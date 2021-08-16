@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="DeFi.js - Standardize the management of DeFi positions programmatically"
+    />
+    <link rel="stylesheet" href="style.css?id=123" />
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <script src="./js/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.12/lottie.min.js"></script>
+    <link rel="manifest" href="site.webmanifest" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <title>DeFi.js</title>
+
+    <script language="JavaScript">
+      function updateGeometryVisibility(){
+        document.getElementById('geometry_container').hidden = window.innerWidth < 1150;
+      }
+    </script>
+
+  </head>
+  <body onresize="updateGeometryVisibility()" onload="updateGeometryVisibility()">
+    <div class="PartnersSection row" style="padding-top: 0px">
+      <div class="LogoSection column">
+        <div class="StrategicPartnersLabel large">MANAGING PARTNERS</div>
+        <div class="StrategicPartnersList row" style="margin-top: 25px" >
+          <a class="orbsLogo" href="https://www.orbs.com"><img class="orbsLogo" src="assets/orbs.png"/></a>
+        </div>
+      </div>
+    </div>
+    <div class="TitleSection column">
+      <img class="logo" src="assets/logo.svg" />
+      <div>
+        <h1>DeFi<span class="small">.js</span></h1>
+        <p>Community-led initiative to standardize the management of Decentralized Finance positions programmatically</p>
+      </div>
+      <p>UNDER CONSTRUCTION</p>
+    </div>
+    <div class="LightSection column spaced">
+      <h3>Simplify and standardize DeFi position management</h3>
+      <div class="IconList row">
+        <div class="column">
+          <img src="assets/list-icon1.svg" />
+          <p>Discover and quickly assess leading DeFi protocol strategies</p>
+        </div>
+        <div class="column">
+          <img src="assets/list-icon2.svg" />
+          <p>Monitor key position properties ex. APY, TVL, rewards</p>
+        </div>
+        <div class="column">
+          <img src="assets/list-icon3.svg" />
+          <p>Monitor position health and governance</p>
+        </div>
+        <div class="column">
+          <img src="assets/list-icon4.svg" />
+          <p>Compare historical performances between strategies</p>
+        </div>
+        <div class="column">
+          <img src="assets/list-icon5.svg" />
+          <p>Composability and interop with the ecosystem</p>
+        </div>
+      </div>
+    </div>
+    <div class="DarkSection row DarkAbstract">
+      <div class="Half column">
+        <div class="SectionTitle">
+          <h2>THE API</h2>
+          <img src="assets/dotted-line.svg" />
+        </div>
+      </div>
+      <div class="Half column">
+        <ul class="BulletList">
+          <li>getNetwork(): Network</li>
+          <li>getAssets(): Token[]</li>
+          <li>getRewardAssets(): Token[]</li>
+          <li>getTVL(): Promise&lt;BN&gt;</li>
+          <li>getAPR(): Promise&lt;BN&gt;</li>
+          <li>getHealth(): Promise&lt;Threat[]&gt;</li>
+          <li>getPendingRewards(): Promise&lt;TokenAmount[]&gt;</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="Footer row">
+      <span>© 2020 defi.org</span>
+      <a href="https://www.announcements.defi.org/">Announcements</a>
+      <a href="https://www.privacypolicies.com/generic/">Privacy</a>
+      <a href="https://github.com/defi-org-code">GitHub</a>
+      <a href="https://t.me/defiorg">Telegram</a>
+      <a href="mailto:hello@defi.org">hello@defi.org</a>
+    </div>
+    <div id="geometry_container" hidden="true">
+      <div style="width: 15%; max-width: 180px; position: absolute; left: 15%; top: -70px;">
+        <img src="assets/geom1.png" width="100%">
+      </div>
+      <div style="width: 15%; max-width: 360px; position: absolute; left: 70%; top: 20px;">
+        <img src="assets/geom2.png" width="100%">
+      </div>
+    </div>
+  </body>
+</html>
