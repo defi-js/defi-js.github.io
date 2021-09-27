@@ -1,3 +1,4 @@
+/build
 
 # Created by https://www.toptal.com/developers/gitignore/api/node,macos,solidity,sublimetext,intellij+all,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,macos,solidity,sublimetext,intellij+all,visualstudiocode
@@ -359,3 +360,26 @@ GitHub.sublime-settings
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/node,macos,solidity,sublimetext,intellij+all,visualstudiocode
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
