@@ -1,21 +1,21 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import reportWebVitals from "./reportWebVitals";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { HashRouter, Route, Switch } from "react-router-dom";
 import "./index.css";
 import App from "./App";
 import Homepage from "./Homepage";
 
 ReactDOM.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <div>
         <Switch>
           <Route path="/wallet" component={App} />
           <Route path="/" component={Homepage} />
         </Switch>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   </React.StrictMode>,
   document.getElementById("root")
 );
