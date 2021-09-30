@@ -14,7 +14,13 @@ export default class App extends React.Component {
     owner: "",
     balance: zero,
     network: {} as Network,
+
+    displayUi: null,
   };
+
+  isConnected() {
+    return Web3.utils.isAddress(this.state.owner);
+  }
 
   render() {
     const darkTheme = createTheme({
@@ -30,15 +36,29 @@ export default class App extends React.Component {
             Connect
           </Button>
 
-          {this.state.owner.length > 0 && (
+          {this.isConnected() && (
             <div>
+              <p>Network 🌐 {this.state.network?.name}</p>
               <p>Wallet 🔑 {this.state.owner}</p>
-              <p>Network 🌐 ${this.state.network?.name}</p>
-              <p>Balance 💰 ${fmt18(this.state.balance)} ETH</p>
+              <p>Balance 💰 {fmt18(this.state.balance)} ETH</p>
 
-              <AaveLoopUi owner={this.state.owner} setLoading={(l) => this.setState({ ...this.state, loading: l })} />
+              {!this.state.displayUi && (
+                <p>
+                  <Button variant={"contained"} size={"large"} onClick={() => this.setState({ displayUi: AaveLoopUi })}>
+                    Aave Loop
+                  </Button>
+                  <p />
+                  <Button variant={"contained"} size={"large"} onClick={() => this.setState({ displayUi: CompoundLoopUi })}>
+                    Compound Loop
+                  </Button>
+                </p>
+              )}
 
-              <CompoundLoopUi owner={this.state.owner} setLoading={(l) => this.setState({ ...this.state, loading: l })} />
+              {this.state.displayUi && <div>{React.createElement(this.state.displayUi, { owner: this.state.owner, withLoading: this.withLoading.bind(this) })}</div>}
+
+              {/*<AaveLoopUi owner={this.state.owner} setLoading={(l) => this.setState({ loading: l })} />*/}
+
+              {/*<CompoundLoopUi owner={this.state.owner} setLoading={(l) => this.setState({ loading: l })} />*/}
             </div>
           )}
 
@@ -52,17 +72,28 @@ export default class App extends React.Component {
 
   setState(state: any, callback?: () => void) {
     super.setState(state, callback);
-    console.log("setState", state);
+    console.log("setState", JSON.stringify(state, null, 2));
+  }
+
+  async withLoading(t: () => Promise<void>) {
+    try {
+      this.setState({ loading: true });
+      await t();
+    } catch (e: any) {
+      alert(`${e.message}`);
+    } finally {
+      this.setState({ loading: false });
+    }
   }
 
   async connect() {
-    this.setState({ ...this.state, loading: true });
+    this.setState({ loading: true });
     if (!(window as any).ethereum) alert("install metamask");
     await (window as any).ethereum.request({ method: "eth_requestAccounts" });
     setWeb3Instance(new Web3((window as any).ethereum));
 
-    this.setState({ ...this.state, loading: false, owner: await account(), network: await getNetwork() });
+    this.setState({ loading: false, owner: await account(), network: await getNetwork(), displayUi: null });
 
-    this.setState({ ...this.state, balance: bn(await web3().eth.getBalance(this.state.owner)) });
+    this.setState({ balance: bn(await web3().eth.getBalance(this.state.owner)) });
   }
 }
