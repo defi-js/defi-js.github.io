@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, TextField } from "@mui/material";
-import { contract, fmt18, fmt6, web3 } from "@defi.org/web3-candies";
+import { bn9, contract, fmt18, fmt6, web3 } from "@defi.org/web3-candies";
 import { CompoundLoop } from "../../typechain-abi/CompoundLoop";
 import { PositionUi } from "./PositionUi";
 
@@ -26,7 +26,7 @@ export class CompoundLoopUi extends PositionUi {
           Status
         </Button>
         <Button sx={{ m: 2 }} variant={"contained"} size={"large"} onClick={this.claim.bind(this)} disabled={!this.isAddressValid()}>
-          test1
+          test2
         </Button>
       </div>
     );
@@ -47,7 +47,7 @@ export class CompoundLoopUi extends PositionUi {
   async claim() {
     await this.props.withLoading(async () => {
       const instance = this.getContract();
-      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner, type: "0x0", gasPrice: 100 } as any);
+      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner, type: "0x0", gasPrice: bn9(100).toString(10) } as any);
     });
   }
 
