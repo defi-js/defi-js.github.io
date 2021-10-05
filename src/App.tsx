@@ -1,10 +1,9 @@
 import React from "react";
 import Web3 from "web3";
 import "./App.css";
-import _ from "lodash";
 
 import { account, bn, fmt18, getNetwork, Network, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
-import { Backdrop, Button, CircularProgress, createTheme, ThemeProvider } from "@mui/material";
+import { Backdrop, Button, CircularProgress, createTheme, FormControlLabel, FormGroup, Switch, ThemeProvider } from "@mui/material";
 import { AaveLoopUi } from "./positions/AaveLoopUi";
 import { CompoundLoopUi } from "./positions/CompoundLoopUi";
 
@@ -15,6 +14,7 @@ export default class App extends React.Component {
     balance: zero,
     network: {} as Network,
 
+    useLegacyTx: false,
     displayUi: null,
   };
 
@@ -32,6 +32,15 @@ export default class App extends React.Component {
     return (
       <ThemeProvider theme={darkTheme}>
         <div className="App">
+          <FormGroup>
+            <FormControlLabel
+              control={<Switch checked={this.state.useLegacyTx} onChange={(e: any) => this.setState({ useLegacyTx: e.target.checked })} />}
+              label="Use Legacy Transaction"
+            />
+          </FormGroup>
+
+          <p />
+
           <Button variant={"contained"} size={"large"} onClick={this.connect.bind(this)}>
             Connect
           </Button>
@@ -54,11 +63,15 @@ export default class App extends React.Component {
                 </p>
               )}
 
-              {this.state.displayUi && <div>{React.createElement(this.state.displayUi, { owner: this.state.owner, withLoading: this.withLoading.bind(this) })}</div>}
-
-              {/*<AaveLoopUi owner={this.state.owner} setLoading={(l) => this.setState({ loading: l })} />*/}
-
-              {/*<CompoundLoopUi owner={this.state.owner} setLoading={(l) => this.setState({ loading: l })} />*/}
+              {this.state.displayUi && (
+                <div>
+                  {React.createElement(this.state.displayUi, {
+                    owner: this.state.owner,
+                    useLegacyTx: this.state.useLegacyTx,
+                    withLoading: this.withLoading.bind(this),
+                  })}
+                </div>
+              )}
             </div>
           )}
 
