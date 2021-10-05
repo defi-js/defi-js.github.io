@@ -26,7 +26,7 @@ export class CompoundLoopUi extends PositionUi {
           Status
         </Button>
         <Button sx={{ m: 2 }} variant={"contained"} size={"large"} onClick={this.claim.bind(this)} disabled={!this.isAddressValid()}>
-          Claim
+          Claim test1
         </Button>
       </div>
     );
