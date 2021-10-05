@@ -47,7 +47,7 @@ export class CompoundLoopUi extends PositionUi {
   async claim() {
     await this.props.withLoading(async () => {
       const instance = this.getContract();
-      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner, type: "0x2", maxPriorityFeePerGas: 10 } as any);
+      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner, type: "0x0", gasPrice: 100 } as any);
     });
   }
 
