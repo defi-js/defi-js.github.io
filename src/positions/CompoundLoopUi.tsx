@@ -26,7 +26,7 @@ export class CompoundLoopUi extends PositionUi {
           Status
         </Button>
         <Button sx={{ m: 2 }} variant={"contained"} size={"large"} onClick={this.claim.bind(this)} disabled={!this.isAddressValid()}>
-          test2
+          Claim
         </Button>
       </div>
     );
@@ -47,7 +47,7 @@ export class CompoundLoopUi extends PositionUi {
   async claim() {
     await this.props.withLoading(async () => {
       const instance = this.getContract();
-      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner, type: "0x0", gasPrice: bn9(100).toString(10) } as any);
+      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner, type: "0x0" } as any);
     });
   }
 

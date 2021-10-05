@@ -51,7 +51,7 @@ export class AaveLoopUi extends PositionUi {
   async claim() {
     await this.props.withLoading(async () => {
       const instance = this.getContract();
-      await instance.methods.claimRewardsToOwner().send({ from: this.props.owner });
+      await instance.methods.claimRewardsToOwner().send({ from: this.props.owner, type: "0x0" } as any);
     });
   }
 
