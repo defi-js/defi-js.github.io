@@ -47,12 +47,12 @@ export class CompoundLoopUi extends PositionUi {
   async claim() {
     await this.props.withLoading(async () => {
       const instance = this.getContract();
-      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner });
+      await instance.methods.claimAndTransferAllCompToOwner().send({ from: this.props.owner, type: "0x2", maxPriorityFeePerGas: 10 } as any);
     });
   }
 
   private isAddressValid() {
-    return this.state.address.length && web3().utils.isAddress(this.state.address);
+    return web3().utils.isAddress(this.state.address);
   }
 
   private getContract() {

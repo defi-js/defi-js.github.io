@@ -56,7 +56,7 @@ export class AaveLoopUi extends PositionUi {
   }
 
   private isAddressValid() {
-    return this.state.address.length && web3().utils.isAddress(this.state.address);
+    return web3().utils.isAddress(this.state.address);
   }
 
   private getContract() {
