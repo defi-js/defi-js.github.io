@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@defi.org/web3-candies": "2.x",
+    "@emotion/react": "11.x",
+    "@emotion/styled": "11.x",
+    "@mui/icons-material": "5.x",
+    "@mui/material": "5.x",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
@@ -13,23 +18,16 @@
     "@types/react-router-dom": "5.x",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "4.0.3",
     "react-router-dom": "5.x",
+    "react-scripts": "4.0.3",
+    "react-sweet-state": "^2.5.2",
     "typescript": "^4.4.3",
-    "web-vitals": "^1.1.2",
-    "@defi.org/web3-candies": "2.x",
-    "@mui/material": "5.x",
-    "@mui/icons-material": "5.x",
-    "@emotion/react": "11.x",
-    "@emotion/styled": "11.x"
+    "web-vitals": "^1.1.2"
   },
   "scripts": {
     "start": "react-scripts start",
     "typechain": "typechain --target=web3-v1 --out-dir=typechain-abi './src/abi/**/*.json'",
-    "build": "rm -rf docs build typechain-abi && npm run typechain && react-scripts build && cp -r ./build ./docs",
-    "serve": "serve -s ./docs",
-    "test": "react-scripts test",
-    "deploy": "aws s3 cp --recursive --acl public-read ./docs/ s3://defi-org/"
+    "build": "rm -rf build docs typechain-abi && npm run typechain && react-scripts build && mv build docs"
   },
   "eslintConfig": {
     "extends": [

@@ -3,15 +3,15 @@ import ReactDOM from "react-dom";
 import reportWebVitals from "./reportWebVitals";
 import { HashRouter, Route, Switch } from "react-router-dom";
 import "./index.css";
-import App from "./App";
-import Homepage from "./Homepage";
+import { Homepage } from "./Homepage";
+import { App } from "./App";
 
 ReactDOM.render(
   <React.StrictMode>
     <HashRouter>
       <div>
         <Switch>
-          <Route path="/wallet" component={App} />
+          <Route path="/dashboard" component={App} />
           <Route path="/" component={Homepage} />
         </Switch>
       </div>

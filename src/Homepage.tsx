@@ -11,7 +11,7 @@ import DotLine from "./assets/dotted-line.svg";
 import Geom1 from "./assets/geom1.png";
 import Geom2 from "./assets/geom2.png";
 
-export default function Homepage() {
+export const Homepage = () => {
   return (
     <div>
       <div className="PartnersSection row" style={{ paddingTop: "0px" }}>
@@ -99,4 +99,4 @@ export default function Homepage() {
       </div>
     </div>
   );
-}
+};
