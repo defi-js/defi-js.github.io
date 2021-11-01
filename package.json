@@ -8,26 +8,26 @@
     "@emotion/styled": "11.x",
     "@mui/icons-material": "5.x",
     "@mui/material": "5.x",
-    "@testing-library/jest-dom": "^5.14.1",
-    "@testing-library/react": "^11.2.7",
-    "@testing-library/user-event": "^12.8.3",
-    "@types/jest": "^26.0.24",
-    "@types/node": "^12.20.27",
-    "@types/react": "^17.0.24",
-    "@types/react-dom": "^17.0.9",
+    "@mui/x-data-grid": "^5.0.0-beta.6",
+    "@testing-library/jest-dom": "5.x",
+    "@testing-library/react": "11.x",
+    "@testing-library/user-event": "12.x",
+    "@types/jest": "26.x",
+    "@types/react": "17.x",
+    "@types/react-dom": "17.x",
     "@types/react-router-dom": "5.x",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
+    "react": "17.x",
+    "react-dom": "17.x",
     "react-router-dom": "5.x",
-    "react-scripts": "4.0.3",
-    "react-sweet-state": "^2.5.2",
-    "typescript": "^4.4.3",
-    "web-vitals": "^1.1.2"
+    "react-scripts": "4.x",
+    "react-sweet-state": "2.x",
+    "web-vitals": "1.x"
   },
   "scripts": {
     "start": "react-scripts start",
     "typechain": "typechain --target=web3-v1 --out-dir=typechain-abi './src/abi/**/*.json'",
-    "build": "rm -rf build docs typechain-abi && npm run typechain && react-scripts build && mv build docs"
+    "build": "rm -rf build docs typechain-abi && npm run typechain && react-scripts build && mv build docs",
+    "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": [

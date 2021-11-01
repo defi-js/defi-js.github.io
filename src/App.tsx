@@ -1,10 +1,29 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import "./App.css";
-import { Backdrop, Button, CircularProgress, createTheme, FormControlLabel, FormGroup, Switch, ThemeProvider } from "@mui/material";
-import { useAppState, useIsValidAddress } from "./state/AppState";
+import {
+  Backdrop,
+  Button,
+  CircularProgress,
+  createTheme,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  InputLabel,
+  ListItemButton,
+  ListItemText,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Switch,
+  TextField,
+  ThemeProvider,
+} from "@mui/material";
+import { useAppState } from "./state/AppState";
 import { fmt18 } from "@defi.org/web3-candies";
-import { AaveLoopComponent } from "./positions/AaveLoopComponent";
-import { CompoundLoopComponent } from "./positions/CompoundLoopComponent";
+import { useAddPosition, useMyPositions } from "./state/PositionsState";
+import { PositionArgs } from "./positions/base/Position";
+import Web3 from "web3";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 const darkTheme = createTheme({
   palette: {
@@ -28,11 +47,15 @@ export const App = () => {
           <p />
         </div>
 
-        <div>
-          <PositionsMenu />
-          <p />
-          <PositionUI />
-        </div>
+        <p />
+
+        <AddPosition />
+
+        <p />
+
+        <PositionsUI />
+
+        <p />
 
         <div>
           <Loading />
@@ -53,7 +76,7 @@ const UseLegacyTx = () => {
 
 const ConnectBtn = () => {
   const [state, actions] = useAppState();
-  const [isConnected] = useIsValidAddress(state.wallet);
+  const isConnected = Web3.utils.isAddress(state.wallet);
   return (
     <Button variant={"contained"} size={"large"} onClick={actions.connect}>
       {isConnected ? "Refresh" : "Connect"}
@@ -81,40 +104,118 @@ const Loading = () => {
   );
 };
 
-const PositionsMenu = () => {
-  const [state, actions] = useAppState();
-  const [isConnected] = useIsValidAddress(state.wallet);
-  if (!isConnected) return <div />;
+const AddPosition = () => {
+  const [myState, setMyState] = useState(() => ({} as PositionArgs));
+  const [addPosState, actions] = useAddPosition(myState);
 
   return (
     <div>
-      <Button variant={"contained"} size={"large"} onClick={() => actions.showPosition("AaveLoopComponent")}>
-        Aave Loop
-      </Button>
-      <p />
-      <Button variant={"contained"} size={"large"} onClick={() => actions.showPosition("CompoundLoopComponent")}>
-        Compound Loop
+      <FormControl sx={{ width: "100%" }}>
+        <InputLabel id="demo-simple-select-label">Position Type</InputLabel>
+        <Select
+          labelId="demo-simple-select-label"
+          id="demo-simple-select"
+          value={myState.type || ""}
+          label="Position Type"
+          onChange={(event: SelectChangeEvent) => setMyState({ ...myState, type: event.target.value })}
+        >
+          <MenuItem value="" />
+          {addPosState.allTypes.map((type) => (
+            <MenuItem key={type} value={type}>
+              {type}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <TextField
+        sx={{ marginTop: "2%" }}
+        fullWidth
+        id="outlined-basic"
+        variant="outlined"
+        label="Target Address"
+        onChange={(event: any) => setMyState({ ...myState, address: event.target.value })}
+      />
+
+      <TextField
+        sx={{ marginTop: "2%" }}
+        fullWidth
+        id="outlined-basic"
+        variant="outlined"
+        label="User Address"
+        onChange={(event: any) => setMyState({ ...myState, user: event.target.value })}
+      />
+
+      <Button
+        sx={{ marginTop: "2%" }}
+        variant={"contained"}
+        size={"large"}
+        onClick={() => actions.addPosition(myState).then(() => setMyState({} as PositionArgs))}
+        disabled={!addPosState.isValid || !myState.type}
+      >
+        Add Position
       </Button>
     </div>
   );
 };
 
-// TODO temp
-function getUi(name: string) {
-  switch (name) {
-    case "AaveLoopComponent":
-      return <AaveLoopComponent />;
-    case "CompoundLoopComponent":
-      return <CompoundLoopComponent />;
-    default:
-      return <div />;
-  }
-}
-
-const PositionUI = () => {
+const RenderCellClaim = (params: any) => {
   const [state] = useAppState();
-  const [isConnected] = useIsValidAddress(state.wallet);
-  if (!isConnected || !state.displayPositionUI) return <div />;
+  const [, actions] = useMyPositions();
+  return (
+    <ListItemButton onClick={() => actions.claim(params.id, state.useLegacyTx)}>
+      <ListItemText primary="Claim" />
+    </ListItemButton>
+  );
+};
+const RenderCellDelete = (params: any) => {
+  const [count, setCount] = useState(0);
+  const [, actions] = useMyPositions();
+  return (
+    <ListItemButton
+      onClick={() => {
+        if (count > 4) {
+          setCount(0);
+          return actions.delete(params.id);
+        } else setCount(count + 1);
+      }}
+    >
+      <ListItemText primary="Delete" />
+    </ListItemButton>
+  );
+};
 
-  return getUi(state.displayPositionUI);
+const columns: GridColDef[] = [
+  { field: "type", headerName: "Type", width: 500 },
+  { field: "amounts", headerName: "Amounts", width: 500 },
+  { field: "pending", headerName: "Pending", width: 200 },
+  { field: "health", headerName: "Health", width: 50 },
+  {
+    field: "claim",
+    headerName: "Claim",
+    width: 50,
+    type: "actions",
+    renderCell: RenderCellClaim,
+  },
+  {
+    field: "delete",
+    headerName: "Delete",
+    width: 50,
+    type: "actions",
+    renderCell: RenderCellDelete,
+  },
+];
+
+const PositionsUI = () => {
+  const [state] = useAppState();
+  const [positions, actions] = useMyPositions();
+  useMemo(() => {
+    if (state.network.id) actions.load().then();
+  }, [state.network, actions]);
+
+  return (
+    <div style={{ height: 500, width: "90%" }}>
+      <DataGrid rows={positions} columns={columns} />
+    </div>
+  );
 };
