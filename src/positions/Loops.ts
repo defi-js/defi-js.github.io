@@ -1,6 +1,6 @@
 import { Position, PositionArgs, Severity } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, bn18, contract, erc20s, networks } from "@defi.org/web3-candies";
+import { account, bn, bn18, contract, erc20s, fmt18, networks, to18 } from "@defi.org/web3-candies";
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
 
@@ -38,7 +38,7 @@ export namespace Loops {
       if (hf.lt(this.WARN_HEALTH_FACTOR)) {
         return [
           {
-            severity: Severity.High,
+            severity: Severity.Critical,
             message: "Low Health Factor!",
             info: { args: this.args, data },
           },
@@ -81,6 +81,8 @@ export namespace Loops {
   }
 
   export class CompoundLoop implements Position {
+    WARN_LIQUIDITY_iPERCENT_OF_SUPPLY = 400; // 0.25% => ex. $10M principal, $40M supply, $100k min liquidity
+
     instance = contract<CompoundLoopAbi>(require("../abi/CompoundLoopAbi.json"), this.args.address);
     asset = erc20s.eth.USDC();
     rewardAsset = erc20s.eth.COMP();
@@ -104,11 +106,37 @@ export namespace Loops {
     }
 
     async getHealth() {
+      const [supplied] = await this.getAmounts();
+      const { accountLiquidity, accountShortfall } = await this.instance.methods.getAccountLiquidityWithInterest().call();
+      const minLiquidity = supplied.value.divn(this.WARN_LIQUIDITY_iPERCENT_OF_SUPPLY);
+
+      if (!bn(accountShortfall).isZero() || bn(accountLiquidity).lt(minLiquidity)) {
+        return [
+          {
+            severity: Severity.Critical,
+            message: "Low Liquidity!",
+            info: { args: this.args, accountLiquidity, accountShortfall },
+          },
+        ];
+      }
       return [];
     }
 
     async getAmounts() {
-      return [];
+      const borrowBalance = to18(await this.instance.methods.borrowBalanceCurrent().call(), 6);
+      const supplyBalance = to18(await erc20s.eth.Compound_cUSDC().methods.balanceOfUnderlying(this.args.address).call(), 6);
+      return [
+        {
+          asset: this.asset,
+          amount: supplyBalance,
+          value: supplyBalance,
+        },
+        {
+          asset: this.asset,
+          amount: borrowBalance,
+          value: borrowBalance,
+        },
+      ];
     }
 
     async getPendingRewards() {
