@@ -29,20 +29,31 @@ const AppState = createStore({
 
     connect:
       () =>
-      async ({ setState, getState, dispatch }) => {
+      async ({ setState, dispatch }) => {
         await dispatch(withLoading)(async () => {
-          if (!(window as any).ethereum) alert("install metamask");
-          await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+          const ethereum = (window as any).ethereum;
+          if (!ethereum) {
+            alert("install metamask");
+            return;
+          }
 
-          setWeb3Instance(new Web3((window as any).ethereum));
-          setState({ wallet: await account(), network: await getNetwork() });
-          setState({ balance: bn(await web3().eth.getBalance(getState().wallet)) });
+          setWeb3Instance(new Web3(ethereum));
+          ethereum.enable();
+
+          ethereum.on("accountsChanged", () => {
+            onConnect(setState);
+          });
+          ethereum.on("networkChanged", () => {
+            onConnect(setState);
+          });
+
+          await onConnect(setState);
         });
       },
   },
 });
 
-export const withLoading = (store: StoreActionApi<typeof AppState.initialState>) => async (t: () => Promise<void>) => {
+const withLoading = (store: StoreActionApi<typeof AppState.initialState>) => async (t: () => Promise<void>) => {
   try {
     store.setState({ loading: true });
     await t();
@@ -52,5 +63,10 @@ export const withLoading = (store: StoreActionApi<typeof AppState.initialState>)
     store.setState({ loading: false });
   }
 };
+
+async function onConnect(setState: any) {
+  const wallet = await account();
+  setState({ wallet, network: await getNetwork(), balance: bn(await web3().eth.getBalance(wallet)) });
+}
 
 export const useAppState = createHook(AppState);
