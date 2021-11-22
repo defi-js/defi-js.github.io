@@ -1,6 +1,6 @@
 import { Position, PositionArgs, Severity } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, bn18, contract, erc20s, fmt18, networks, to18 } from "@defi.org/web3-candies";
+import { account, bn, bn18, contract, erc20s, fmt18, networks, to18, getNetwork } from "@defi.org/web3-candies";
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
 

@@ -1,5 +1,5 @@
 import { Position, PositionArgs } from "./base/Position";
-import { account, bn, contracts, erc20s, networks, Token } from "@defi.org/web3-candies";
+import { account, bn, contracts, erc20s, networks, Token, getNetwork } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
 
@@ -17,9 +17,7 @@ export namespace Pancakeswap {
       public asset1: Token,
       public lpToken: Token & PancakeswapLPAbi,
       public poolId: number
-    ) {
-      args.address = this.masterchef.options.address;
-    }
+    ) {}
 
     getArgs() {
       return this.args;
@@ -43,7 +41,7 @@ export namespace Pancakeswap {
 
     async getAmounts() {
       const [userInfo, reserves, token0, totalSupply] = await Promise.all([
-        await this.masterchef.methods.userInfo(this.poolId, this.args.user).call(),
+        await this.masterchef.methods.userInfo(this.poolId, this.args.address).call(),
         await this.lpToken.methods.getReserves().call(),
         await this.lpToken.methods.token0().call(),
         await this.lpToken.methods.totalSupply().call(),
@@ -70,7 +68,7 @@ export namespace Pancakeswap {
     }
 
     async getPendingRewards() {
-      const amount = bn(await this.masterchef.methods.pendingCake(this.poolId, this.args.user).call());
+      const amount = bn(await this.masterchef.methods.pendingCake(this.poolId, this.args.address).call());
       return [
         {
           asset: this.cake,
@@ -81,7 +79,7 @@ export namespace Pancakeswap {
     }
 
     async claim(useLegacyTx: boolean) {
-      if (this.args.user != (await account())) throw new Error("only user able to claim");
+      if (this.args.address != (await account())) throw new Error("only user able to claim");
       await this.masterchef.methods.deposit(this.poolId, 0).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
   }

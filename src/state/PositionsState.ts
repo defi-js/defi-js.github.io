@@ -3,9 +3,9 @@ import { createHook, createSelector, createStore } from "react-sweet-state";
 import { Position, PositionArgs, Threat, TokenAmount } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
 import { fmt18, getNetwork } from "@defi.org/web3-candies";
-import Web3 from "web3";
+import { registerAllPositions } from "../positions";
 
-require("../positions");
+registerAllPositions();
 
 export type PositionResolved = { id: string; type: string; amounts: string; pending: string; health: string };
 
@@ -28,7 +28,6 @@ const PositionsState = createStore({
       (args: PositionArgs) =>
       async ({ getState, dispatch }) => {
         const position = PositionFactory.create(args);
-        if (position.getNetwork() != (await getNetwork())) throw new Error(`wrong network`);
 
         const data = _.mapValues(getState().positions, (p) => p.getArgs());
         data[position.getArgs().id] = position.getArgs();
@@ -80,11 +79,11 @@ async function load(api: any) {
 }
 
 async function resolveForCurrentNetwork(positions: Record<string, Position>) {
-  const network = await getNetwork();
+  const currentNetwork = await getNetwork();
   return await Promise.all(
     _(positions)
       .values()
-      .filter((p) => p.getNetwork().id == network.id)
+      .filter((p) => PositionFactory.shouldLoad(p, currentNetwork))
       .map(async (position) => ({
         id: position.getArgs().id,
         type: position.getArgs().type,
@@ -103,7 +102,7 @@ export const useAddPosition = createHook(PositionsState, {
     (_, args: PositionArgs) => args,
     (state, args) => ({
       allTypes: PositionFactory.allTypes(),
-      isValid: Web3.utils.isAddress(args.user) && Web3.utils.isAddress(args.address),
+      isValid: PositionFactory.isValidInput(args),
     })
   ),
 });

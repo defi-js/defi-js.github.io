@@ -1,5 +1,5 @@
 import Web3 from "web3";
-import { createHook, createStore, defaults, StoreActionApi } from "react-sweet-state";
+import { createHook, createStore, defaults } from "react-sweet-state";
 import { account, bn, getNetwork, Network, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
 
 defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
@@ -22,15 +22,14 @@ const AppState = createStore({
   actions: {
     setUseLegacyTx:
       (useLegacyTx: boolean) =>
-      ({ setState, dispatch }) => {
+      ({ setState }) => {
         setState({ useLegacyTx });
-        // dispatch((store) => {});
       },
 
     connect:
       () =>
-      async ({ setState, dispatch }) => {
-        await dispatch(withLoading)(async () => {
+      async ({ setState }) => {
+        await withLoading(setState, async () => {
           const ethereum = (window as any).ethereum;
           if (!ethereum) {
             alert("install metamask");
@@ -53,16 +52,16 @@ const AppState = createStore({
   },
 });
 
-const withLoading = (store: StoreActionApi<typeof AppState.initialState>) => async (t: () => Promise<void>) => {
+async function withLoading(setState: any, t: () => Promise<void>) {
   try {
-    store.setState({ loading: true });
+    setState({ loading: true });
     await t();
   } catch (e: any) {
     alert(`${e.message}`);
   } finally {
-    store.setState({ loading: false });
+    setState({ loading: false });
   }
-};
+}
 
 async function onConnect(setState: any) {
   const wallet = await account();

@@ -137,15 +137,6 @@ const AddPosition = () => {
         onChange={(event: any) => setMyState({ ...myState, address: event.target.value })}
       />
 
-      <TextField
-        sx={{ marginTop: "2%" }}
-        fullWidth
-        id="outlined-basic"
-        variant="outlined"
-        label="User Address"
-        onChange={(event: any) => setMyState({ ...myState, user: event.target.value })}
-      />
-
       <Button
         sx={{ marginTop: "2%" }}
         variant={"contained"}

@@ -12,6 +12,16 @@ const coingeckoIds = {
 export class PriceOracle {
   prices: Record<string, BN> = {};
 
+  async valueOf(token: Token, amount: BN): Promise<BN> {
+    const id = (token as any).tokenId || token.address;
+    if (!this.prices[id]) {
+      if ((token as any).esdt) await this.fetchPricesElrond(id);
+      else await this.fetchPrices(id);
+    }
+
+    return amount.mul(this.prices[id]).div(ether);
+  }
+
   /**
    * returns price in USD 18 decimals by token address
    */
@@ -26,15 +36,41 @@ export class PriceOracle {
       .mapValues((v) => bn18(v.usd))
       .value();
 
-    if (_.isEmpty(result)) throw new Error(`no price for ${addresses}`);
-    _.merge(this.prices, result);
-
-    return result;
+    return this.updateResults(addresses, result);
   }
 
-  async valueOf(token: Token, amount: BN): Promise<BN> {
-    if (!this.prices[token.address]) await this.fetchPrices(token.address);
+  /**
+   * returns price in USD 18 decimals by token ID
+   */
+  async fetchPricesElrond(...tokenIds: string[]): Promise<{ [address: string]: BN }> {
+    const body = {
+      variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
+      query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {
+              ${_.map(tokenIds, (id, i) => `token${i}: getTokenPriceUSD(tokenID: $token${i})`).join("\n")}
+            }`,
+    };
+    const response = await fetch("https://graph.maiar.exchange/graphql", {
+      headers: {
+        accept: "*/*",
+        "cache-control": "no-cache",
+        "content-type": "application/json",
+        pragma: "no-cache",
+      },
+      body: JSON.stringify(body),
+      method: "POST",
+    });
+    const json = await response.json();
 
-    return amount.mul(this.prices[token.address]).div(ether);
+    const result = _(json.data)
+      .mapKeys((v, k) => body.variables[k])
+      .mapValues((v) => bn18(v))
+      .value();
+
+    return this.updateResults(tokenIds, result);
+  }
+
+  updateResults(inputs: any, results: { [p: string]: BN }) {
+    if (_.isEmpty(results)) throw new Error(`no price for ${inputs}`);
+    return _.merge(this.prices, results);
   }
 }

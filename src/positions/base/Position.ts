@@ -5,8 +5,6 @@ export type PositionArgs = {
   type: string;
   id: string;
   address: string;
-  user: string;
-  args?: string[];
 };
 
 export interface Position {
@@ -25,7 +23,8 @@ export interface Position {
   // getAPR(): Promise<BN>;
 
   // getGovernance
-  getHealth(): Promise<Threat[]>;
+  // load() : Promise<void> // TODO resolve once per position
+  getHealth(): Promise<Threat[]>; // TODO feature: see specific health stats w/o threats (Severity:Healthy/generic JSON of all position data?)
   getAmounts(): Promise<TokenAmount[]>;
   getPendingRewards(): Promise<TokenAmount[]>;
 
