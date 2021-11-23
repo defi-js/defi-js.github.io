@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { useAppState } from "./state/AppState";
 import { fmt18, getNetwork } from "@defi.org/web3-candies";
-import { useAddPosition, useMyPositions } from "./state/PositionsState";
+import { useAddPosition, useUpdatedPositionRows, usePositionsActions } from "./state/PositionsState";
 import { Position, PositionArgs, Threat, TokenAmount } from "./positions/base/Position";
 import Web3 from "web3";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -156,7 +156,7 @@ const AddPosition = () => {
 
 const RenderCellClaim = (params: any) => {
   const [state] = useAppState();
-  const [, actions] = useMyPositions();
+  const [, actions] = usePositionsActions();
   return (
     <ListItemButton onClick={() => actions.claim(params.id, state.useLegacyTx)}>
       <ListItemText primary="Claim" />
@@ -165,7 +165,7 @@ const RenderCellClaim = (params: any) => {
 };
 const RenderCellDelete = (params: any) => {
   const [count, setCount] = useState(0);
-  const [, actions] = useMyPositions();
+  const [, actions] = usePositionsActions();
   return (
     <ListItemButton
       onClick={() => {
@@ -203,20 +203,10 @@ const columns: GridColDef[] = [
 
 const PositionsUI = () => {
   const [state] = useAppState();
-  const [positions, actions] = useMyPositions();
+  const [rows, actions] = useUpdatedPositionRows(null);
   useMemo(() => {
     if (state.network.id) actions.load().then();
   }, [state.network, actions]);
-
-  const rows = useMemo(() => {
-    return positions.map((p) => ({
-      id: p.getArgs().id,
-      type: p.getArgs().type,
-      amounts: fmtAmounts(p.getAmounts()),
-      pending: fmtAmounts(p.getPendingRewards()),
-      health: fmtHealth(p.getHealth()),
-    }));
-  }, [positions]);
 
   return (
     <div style={{ height: 500, width: "90%" }}>
@@ -224,14 +214,3 @@ const PositionsUI = () => {
     </div>
   );
 };
-
-function fmtAmounts(amnt: TokenAmount[]) {
-  return _(amnt)
-    .map((a) => `${a.asset.name}: ${fmt18(a.amount).split(".")[0]} = $${fmt18(a.value).split(".")[0]}`)
-    .join(" + ");
-}
-
-function fmtHealth(health: Threat[]) {
-  if (!health.length) return "🟢";
-  return health.map((t) => t.message).join("⚠️");
-}

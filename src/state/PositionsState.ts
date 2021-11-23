@@ -1,8 +1,9 @@
 import _ from "lodash";
-import { createHook, createSelector, createStore } from "react-sweet-state";
-import { Position, PositionArgs } from "../positions/base/Position";
+import { createHook, createSelector, createStore, StoreActionApi } from "react-sweet-state";
+import { Position, PositionArgs, Threat, TokenAmount } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
 import { registerAllPositions } from "../positions";
+import { fmt18 } from "@defi.org/web3-candies";
 
 registerAllPositions();
 
@@ -13,63 +14,80 @@ const saveToStorage = (data: Record<string, PositionArgs>) => localStorage.setIt
 const PositionsState = createStore({
   name: "PositionsState",
 
-  initialState: {} as { [id: string]: Position },
+  initialState: {
+    positions: {} as Record<string, Position>,
+  },
 
   actions: {
     load:
       () =>
-      async ({ getState, setState }) => {
-        await load(getState, setState);
+      async ({ dispatch }) => {
+        await dispatch(load);
       },
 
     addPosition:
       (args: PositionArgs) =>
-      async ({ getState, setState }) => {
+      async ({ getState, dispatch }) => {
         const position = PositionFactory.create(args);
 
-        const data = _.mapValues(getState(), (p) => p.getArgs());
+        const data = _.mapValues(getState().positions, (p) => p.getArgs());
         data[position.getArgs().id] = position.getArgs();
         saveToStorage(data);
+        await dispatch(load);
+      },
 
-        await load(getState, setState);
+    delete:
+      (posId: string) =>
+      async ({ getState, dispatch }) => {
+        const data = _.mapValues(getState().positions, (p) => p.getArgs());
+        delete data[posId];
+        saveToStorage(data);
+        await dispatch(load);
       },
 
     claim:
       (posId: string, useLegacyTx: boolean) =>
       async ({ getState }) => {
-        await getState()[posId].claim(useLegacyTx);
-      },
-
-    delete:
-      (posId: string) =>
-      async ({ getState, setState }) => {
-        const positions = _.mapValues(getState(), (p) => p.getArgs());
-        delete positions[posId];
-        saveToStorage(positions);
-
-        await load(getState, setState);
+        await getState().positions[posId].claim(useLegacyTx);
       },
   },
 });
 
-async function load(getState: any, setState: any) {
+async function load({ getState, setState }: StoreActionApi<typeof PositionsState.initialState>) {
   console.log("LOAD");
-  const fromStorage = _.mapValues(loadFromStorage(), (args) => PositionFactory.create(args));
-  getState().positions;
-  await Promise.all(_.map(fromStorage, (p) => p.load()));
-  setState({ positions: fromStorage });
+  const current = getState().positions;
+  const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
+  await Promise.all(_.map(positions, (p) => p.load()));
+  setState({ positions });
 }
 
-export const useMyPositions = createHook(PositionsState, {
-  selector: (state) =>
-    _(state.positions)
-      .values()
-      .sortBy((p) => p.getArgs().type)
-      .value(),
+export const usePositionsActions = createHook(PositionsState, {
+  selector: null,
+});
+
+export const useUpdatedPositionRows = createHook(PositionsState, {
+  selector: createSelector(
+    (state) =>
+      _(state.positions)
+        .values()
+        .sortBy((p) => p.getArgs().type)
+        .value(),
+    (positions) =>
+      _.map(positions, (p) => {
+        console.log("here", fmtAmounts(p.getAmounts()));
+        return {
+          id: p.getArgs().id,
+          type: p.getArgs().type,
+          amounts: fmtAmounts(p.getAmounts()),
+          pending: fmtAmounts(p.getPendingRewards()),
+          health: fmtHealth(p.getHealth()),
+        };
+      })
+  ),
 });
 export const useAddPosition = createHook(PositionsState, {
   selector: createSelector(
-    (_) => null,
+    () => null,
     (_, args: PositionArgs) => args,
     (state, args) => ({
       allTypes: PositionFactory.allTypes(),
@@ -77,3 +95,14 @@ export const useAddPosition = createHook(PositionsState, {
     })
   ),
 });
+
+function fmtAmounts(amnt: TokenAmount[]) {
+  return _(amnt)
+    .map((a) => `${a.asset.name}: ${fmt18(a.amount).split(".")[0]} = $${fmt18(a.value).split(".")[0]}`)
+    .join(" + ");
+}
+
+function fmtHealth(health: Threat[]) {
+  if (!health.length) return "🟢";
+  return health.map((t) => t.message).join("⚠️");
+}
