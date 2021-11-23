@@ -19,11 +19,14 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import { useAppState } from "./state/AppState";
-import { fmt18 } from "@defi.org/web3-candies";
+import { fmt18, getNetwork } from "@defi.org/web3-candies";
 import { useAddPosition, useMyPositions } from "./state/PositionsState";
-import { PositionArgs } from "./positions/base/Position";
+import { Position, PositionArgs, Threat, TokenAmount } from "./positions/base/Position";
 import Web3 from "web3";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import _ from "lodash";
+import { PositionFactory } from "./positions/base/PositionFactory";
+import BN from "bn.js";
 
 const darkTheme = createTheme({
   palette: {
@@ -105,6 +108,7 @@ const Loading = () => {
 };
 
 const AddPosition = () => {
+  const [appState] = useAppState();
   const [myState, setMyState] = useState(() => ({} as PositionArgs));
   const [addPosState, actions] = useAddPosition(myState);
 
@@ -142,7 +146,7 @@ const AddPosition = () => {
         variant={"contained"}
         size={"large"}
         onClick={() => actions.addPosition(myState).then(() => setMyState({} as PositionArgs))}
-        disabled={!addPosState.isValid || !myState.type}
+        disabled={!appState.wallet || !addPosState.isValid || !myState.type}
       >
         Add Position
       </Button>
@@ -177,14 +181,14 @@ const RenderCellDelete = (params: any) => {
 };
 
 const columns: GridColDef[] = [
-  { field: "type", headerName: "Type", width: 500 },
-  { field: "amounts", headerName: "Amounts", width: 500 },
-  { field: "pending", headerName: "Pending", width: 200 },
-  { field: "health", headerName: "Health", width: 50 },
+  { field: "type", headerName: "Type", width: 300 },
+  { field: "amounts", headerName: "Amounts", width: 700 },
+  { field: "pending", headerName: "Pending", width: 300 },
+  { field: "health", headerName: "Health", width: 100 },
   {
     field: "claim",
     headerName: "Claim",
-    width: 50,
+    width: 100,
     type: "actions",
     renderCell: RenderCellClaim,
   },
@@ -204,9 +208,30 @@ const PositionsUI = () => {
     if (state.network.id) actions.load().then();
   }, [state.network, actions]);
 
+  const rows = useMemo(() => {
+    return positions.map((p) => ({
+      id: p.getArgs().id,
+      type: p.getArgs().type,
+      amounts: fmtAmounts(p.getAmounts()),
+      pending: fmtAmounts(p.getPendingRewards()),
+      health: fmtHealth(p.getHealth()),
+    }));
+  }, [positions]);
+
   return (
     <div style={{ height: 500, width: "90%" }}>
-      <DataGrid rows={positions} columns={columns} />
+      <DataGrid rows={rows} columns={columns} />
     </div>
   );
 };
+
+function fmtAmounts(amnt: TokenAmount[]) {
+  return _(amnt)
+    .map((a) => `${a.asset.name}: ${fmt18(a.amount).split(".")[0]} = $${fmt18(a.value).split(".")[0]}`)
+    .join(" + ");
+}
+
+function fmtHealth(health: Threat[]) {
+  if (!health.length) return "🟢";
+  return health.map((t) => t.message).join("⚠️");
+}

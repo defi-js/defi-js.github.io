@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import { createHook, createStore, defaults } from "react-sweet-state";
-import { account, bn, getNetwork, Network, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
+import { account, bn, getNetwork, Network, networks, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
+import _ from "lodash";
 
 defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
   const result = next(arg);

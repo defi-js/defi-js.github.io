@@ -1,6 +1,6 @@
 import { Position, PositionArgs, Severity } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, bn18, contract, erc20s, fmt18, networks, to18, getNetwork } from "@defi.org/web3-candies";
+import { account, bn, bn18, contract, erc20s, fmt18, getNetwork, networks, to18, zero } from "@defi.org/web3-candies";
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
 
@@ -14,6 +14,16 @@ export namespace Loops {
     aave = erc20s.eth.AAVE();
     weth = erc20s.eth.WETH();
 
+    data = {
+      healthFactor: zero,
+      totalCollateralETH: zero,
+      totalCollateralValue: zero,
+      totalDebtETH: zero,
+      totalDebtValue: zero,
+      rewardAmount: zero,
+      rewardValue: zero,
+    };
+
     constructor(public args: PositionArgs, public oracle: PriceOracle) {}
 
     getArgs() {
@@ -32,61 +42,78 @@ export namespace Loops {
       return [this.rewardAsset];
     }
 
-    async getHealth() {
-      const data = await this.instance.methods.getPositionData().call();
-      const hf = bn(data.healthFactor);
-      if (hf.lt(this.WARN_HEALTH_FACTOR)) {
+    getData = () => this.data;
+
+    getHealth() {
+      if (!this.data.healthFactor.isZero() && this.data.healthFactor.lt(this.WARN_HEALTH_FACTOR)) {
         return [
           {
             severity: Severity.Critical,
             message: "Low Health Factor!",
-            info: { args: this.args, data },
           },
         ];
       }
       return [];
     }
 
-    async getAmounts() {
-      const { totalCollateralETH, totalDebtETH } = await this.instance.methods.getPositionData().call();
-      return [
-        {
-          asset: this.asset,
-          amount: bn(totalCollateralETH),
-          value: await this.oracle.valueOf(this.weth, bn(totalCollateralETH)),
-        },
-        {
-          asset: this.asset,
-          amount: bn(totalDebtETH),
-          value: await this.oracle.valueOf(this.weth, bn(totalDebtETH)),
-        },
-      ];
-    }
+    getAmounts = () => [
+      {
+        asset: this.asset,
+        amount: this.data.totalCollateralETH,
+        value: this.data.totalCollateralValue,
+      },
+      {
+        asset: this.asset,
+        amount: this.data.totalDebtETH,
+        value: this.data.totalDebtValue,
+      },
+    ];
 
-    async getPendingRewards() {
-      const amount = bn(await this.instance.methods.getBalanceReward().call());
-      const value = await this.oracle.valueOf(this.aave, amount);
-      return [
-        {
-          asset: this.rewardAsset,
-          amount,
-          value,
-        },
-      ];
+    getPendingRewards = () => [
+      {
+        asset: this.rewardAsset,
+        amount: this.data.rewardAmount,
+        value: this.data.rewardValue,
+      },
+    ];
+
+    async load() {
+      if ((await getNetwork()).id !== this.getNetwork().id) return;
+
+      const posData = await this.instance.methods.getPositionData().call();
+      this.data.healthFactor = bn(posData.healthFactor);
+      this.data.totalCollateralETH = bn(posData.totalCollateralETH);
+      this.data.totalDebtETH = bn(posData.totalDebtETH);
+      this.data.totalCollateralValue = await this.oracle.valueOf(this.weth, this.data.totalCollateralETH);
+      this.data.totalDebtValue = await this.oracle.valueOf(this.weth, this.data.totalDebtETH);
+      this.data.rewardAmount = bn(await this.instance.methods.getBalanceReward().call());
+      this.data.rewardValue = await this.oracle.valueOf(this.aave, this.data.rewardAmount);
     }
 
     async claim(useLegacyTx: boolean) {
-      await this.instance.methods.claimRewardsToOwner().send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await this.instance.methods.claimRewardsToOwner().send({
+        from: await account(),
+        type: useLegacyTx ? "0x0" : "0x2",
+      } as any);
     }
   }
 
   export class CompoundLoop implements Position {
-    WARN_LIQUIDITY_iPERCENT_OF_SUPPLY = 400; // 0.25% => ex. $10M principal, $40M supply, $100k min liquidity
+    WARN_LIQUIDITY_PERCENT_OF_SUPPLY = 0.25; // percent of total supply 0.25% => ex. $10M principal, $40M supply, $100k min liquidity
 
     instance = contract<CompoundLoopAbi>(require("../abi/CompoundLoopAbi.json"), this.args.address);
     asset = erc20s.eth.USDC();
     rewardAsset = erc20s.eth.COMP();
 
+    data = {
+      borrowBalance: zero,
+      supplyBalance: zero,
+      rewardAmount: zero,
+      rewardValue: zero,
+      accountLiquidity: zero,
+      accountShortfall: zero,
+    };
+
     constructor(public args: PositionArgs, public oracle: PriceOracle) {}
 
     getArgs() {
@@ -105,53 +132,59 @@ export namespace Loops {
       return [this.rewardAsset];
     }
 
-    async getHealth() {
-      const [supplied] = await this.getAmounts();
-      const { accountLiquidity, accountShortfall } = await this.instance.methods.getAccountLiquidityWithInterest().call();
-      const minLiquidity = supplied.value.divn(this.WARN_LIQUIDITY_iPERCENT_OF_SUPPLY);
+    getData = () => this.data;
 
-      if (!bn(accountShortfall).isZero() || bn(accountLiquidity).lt(minLiquidity)) {
+    getAmounts = () => [
+      {
+        asset: this.asset,
+        amount: this.data.supplyBalance,
+        value: this.data.supplyBalance,
+      },
+      {
+        asset: this.asset,
+        amount: this.data.borrowBalance,
+        value: this.data.borrowBalance,
+      },
+    ];
+
+    getPendingRewards = () => [
+      {
+        asset: this.rewardAsset,
+        amount: this.data.rewardAmount,
+        value: this.data.rewardValue,
+      },
+    ];
+
+    getHealth() {
+      const minLiquidity = this.data.supplyBalance.muln(this.WARN_LIQUIDITY_PERCENT_OF_SUPPLY).divn(100);
+      if (!this.data.accountShortfall.isZero() || bn(this.data.accountLiquidity).lt(minLiquidity)) {
         return [
           {
             severity: Severity.Critical,
             message: "Low Liquidity!",
-            info: { args: this.args, accountLiquidity, accountShortfall },
           },
         ];
       }
       return [];
     }
 
-    async getAmounts() {
-      const borrowBalance = to18(await this.instance.methods.borrowBalanceCurrent().call(), 6);
-      const supplyBalance = to18(await erc20s.eth.Compound_cUSDC().methods.balanceOfUnderlying(this.args.address).call(), 6);
-      return [
-        {
-          asset: this.asset,
-          amount: supplyBalance,
-          value: supplyBalance,
-        },
-        {
-          asset: this.asset,
-          amount: borrowBalance,
-          value: borrowBalance,
-        },
-      ];
-    }
+    async load() {
+      if ((await getNetwork()).id !== this.getNetwork().id) return;
 
-    async getPendingRewards() {
-      const amount = bn(await this.instance.methods["claimComp()"]().call());
-      return [
-        {
-          asset: this.rewardAsset,
-          amount,
-          value: await this.oracle.valueOf(this.rewardAsset, amount),
-        },
-      ];
+      this.data.borrowBalance = to18(await this.instance.methods.borrowBalanceCurrent().call(), 6);
+      this.data.supplyBalance = to18(await erc20s.eth.Compound_cUSDC().methods.balanceOfUnderlying(this.args.address).call(), 6);
+      this.data.rewardAmount = bn(await this.instance.methods["claimComp()"]().call());
+      this.data.rewardValue = await this.oracle.valueOf(this.rewardAsset, this.data.rewardAmount);
+      const { accountLiquidity, accountShortfall } = await this.instance.methods.getAccountLiquidityWithInterest().call();
+      this.data.accountLiquidity = bn(accountLiquidity);
+      this.data.accountShortfall = bn(accountShortfall);
     }
 
     async claim(useLegacyTx: boolean) {
-      await this.instance.methods.claimAndTransferAllCompToOwner().send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await this.instance.methods.claimAndTransferAllCompToOwner().send({
+        from: await account(),
+        type: useLegacyTx ? "0x0" : "0x2",
+      } as any);
     }
   }
 }

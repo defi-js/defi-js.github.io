@@ -23,10 +23,11 @@ export interface Position {
   // getAPR(): Promise<BN>;
 
   // getGovernance
-  // load() : Promise<void> // TODO resolve once per position
-  getHealth(): Promise<Threat[]>; // TODO feature: see specific health stats w/o threats (Severity:Healthy/generic JSON of all position data?)
-  getAmounts(): Promise<TokenAmount[]>;
-  getPendingRewards(): Promise<TokenAmount[]>;
+  load(): Promise<void>;
+  getData(): { [key: string]: BN | string | number };
+  getHealth(): Threat[];
+  getAmounts(): TokenAmount[];
+  getPendingRewards(): TokenAmount[];
 
   claim(useLegacyTx: boolean): Promise<void>;
 }
@@ -53,5 +54,4 @@ export enum Severity {
 export interface Threat {
   severity: Severity;
   message: string;
-  info: any;
 }

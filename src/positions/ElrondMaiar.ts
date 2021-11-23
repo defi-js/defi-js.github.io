@@ -51,6 +51,11 @@ export namespace ElrondMaiar {
   const provider = new ProxyProvider("https://gateway.elrond.com");
 
   export class Farm implements Position {
+    data = {
+      rewardAmount: zero,
+      rewardValue: zero,
+    };
+
     constructor(public args: PositionArgs, public oracle: PriceOracle, public assets: ESDT[]) {
       if (!_.every(assets, (a) => a.esdt)) throw new Error(`only ESDT tokens: ${assets}`);
     }
@@ -63,11 +68,25 @@ export namespace ElrondMaiar {
 
     getRewardAssets = () => [tokens.MEX()];
 
-    getHealth = async () => [];
+    getData = () => this.data;
 
-    async getAmounts() {
+    getHealth = () => [];
+
+    getAmounts() {
+      return [];
+    }
+
+    getPendingRewards() {
+      return [];
+    }
+
+    async load() {
       const result = await provider.getAddressEsdtList(new Address(this.args.address));
-      console.log(result);
+      const farmNfts = _.filter(result, (v) => v.tokenIdentifier.startsWith(EGLDUSDCF));
+      console.log("farmNfts", farmNfts);
+      const nfts = await provider.getAddressNft(new Address(this.args.address), EGLDUSDCF, farmNfts[0].nonce);
+      console.log("nfts", nfts);
+
       // await provider.getAddressNft(new Address(this.args.address), result.)
 
       //query ($days: Int!, $mexID: String!, $wegldID: String!, $offset: Int, $pairsLimit: Int) {
@@ -129,18 +148,14 @@ export namespace ElrondMaiar {
       //     __typename
       //   }
       // }
-
-      return await Promise.all(
-        this.assets.map(async (asset) => {
-          const amount = bn(_.get(result, [asset.tokenId, "balance"], 0));
-          const value = await this.oracle.valueOf(asset, amount);
-          return { asset, amount, value };
-        })
-      );
-    }
-
-    async getPendingRewards() {
-      return [];
+      //
+      // return await Promise.all(
+      //   this.assets.map(async (asset) => {
+      //     const amount = bn(_.get(result, [asset.tokenId, "balance"], 0));
+      //     const value = await this.oracle.valueOf(asset, amount);
+      //     return { asset, amount, value };
+      //   })
+      // );
     }
 
     async claim(useLegacyTx: boolean) {}

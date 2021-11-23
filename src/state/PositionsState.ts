@@ -1,101 +1,72 @@
 import _ from "lodash";
 import { createHook, createSelector, createStore } from "react-sweet-state";
-import { Position, PositionArgs, Threat, TokenAmount } from "../positions/base/Position";
+import { Position, PositionArgs } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
-import { fmt18, getNetwork } from "@defi.org/web3-candies";
 import { registerAllPositions } from "../positions";
 
 registerAllPositions();
 
-export type PositionResolved = { id: string; type: string; amounts: string; pending: string; health: string };
+const STORAGE_KEY = "PositionArgs:v1";
+const loadFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as Record<string, PositionArgs>;
+const saveToStorage = (data: Record<string, PositionArgs>) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
 const PositionsState = createStore({
   name: "PositionsState",
 
-  initialState: {
-    positions: {} as Record<string, Position>,
-    positions_resolved: {} as Record<string, PositionResolved>,
-  },
+  initialState: {} as { [id: string]: Position },
 
   actions: {
     load:
       () =>
-      async ({ dispatch }) => {
-        await dispatch(load);
+      async ({ getState, setState }) => {
+        await load(getState, setState);
       },
 
     addPosition:
       (args: PositionArgs) =>
-      async ({ getState, dispatch }) => {
+      async ({ getState, setState }) => {
         const position = PositionFactory.create(args);
 
-        const data = _.mapValues(getState().positions, (p) => p.getArgs());
+        const data = _.mapValues(getState(), (p) => p.getArgs());
         data[position.getArgs().id] = position.getArgs();
-        localStorage.setItem("positions", JSON.stringify(data));
+        saveToStorage(data);
 
-        await dispatch(load);
+        await load(getState, setState);
       },
 
     claim:
       (posId: string, useLegacyTx: boolean) =>
       async ({ getState }) => {
-        await getState().positions[posId].claim(useLegacyTx);
+        await getState()[posId].claim(useLegacyTx);
       },
 
     delete:
       (posId: string) =>
-      async ({ getState, dispatch }) => {
-        const positions = _.mapValues(getState().positions, (p) => p.getArgs());
+      async ({ getState, setState }) => {
+        const positions = _.mapValues(getState(), (p) => p.getArgs());
         delete positions[posId];
-        localStorage.setItem("positions", JSON.stringify(positions));
+        saveToStorage(positions);
 
-        const positions_resolved = JSON.parse(localStorage.getItem("positions_resolved") || "{}") as Record<string, PositionResolved>;
-        delete positions_resolved[posId];
-        localStorage.setItem("positions_resolved", JSON.stringify(positions_resolved));
-
-        await dispatch(load);
+        await load(getState, setState);
       },
   },
 });
 
-async function load(api: any) {
+async function load(getState: any, setState: any) {
   console.log("LOAD");
-  const { setState } = api;
-  const data = JSON.parse(localStorage.getItem("positions") || "{}") as Record<string, PositionArgs>;
-  const positions = _.mapValues(data, (args) => PositionFactory.create(args));
-  setState({ positions });
-
-  const positions_resolved = JSON.parse(localStorage.getItem("positions_resolved") || "{}") as Record<string, PositionResolved>;
-  const resolvedCurrent = await resolveForCurrentNetwork(positions);
-
-  _.merge(
-    positions_resolved,
-    _.mapKeys(resolvedCurrent, (p) => p.id)
-  );
-
-  localStorage.setItem("positions_resolved", JSON.stringify(positions_resolved));
-
-  setState({ positions_resolved });
+  const fromStorage = _.mapValues(loadFromStorage(), (args) => PositionFactory.create(args));
+  getState().positions;
+  await Promise.all(_.map(fromStorage, (p) => p.load()));
+  setState({ positions: fromStorage });
 }
 
-async function resolveForCurrentNetwork(positions: Record<string, Position>) {
-  const currentNetwork = await getNetwork();
-  return await Promise.all(
-    _(positions)
+export const useMyPositions = createHook(PositionsState, {
+  selector: (state) =>
+    _(state.positions)
       .values()
-      .filter((p) => PositionFactory.shouldLoad(p, currentNetwork))
-      .map(async (position) => ({
-        id: position.getArgs().id,
-        type: position.getArgs().type,
-        amounts: fmt(await position.getAmounts()),
-        pending: fmt(await position.getPendingRewards()),
-        health: fmtHealth(await position.getHealth()),
-      }))
-      .value()
-  );
-}
-
-export const useMyPositions = createHook(PositionsState, { selector: (state) => _.values(state.positions_resolved) });
+      .sortBy((p) => p.getArgs().type)
+      .value(),
+});
 export const useAddPosition = createHook(PositionsState, {
   selector: createSelector(
     (_) => null,
@@ -106,14 +77,3 @@ export const useAddPosition = createHook(PositionsState, {
     })
   ),
 });
-
-function fmt(amnt: TokenAmount[]) {
-  return _(amnt)
-    .map((a) => `${a.asset.name}: ${fmt18(a.amount).split(".")[0]} = $${fmt18(a.value).split(".")[0]}`)
-    .join(" + ");
-}
-
-function fmtHealth(health: Threat[]) {
-  if (!health.length) return "🟢";
-  return health.map((t) => t.message).join("⚠️");
-}
