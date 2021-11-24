@@ -19,14 +19,11 @@ import {
   ThemeProvider,
 } from "@mui/material";
 import { useAppState } from "./state/AppState";
-import { fmt18, getNetwork } from "@defi.org/web3-candies";
-import { useAddPosition, useUpdatedPositionRows, usePositionsActions } from "./state/PositionsState";
-import { Position, PositionArgs, Threat, TokenAmount } from "./positions/base/Position";
+import { fmt18 } from "@defi.org/web3-candies";
+import { useAddPosition, usePositionActions, useUpdatedPositionRows } from "./state/PositionsState";
+import { PositionArgs } from "./positions/base/Position";
 import Web3 from "web3";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import _ from "lodash";
-import { PositionFactory } from "./positions/base/PositionFactory";
-import BN from "bn.js";
 
 const darkTheme = createTheme({
   palette: {
@@ -80,6 +77,10 @@ const UseLegacyTx = () => {
 const ConnectBtn = () => {
   const [state, actions] = useAppState();
   const isConnected = Web3.utils.isAddress(state.wallet);
+  useMemo(() => {
+    if (!state.wallet) actions.connect().then();
+  }, [state.wallet]);
+
   return (
     <Button variant={"contained"} size={"large"} onClick={actions.connect}>
       {isConnected ? "Refresh" : "Connect"}
@@ -156,7 +157,7 @@ const AddPosition = () => {
 
 const RenderCellClaim = (params: any) => {
   const [state] = useAppState();
-  const [, actions] = usePositionsActions();
+  const [, actions] = usePositionActions();
   return (
     <ListItemButton onClick={() => actions.claim(params.id, state.useLegacyTx)}>
       <ListItemText primary="Claim" />
@@ -165,7 +166,7 @@ const RenderCellClaim = (params: any) => {
 };
 const RenderCellDelete = (params: any) => {
   const [count, setCount] = useState(0);
-  const [, actions] = usePositionsActions();
+  const [, actions] = usePositionActions();
   return (
     <ListItemButton
       onClick={() => {

@@ -54,14 +54,18 @@ const PositionsState = createStore({
 });
 
 async function load({ getState, setState }: StoreActionApi<typeof PositionsState.initialState>) {
-  console.log("LOAD");
-  const current = getState().positions;
-  const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
-  await Promise.all(_.map(positions, (p) => p.load()));
-  setState({ positions });
+  try {
+    console.log("LOAD");
+    const current = getState().positions;
+    const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
+    await Promise.all(_.map(positions, (p) => p.load()));
+    setState({ positions });
+  } catch (e: any) {
+    alert(e.message);
+  }
 }
 
-export const usePositionsActions = createHook(PositionsState, {
+export const usePositionActions = createHook(PositionsState, {
   selector: null,
 });
 
@@ -73,16 +77,13 @@ export const useUpdatedPositionRows = createHook(PositionsState, {
         .sortBy((p) => p.getArgs().type)
         .value(),
     (positions) =>
-      _.map(positions, (p) => {
-        console.log("here", fmtAmounts(p.getAmounts()));
-        return {
-          id: p.getArgs().id,
-          type: p.getArgs().type,
-          amounts: fmtAmounts(p.getAmounts()),
-          pending: fmtAmounts(p.getPendingRewards()),
-          health: fmtHealth(p.getHealth()),
-        };
-      })
+      _.map(positions, (p) => ({
+        id: p.getArgs().id,
+        type: p.getArgs().type,
+        amounts: fmtAmounts(p.getAmounts()),
+        pending: fmtAmounts(p.getPendingRewards()),
+        health: fmtHealth(p.getHealth()),
+      }))
   ),
 });
 export const useAddPosition = createHook(PositionsState, {

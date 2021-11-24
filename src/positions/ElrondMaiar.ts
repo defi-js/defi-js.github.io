@@ -1,8 +1,32 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, erc20, Token, zero, zeroAddress } from "@defi.org/web3-candies";
-import { Address, ContractFunction, ProxyProvider, Query } from "@elrondnetwork/erdjs/out";
+import { bn, erc20, ether, fmt18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
+import {
+  AbiRegistry,
+  Address,
+  BigUIntType,
+  BigUIntValue,
+  BinaryCodec,
+  ContractFunction,
+  ContractInterface,
+  EndpointDefinition,
+  EnumType,
+  ProxyProvider,
+  Query,
+  ScArgumentsParser,
+  SmartContract,
+  SmartContractAbi,
+  Struct,
+  StructField,
+  StructFieldDefinition,
+  StructType,
+  TokenIdentifierType,
+  U64Type,
+} from "@elrondnetwork/erdjs/out";
 import _ from "lodash";
+import { ContractWrapper } from "@elrondnetwork/erdjs/out/smartcontracts/wrapper/contractWrapper";
+import BigNumber from "bignumber.js";
+import { StructBinaryCodec } from "@elrondnetwork/erdjs/out/smartcontracts/codec/struct";
 
 const ZERO_ADDRESS = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 const ESDT_ISSUE_ADDRESS = "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqzllls8a5w6u";
@@ -81,83 +105,56 @@ export namespace ElrondMaiar {
     }
 
     async load() {
-      const result = await provider.getAddressEsdtList(new Address(this.args.address));
-      const farmNfts = _.filter(result, (v) => v.tokenIdentifier.startsWith(EGLDUSDCF));
-      console.log("farmNfts", farmNfts);
-      const nfts = await provider.getAddressNft(new Address(this.args.address), EGLDUSDCF, farmNfts[0].nonce);
-      console.log("nfts", nfts);
+      const account = new Address(this.args.address);
+      const esdts = await provider.getAddressEsdtList(account);
+      const farmNfts = _.filter(esdts, (v) => v.tokenIdentifier.startsWith(EGLDUSDCF));
+      const balanceEGLD = bn((await provider.getAccount(account)).balance.toString());
 
-      // await provider.getAddressNft(new Address(this.args.address), result.)
+      const farm = new SmartContract({ address: new Address(EGLDUSDC_FARM_ADDRESS) });
+      const lpReserve = base64((await farm.runQuery(provider, { func: new ContractFunction("getFarmingTokenReserve") })).returnData[0]);
+      const farmNftSupply = base64((await farm.runQuery(provider, { func: new ContractFunction("getFarmTokenSupply") })).returnData[0]);
+      const farmNftBalance = farmNfts.map((nft) => bn(nft.balance)).reduce((sum, b) => sum.add(b), zero);
+      const farmNftPercentOfSupply = farmNftBalance.mul(ether).div(farmNftSupply);
+      const lpReserveBalance = lpReserve.mul(farmNftPercentOfSupply).div(ether);
 
-      //query ($days: Int!, $mexID: String!, $wegldID: String!, $offset: Int, $pairsLimit: Int) {
-      //   totalAggregatedRewards(days: $days)
-      //   wegldPriceUSD: getTokenPriceUSD(tokenID: $wegldID)
-      //   mexPriceUSD: getTokenPriceUSD(tokenID: $mexID)
-      //   mexSupply: totalTokenSupply(tokenID: $mexID)
-      //   totalLockedValueUSDFarms
-      //   totalValueLockedUSD
-      //   farms {
-      //     address
-      //     APR
-      //     farmingToken {
-      //       name
-      //       identifier
-      //       decimals
-      //       __typename
-      //     }
-      //     farmTokenPriceUSD
-      //     farmedTokenPriceUSD
-      //     farmingTokenPriceUSD
-      //     farmingTokenReserve
-      //     perBlockRewards
-      //     penaltyPercent
-      //     totalValueLockedUSD
-      //     __typename
-      //   }
-      //   pairs(offset: $offset, limit: $pairsLimit) {
-      //     address
-      //     firstToken {
-      //       name
-      //       identifier
-      //       decimals
-      //       __typename
-      //     }
-      //     secondToken {
-      //       name
-      //       identifier
-      //       decimals
-      //       __typename
-      //     }
-      //     firstTokenPrice
-      //     firstTokenPriceUSD
-      //     secondTokenPrice
-      //     secondTokenPriceUSD
-      //     liquidityPoolTokenPriceUSD
-      //     info {
-      //       reserves0
-      //       reserves1
-      //       totalSupply
-      //       __typename
-      //     }
-      //     state
-      //     lockedValueUSD
-      //     __typename
-      //   }
-      //   factory {
-      //     totalVolumeUSD24h
-      //     __typename
-      //   }
+      console.log("lpReserve", fmt18(lpReserve));
+      console.log("farmNftSupply", fmt18(farmNftSupply));
+      console.log("farmNftBalance", fmt18(farmNftBalance));
+      console.log("farmNftPercentOfSupply", fmt18(farmNftPercentOfSupply));
+      console.log("lpReserveBalance", fmt18(lpReserveBalance));
+
+      const pair = new SmartContract({ address: new Address(EGLD_USDC_POOL_ADDRESS) });
+
+      //pub struct EsdtTokenPayment<BigUint: BigUintApi> {
+      //     pub token_type: EsdtTokenType,
+      //     pub token_name: TokenIdentifier,
+      //     pub token_nonce: u64,
+      //     pub amount: BigUint,
       // }
-      //
-      // return await Promise.all(
-      //   this.assets.map(async (asset) => {
-      //     const amount = bn(_.get(result, [asset.tokenId, "balance"], 0));
-      //     const value = await this.oracle.valueOf(asset, amount);
-      //     return { asset, amount, value };
-      //   })
-      // );
+      //pub enum EsdtTokenType {
+      //     Fungible,
+      //     NonFungible,
+      //     SemiFungible,
+      //     Meta,
+      //     Invalid,
+      // }
+
+      const tokensForPositionRaw = await pair.runQuery(provider, {
+        func: new ContractFunction("getTokensForGivenPosition"),
+        args: [new BigUIntValue(BigNumber.sum(lpReserveBalance.toString()))],
+      });
+      console.log(tokensForPositionRaw);
+
+      console.log("base64", base64(tokensForPositionRaw.returnData[0]).toString(16));
     }
 
     async claim(useLegacyTx: boolean) {}
   }
+}
+
+function base64(s: string) {
+  return bn(Buffer.from(s, "base64").toString("hex"), 16);
+}
+function base64Str(s: string) {
+  return Buffer.from(s, "base64").toString("utf8");
 }
