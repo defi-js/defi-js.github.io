@@ -191,15 +191,16 @@ const RenderCellCustomAction = (params: any) => {
 };
 
 const columns: GridColDef[] = [
-  { field: "type", headerName: "Type", width: 300 },
-  { field: "amounts", headerName: "Amounts", width: 700 },
-  { field: "pending", headerName: "Pending", width: 300 },
-  { field: "health", headerName: "Health", width: 100 },
+  { field: "type", headerName: "Type", width: 200, resizable: true },
+  { field: "amounts", headerName: "Amounts", width: 500, resizable: true },
+  { field: "pending", headerName: "Pending", width: 200, resizable: true },
+  { field: "health", headerName: "Health", width: 50, resizable: true },
   {
     field: "claim",
     headerName: "Claim",
-    width: 100,
+    width: 50,
     type: "actions",
+    resizable: true,
     renderCell: RenderCellClaim,
   },
   {
@@ -207,13 +208,15 @@ const columns: GridColDef[] = [
     headerName: "Delete",
     width: 50,
     type: "actions",
+    resizable: true,
     renderCell: RenderCellDelete,
   },
   {
     field: "custom",
     headerName: "Custom Action",
-    width: 100,
+    width: 50,
     type: "actions",
+    resizable: true,
     renderCell: RenderCellCustomAction,
   },
 ];
