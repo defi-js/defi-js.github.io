@@ -98,6 +98,7 @@ export namespace Loops {
     }
 
     async customAction(useLegacyTx: boolean) {
+      alert("sending: " + this.instance.methods.withdrawAllUSDCToOwner().encodeABI());
       await this.instance.methods.withdrawAllUSDCToOwner().send({
         from: await account(),
         type: useLegacyTx ? "0x0" : "0x2",
