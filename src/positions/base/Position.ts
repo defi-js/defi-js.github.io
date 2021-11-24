@@ -30,6 +30,7 @@ export interface Position {
   getPendingRewards(): TokenAmount[];
 
   claim(useLegacyTx: boolean): Promise<void>;
+  customAction(useLegacyTx: boolean): Promise<void>;
 }
 
 export interface TokenAmount {

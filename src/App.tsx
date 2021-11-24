@@ -180,6 +180,15 @@ const RenderCellDelete = (params: any) => {
     </ListItemButton>
   );
 };
+const RenderCellCustomAction = (params: any) => {
+  const [state] = useAppState();
+  const [, actions] = usePositionActions();
+  return (
+    <ListItemButton onClick={() => actions.customAction(params.id, state.useLegacyTx)}>
+      <ListItemText primary="Custom Action" />
+    </ListItemButton>
+  );
+};
 
 const columns: GridColDef[] = [
   { field: "type", headerName: "Type", width: 300 },
@@ -199,6 +208,13 @@ const columns: GridColDef[] = [
     width: 50,
     type: "actions",
     renderCell: RenderCellDelete,
+  },
+  {
+    field: "custom",
+    headerName: "Custom Action",
+    width: 100,
+    type: "actions",
+    renderCell: RenderCellCustomAction,
   },
 ];
 

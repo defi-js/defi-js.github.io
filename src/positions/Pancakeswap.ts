@@ -97,5 +97,7 @@ export namespace Pancakeswap {
       if (this.args.address != (await account())) throw new Error("only user able to claim");
       await this.masterchef.methods.deposit(this.poolId, 0).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
+
+    async customAction(useLegacyTx: boolean) {}
   }
 }

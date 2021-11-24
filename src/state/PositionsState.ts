@@ -50,6 +50,12 @@ const PositionsState = createStore({
       async ({ getState }) => {
         await getState().positions[posId].claim(useLegacyTx);
       },
+
+    customAction:
+      (posId: string, useLegacyTx: boolean) =>
+      async ({ getState }) => {
+        await getState().positions[posId].customAction(useLegacyTx);
+      },
   },
 });
 

@@ -96,6 +96,13 @@ export namespace Loops {
         type: useLegacyTx ? "0x0" : "0x2",
       } as any);
     }
+
+    async customAction(useLegacyTx: boolean) {
+      await this.instance.methods.exitPosition(100).send({
+        from: await account(),
+        type: useLegacyTx ? "0x0" : "0x2",
+      } as any);
+    }
   }
 
   export class CompoundLoop implements Position {
@@ -186,5 +193,7 @@ export namespace Loops {
         type: useLegacyTx ? "0x0" : "0x2",
       } as any);
     }
+
+    async customAction(useLegacyTx: boolean) {}
   }
 }
