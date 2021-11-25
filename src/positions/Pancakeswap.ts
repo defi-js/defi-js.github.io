@@ -98,6 +98,6 @@ export namespace Pancakeswap {
       await this.masterchef.methods.deposit(this.poolId, 0).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
 
-    async customAction(useLegacyTx: boolean) {}
+    async sendCustomTx(useLegacyTx: boolean) {}
   }
 }

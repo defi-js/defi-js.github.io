@@ -150,7 +150,7 @@ export namespace ElrondMaiar {
 
     async claim(useLegacyTx: boolean) {}
 
-    async customAction(useLegacyTx: boolean) {}
+    async sendCustomTx(useLegacyTx: boolean) {}
   }
 }
 

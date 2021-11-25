@@ -97,12 +97,10 @@ export namespace Loops {
       } as any);
     }
 
-    async customAction(useLegacyTx: boolean) {
-      alert("withdrawAllUSDCToOwner(): " + this.instance.methods.withdrawAllUSDCToOwner().encodeABI());
-      await this.instance.methods.withdrawAllUSDCToOwner().send({
-        from: await account(),
-        type: useLegacyTx ? "0x0" : "0x2",
-      } as any);
+    async sendCustomTx(useLegacyTx: boolean) {
+      const tx = this.instance.methods.exitPosition(100);
+      alert("exitPosition(100): " + tx.encodeABI());
+      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
   }
 
@@ -195,6 +193,6 @@ export namespace Loops {
       } as any);
     }
 
-    async customAction(useLegacyTx: boolean) {}
+    async sendCustomTx(useLegacyTx: boolean) {}
   }
 }
