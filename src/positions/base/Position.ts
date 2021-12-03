@@ -29,8 +29,9 @@ export interface Position {
   getAmounts(): TokenAmount[];
   getPendingRewards(): TokenAmount[];
 
-  claim(useLegacyTx: boolean): Promise<void>;
-  sendCustomTx(useLegacyTx: boolean): Promise<void>;
+  getContractMethods(): string[];
+  sendTransaction(method: string, args: string[], useLegacyTx: boolean): Promise<void>;
+  harvest(useLegacyTx: boolean): Promise<void>;
 }
 
 export interface TokenAmount {

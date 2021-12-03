@@ -1,10 +1,14 @@
 import { Position, PositionArgs, Severity } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, bn18, contract, erc20s, fmt18, getNetwork, networks, to18, zero } from "@defi.org/web3-candies";
+import { account, bn, bn18, contract, erc20s, getNetwork, networks, to18, zero } from "@defi.org/web3-candies";
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
+import _ from "lodash";
 
 export namespace Loops {
+  /**
+   * Aave on Ethereum
+   */
   export class AaveLoop implements Position {
     WARN_HEALTH_FACTOR = bn18("1.0641");
 
@@ -90,20 +94,22 @@ export namespace Loops {
       this.data.rewardValue = await this.oracle.valueOf(this.aave, this.data.rewardAmount);
     }
 
-    async claim(useLegacyTx: boolean) {
-      await this.instance.methods.claimRewardsToOwner().send({
-        from: await account(),
-        type: useLegacyTx ? "0x0" : "0x2",
-      } as any);
+    getContractMethods = () => _.functions(this.instance.methods);
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.instance.methods as any)[method](...args);
+      alert(`target:\n${this.instance.options.address}\ndata:\n${tx.encodeABI()}`);
+      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
 
-    async sendCustomTx(useLegacyTx: boolean) {
-      const tx = this.instance.methods.exitPosition(100);
-      alert("exitPosition(100): " + tx.encodeABI());
-      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+    async harvest(useLegacyTx: boolean) {
+      await this.instance.methods.claimRewardsToOwner().send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
   }
 
+  /**
+   * Compound on ethereum
+   */
   export class CompoundLoop implements Position {
     WARN_LIQUIDITY_PERCENT_OF_SUPPLY = 0.25; // percent of total supply 0.25% => ex. $10M principal, $40M supply, $100k min liquidity
 
@@ -186,13 +192,16 @@ export namespace Loops {
       this.data.accountShortfall = bn(accountShortfall);
     }
 
-    async claim(useLegacyTx: boolean) {
-      await this.instance.methods.claimAndTransferAllCompToOwner().send({
-        from: await account(),
-        type: useLegacyTx ? "0x0" : "0x2",
-      } as any);
+    getContractMethods = () => _.functions(this.instance.methods);
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.instance.methods as any)[method](...args);
+      alert(`target:\n${this.instance.options.address}\ndata:\n${tx.encodeABI()}`);
+      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
 
-    async sendCustomTx(useLegacyTx: boolean) {}
+    async harvest(useLegacyTx: boolean) {
+      await this.instance.methods.claimAndTransferAllCompToOwner().send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+    }
   }
 }

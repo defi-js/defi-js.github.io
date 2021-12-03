@@ -2,9 +2,10 @@ import { Position, PositionArgs } from "./base/Position";
 import { account, bn, contracts, erc20s, getNetwork, networks, Token, zero } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
+import _ from "lodash";
 
 export namespace Pancakeswap {
-  const POOL_ID_MAPPING_URL = "https://raw.githubusercontent.com/pancakeswap/pancake-frontend/master/src/config/constants/farms.ts";
+  // const POOL_ID_MAPPING_URL = "https://raw.githubusercontent.com/pancakeswap/pancake-frontend/master/src/config/constants/farms.ts";
 
   export class Farm implements Position {
     masterchef = contracts.bsc.Pancakeswap_Masterchef();
@@ -82,8 +83,8 @@ export namespace Pancakeswap {
         await this.masterchef.methods.pendingCake(this.poolId, this.args.address).call(),
       ]);
       const { _reserve0, _reserve1 } = reserves;
-      const r0 = token0.toLowerCase() == this.asset0.address.toLowerCase() ? _reserve0 : _reserve1;
-      const r1 = r0 == _reserve0 ? _reserve1 : _reserve0;
+      const r0 = token0.toLowerCase() === this.asset0.address.toLowerCase() ? _reserve0 : _reserve1;
+      const r1 = r0 === _reserve0 ? _reserve1 : _reserve0;
       const amountLP = bn(userInfo.amount);
       this.data.amount0 = bn(r0).mul(amountLP).div(bn(totalSupply));
       this.data.amount1 = bn(r1).mul(amountLP).div(bn(totalSupply));
@@ -93,11 +94,16 @@ export namespace Pancakeswap {
       this.data.rewardValue = await this.oracle.valueOf(this.cake, this.data.rewardAmount);
     }
 
-    async claim(useLegacyTx: boolean) {
-      if (this.args.address != (await account())) throw new Error("only user able to claim");
-      await this.masterchef.methods.deposit(this.poolId, 0).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+    getContractMethods = () => _.functions(this.masterchef.methods);
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.masterchef.methods as any)[method](...args);
+      alert(`target:\n${this.masterchef.options.address}\ndata:\n${tx.encodeABI()}`);
+      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
     }
 
-    async sendCustomTx(useLegacyTx: boolean) {}
+    async harvest(useLegacyTx: boolean) {
+      await this.masterchef.methods.deposit(this.poolId, 0).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+    }
   }
 }

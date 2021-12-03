@@ -7,14 +7,3 @@
   min-height: 100vh;
   min-width: 100vw;
 }
-
-.Header {
-  font-size: large;
-  min-width: 42em;
-}
-
-.Connect {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-}

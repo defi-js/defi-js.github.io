@@ -20,8 +20,8 @@ describe("Positions", () => {
 
       it("positions", async () => {
         const positions = _.values(config().positions).map((a) => PositionFactory.create(a));
-        for (const position of positions.filter((p) => p.getNetwork().id == network.id)) {
-          console.log(position.getArgs().type, (await position.getAmounts()).map(fmt), (await position.getPendingRewards()).map(fmt));
+        for (const position of positions.filter((p) => !!p && p.getNetwork().id == network.id)) {
+          console.log(position!.getArgs().type, position!.getAmounts().map(fmt), position!.getPendingRewards().map(fmt));
         }
       });
     });

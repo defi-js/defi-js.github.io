@@ -27,7 +27,7 @@ export class PriceOracle {
    */
   async fetchPrices(...addresses: string[]): Promise<{ [address: string]: BN }> {
     const network = await getNetwork();
-    const coingeckoId = _.find(coingeckoIds, (v, k) => k == network.shortname)!;
+    const coingeckoId = _.find(coingeckoIds, (v, k) => k === network.shortname)!;
     const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`);
     const json = (await response.json()) as Record<string, any>;
 

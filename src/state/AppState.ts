@@ -1,35 +1,28 @@
 import Web3 from "web3";
-import { createHook, createStore, defaults } from "react-sweet-state";
+import { createHook, createStore } from "react-sweet-state";
 import { account, bn, getNetwork, Network, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
 
-defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
-  const result = next(arg);
-  console.log(storeState.key, ":", storeState.getState());
-  return result;
-});
+// defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
+//   const result = next(arg);
+//   console.log(storeState.key, ":", storeState.getState());
+//   return result;
+// });
 
 const AppState = createStore({
   name: "AppState",
 
   initialState: {
     loading: false,
-    useLegacyTx: false,
     wallet: "",
     balance: zero,
     network: {} as Network,
   },
 
   actions: {
-    setUseLegacyTx:
-      (useLegacyTx: boolean) =>
-      ({ setState }) => {
-        setState({ useLegacyTx });
-      },
-
     connect:
       () =>
       async ({ setState }) => {
-        await withLoading(setState, async () => {
+        await _withLoading(setState, async () => {
           setState({ wallet: "", balance: zero, network: {} as Network });
 
           const ethereum = (window as any).ethereum;
@@ -37,33 +30,47 @@ const AppState = createStore({
             alert("install metamask");
             return;
           }
-          await onConnect(setState, ethereum);
+          await _onConnect(setState, ethereum);
 
           ethereum.on("accountsChanged", () => {
-            onConnect(setState, ethereum);
+            _onConnect(setState, ethereum);
           });
           ethereum.on("chainChanged", () => {
-            onConnect(setState, ethereum);
+            _onConnect(setState, ethereum);
           });
         });
+      },
+
+    withLoading:
+      (thunk: () => any) =>
+      async ({ setState }) => {
+        await _withLoading(setState, thunk);
       },
   },
 });
 
-async function withLoading(setState: any, t: () => Promise<void>) {
+async function _withLoading(setState: any, t: () => Promise<void>) {
   try {
     setState({ loading: true });
     await t();
-    setState({ loading: false });
   } catch (e: any) {
     alert(`${e.message}`);
+  } finally {
+    setState({ loading: false });
   }
 }
 
-async function onConnect(setState: any, ethereum: any) {
+async function _onConnect(setState: any, ethereum: any) {
   setWeb3Instance(new Web3(ethereum));
   const wallet = await account();
-  setState({ wallet, network: await getNetwork(), balance: bn(await web3().eth.getBalance(wallet)) });
+  setState({
+    wallet,
+    network: await getNetwork(),
+    balance: bn(await web3().eth.getBalance(wallet)),
+  });
 }
 
 export const useAppState = createHook(AppState);
+export const useIsAppConnected = createHook(AppState, {
+  selector: (state) => Web3.utils.isAddress(state.wallet),
+});

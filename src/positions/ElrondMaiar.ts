@@ -72,7 +72,7 @@ export namespace ElrondMaiar {
     MEX: () => esdt("MEX", MEX_TOKEN),
   };
 
-  const provider = new ProxyProvider("https://gateway.elrond.com");
+  const provider = new ProxyProvider("https://gateway.elrond.com", { timeout: 60 * 1000 });
 
   export class Farm implements Position {
     data = {
@@ -148,9 +148,11 @@ export namespace ElrondMaiar {
       console.log("base64", base64(tokensForPositionRaw.returnData[0]).toString(16));
     }
 
-    async claim(useLegacyTx: boolean) {}
+    getContractMethods = () => [];
 
-    async sendCustomTx(useLegacyTx: boolean) {}
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {}
+
+    async harvest(useLegacyTx: boolean) {}
   }
 }
 

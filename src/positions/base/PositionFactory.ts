@@ -20,26 +20,25 @@ export namespace PositionFactory {
     return _.keys(registry);
   }
 
-  export function create(args: PositionArgs): Position {
-    if (!registry[args.type]) throw new Error(`unknown type ${args.type} for ${JSON.stringify(args)}`);
+  export function create(args: PositionArgs): Position | null {
+    if (!registry[args.type]) return null;
 
-    if (!args.id) args.id = _.uniqueId(args.type);
+    if (!args.id) args.id = args.type + ":" + args.address;
 
     return registry[args.type](args, oracle);
   }
 
   export function shouldLoad(p: Position, current: Network) {
-    // TODO refactor into Position
-    return p.getNetwork().id == current.id || p.getNetwork().id < 0; // non-web3 network
+    return p.getNetwork().id === current.id || p.getNetwork().id < 0; // non-web3 network
   }
 
-  export function isValidInput(args: PositionArgs) {
-    return Web3.utils.isAddress(args.address) || isElrondAddress(args);
+  export function isValidInput(type: string, address: string) {
+    return !!type && (Web3.utils.isAddress(address) || isElrondAddress(type, address));
   }
 
-  function isElrondAddress(args: PositionArgs) {
+  function isElrondAddress(type: string, address: string) {
     try {
-      return args.type.startsWith("egld:") && args.address.startsWith("erd1") && !Address.fromString(args.address).isEmpty();
+      return type.startsWith("egld:") && address.startsWith("erd1") && !Address.fromString(address).isEmpty();
     } catch (e) {
       return false;
     }

@@ -11,6 +11,7 @@ import DotLine from "./assets/dotted-line.svg";
 import Geom1 from "./assets/geom1.png";
 import Geom2 from "./assets/geom2.png";
 
+/* eslint-disable */
 export const Homepage = () => {
   return (
     <div>
