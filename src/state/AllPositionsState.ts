@@ -3,7 +3,7 @@ import { createHook, createSelector, createStore, StoreActionApi } from "react-s
 import { Position, PositionArgs, Threat, TokenAmount } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
 import { registerAllPositions } from "../positions";
-import { fmt18 } from "@defi.org/web3-candies";
+import { fmt18, zero } from "@defi.org/web3-candies";
 
 registerAllPositions();
 
@@ -67,7 +67,7 @@ async function load({ getState, setState }: StoreActionApi<typeof AllPositionsSt
   console.log("LOAD");
   const current = getState().positions;
   const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
-  await Promise.all(_.map(positions, (p) => p.load().catch((e) => console.log(e))));
+  await Promise.all(_.map(positions, (p) => p.load().catch((e) => console.log(p.getArgs().type, e))));
   setState({ positions });
 }
 
@@ -86,6 +86,7 @@ export const useAllPositionRows = createHook(AllPositionsState, {
         amounts: fmtAmounts(p.getAmounts()),
         pending: fmtAmounts(p.getPendingRewards()),
         health: fmtHealth(p.getHealth()),
+        value: "$" + fmt18(p.getAmounts().reduce((sum, v) => sum.add(v.value), zero)).split(".")[0],
         position: p,
       }))
   ),
@@ -96,7 +97,7 @@ export const useAllPositions = createHook(AllPositionsState, {
 
 function fmtAmounts(amnt: TokenAmount[]) {
   return _(amnt)
-    .map((a) => `${a.asset.name}: ${fmt18(a.amount).split(".")[0]} = $${fmt18(a.value).split(".")[0]}`)
+    .map((a) => `${a.asset.name}: ${fmt18(a.amount).split(".")[0]} ($${fmt18(a.value).split(".")[0]})`)
     .join(" + ");
 }
 

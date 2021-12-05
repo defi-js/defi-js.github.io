@@ -13,8 +13,8 @@ export function registerAllPositions() {
     "eth:Loops:AaveLoop": (args, oracle) => new Loops.AaveLoop(args, oracle),
     "eth:Loops:CompoundLoop": (args, oracle) => new Loops.CompoundLoop(args, oracle),
 
-    "egld:Maiar:Farm:USDC/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, [ElrondMaiar.tokens.USDC(), ElrondMaiar.tokens.EGLD()]),
-    "egld:Maiar:Farm:MEX/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, [ElrondMaiar.tokens.MEX(), ElrondMaiar.tokens.EGLD()]),
-    "egld:Maiar:Farm:MEX": (args, oracle) => new ElrondMaiar.Farm(args, oracle, [ElrondMaiar.tokens.MEX()]),
+    "egld:Maiar:Farm:USDC/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.Strategies.USDC_EGLD()),
+    "egld:Maiar:Farm:MEX/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.Strategies.MEX_EGLD()),
+    // "egld:Maiar:Farm:MEX": (args, oracle) => new ElrondMaiar.Farm(args, oracle, [ElrondMaiar.tokens.MEX()]),
   });
 }

@@ -9,6 +9,7 @@ const columns: GridColDef[] = [
   { field: "amounts", headerName: "Amounts", width: 500 },
   { field: "pending", headerName: "Pending", width: 200 },
   { field: "health", headerName: "Health", width: 50 },
+  { field: "value", headerName: "Value", width: 200 },
 ];
 
 export const AllPositionsTable = () => {

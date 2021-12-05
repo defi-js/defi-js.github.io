@@ -1,7 +1,7 @@
 import _ from "lodash";
 import BN from "bn.js";
 import Web3 from "web3";
-import { bn18, ether, getNetwork, Token } from "@defi.org/web3-candies";
+import { bn18, decimals, ether, getNetwork, to18, Token, zero } from "@defi.org/web3-candies";
 
 const coingeckoIds = {
   eth: "ethereum",
@@ -63,7 +63,11 @@ export class PriceOracle {
 
     const result = _(json.data)
       .mapKeys((v, k) => body.variables[k])
-      .mapValues((v) => bn18(v))
+      .mapValues((v) => {
+        const d = decimals(v);
+        if (d > 18) v = v.substring(0, v.length - (d - 18));
+        return bn18(v);
+      })
       .value();
 
     return this.updateResults(tokenIds, result);
