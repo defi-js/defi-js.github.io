@@ -12,22 +12,16 @@ export interface Position {
   getNetwork(): Network;
   getAssets(): Token[];
   getRewardAssets(): Token[];
-  // /**
-  //  * USD, 18 decimals
-  //  */
-  // getTVL(): Promise<BN>;
 
-  // /**
-  //  * Percent spot annual rate without compounding, 18 decimals (123% == 1.23*10^18).
-  //  */
-  // getAPR(): Promise<BN>;
-
-  // getGovernance
+  // TODO getGovernance
   load(): Promise<void>;
   getData(): { [key: string]: BN | string | number };
+
   getHealth(): Threat[];
   getAmounts(): TokenAmount[];
   getPendingRewards(): TokenAmount[];
+  getTVL(): BN;
+  // getAPR(): BN;
 
   getContractMethods(): string[];
   sendTransaction(method: string, args: string[], useLegacyTx: boolean): Promise<void>;

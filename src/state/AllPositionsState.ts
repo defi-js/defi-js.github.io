@@ -83,10 +83,10 @@ export const useAllPositionRows = createHook(AllPositionsState, {
       _.map(positions, (p) => ({
         id: p.getArgs().id,
         type: p.getArgs().type,
-        amounts: fmtAmounts(p.getAmounts()),
-        pending: fmtAmounts(p.getPendingRewards()),
         health: fmtHealth(p.getHealth()),
         value: "$" + fmt18(p.getAmounts().reduce((sum, v) => sum.add(v.value), zero)).split(".")[0],
+        pending: "$" + fmt18(p.getPendingRewards().reduce((sum, v) => sum.add(v.value), zero)).split(".")[0],
+        tvl: "$" + fmt18(p.getTVL()).split(".")[0],
         position: p,
       }))
   ),

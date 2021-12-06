@@ -5,11 +5,11 @@ import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
 
 const columns: GridColDef[] = [
-  { field: "type", headerName: "Type", width: 200 },
-  { field: "amounts", headerName: "Amounts", width: 500 },
-  { field: "pending", headerName: "Pending", width: 200 },
-  { field: "health", headerName: "Health", width: 50 },
-  { field: "value", headerName: "Value", width: 200 },
+  { field: "type", headerName: "Type", width: 300, align: "left" },
+  { field: "health", headerName: "Health", width: 60, align: "center" },
+  { field: "value", headerName: "Market Value", width: 100, align: "right" },
+  { field: "pending", headerName: "Pending", width: 100, align: "right" },
+  { field: "tvl", headerName: "TVL", width: 150, align: "right" },
 ];
 
 export const AllPositionsTable = () => {

@@ -39,6 +39,7 @@ export namespace ElrondMaiar {
       rewardAmount: zero,
       rewardValue: zero,
       balanceEGLD: zero,
+      tvl: zero,
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public strategy: Strategy) {}
@@ -68,9 +69,9 @@ export namespace ElrondMaiar {
       },
     ];
 
-    getPendingRewards() {
-      return [];
-    }
+    getPendingRewards = () => [];
+
+    getTVL = () => this.data.tvl;
 
     async load() {
       const account = new Address(this.args.address);
@@ -98,8 +99,11 @@ export namespace ElrondMaiar {
       const token1 = to18(this.data.amount0 === token0r ? token1r : token0r, this.strategy.assets[1].dec);
       this.data.amount0 = percentOfPool.mul(token0).div(ether);
       this.data.amount1 = percentOfPool.mul(token1).div(ether);
-      this.data.value0 = await this.oracle.valueOf(this.strategy.assets[0], this.data.amount0);
-      this.data.value1 = await this.oracle.valueOf(this.strategy.assets[1], this.data.amount1);
+      [this.data.value0, this.data.value1, this.data.tvl] = await Promise.all([
+        this.oracle.valueOf(this.strategy.assets[0], this.data.amount0),
+        this.oracle.valueOf(this.strategy.assets[1], this.data.amount1),
+        this.oracle.valueOf(this.strategy.assets[0], token0.muln(2).mul(lpTotalStakedInFarm).div(totalSupply)),
+      ]);
     }
 
     getContractMethods = () => [];

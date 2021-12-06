@@ -63,11 +63,7 @@ export class PriceOracle {
 
     const result = _(json.data)
       .mapKeys((v, k) => body.variables[k])
-      .mapValues((v) => {
-        const d = decimals(v);
-        if (d > 18) v = v.substring(0, v.length - (d - 18));
-        return bn18(v);
-      })
+      .mapValues((v) => bn18(v))
       .value();
 
     return this.updateResults(tokenIds, result);

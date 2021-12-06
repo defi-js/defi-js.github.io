@@ -1,6 +1,6 @@
 import { Position, PositionArgs, Severity } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, bn18, contract, erc20s, getNetwork, networks, to18, zero } from "@defi.org/web3-candies";
+import { account, bn, bn18, contract, contracts, erc20s, ether, getNetwork, networks, to18, zero } from "@defi.org/web3-candies";
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
 import _ from "lodash";
@@ -26,6 +26,7 @@ export namespace Loops {
       totalDebtValue: zero,
       rewardAmount: zero,
       rewardValue: zero,
+      tvl: zero,
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle) {}
@@ -81,6 +82,8 @@ export namespace Loops {
       },
     ];
 
+    getTVL = () => this.data.tvl;
+
     async load() {
       if ((await getNetwork()).id !== this.getNetwork().id) return;
 
@@ -92,6 +95,7 @@ export namespace Loops {
       this.data.totalDebtValue = await this.oracle.valueOf(this.weth, this.data.totalDebtETH);
       this.data.rewardAmount = bn(await this.instance.methods.getBalanceReward().call());
       this.data.rewardValue = await this.oracle.valueOf(this.aave, this.data.rewardAmount);
+      this.data.tvl = await this.oracle.valueOf(this.asset, to18(await erc20s.eth.Aave_aUSDC().methods.totalSupply().call(), 6));
     }
 
     getContractMethods = () => _.functions(this.instance.methods);
@@ -124,6 +128,7 @@ export namespace Loops {
       rewardValue: zero,
       accountLiquidity: zero,
       accountShortfall: zero,
+      tvl: zero,
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle) {}
@@ -159,6 +164,8 @@ export namespace Loops {
       },
     ];
 
+    getTVL = () => this.data.tvl;
+
     getPendingRewards = () => [
       {
         asset: this.rewardAsset,
@@ -190,6 +197,11 @@ export namespace Loops {
       const { accountLiquidity, accountShortfall } = await this.instance.methods.getAccountLiquidityWithInterest().call();
       this.data.accountLiquidity = bn(accountLiquidity);
       this.data.accountShortfall = bn(accountShortfall);
+      const [totalSupply, exchangeRate] = await Promise.all([
+        erc20s.eth.Compound_cUSDC().methods.totalSupply().call(),
+        erc20s.eth.Compound_cUSDC().methods.exchangeRateCurrent().call(),
+      ]);
+      this.data.tvl = to18(totalSupply, 8).mul(to18(exchangeRate, 16)).div(ether);
     }
 
     getContractMethods = () => _.functions(this.instance.methods);

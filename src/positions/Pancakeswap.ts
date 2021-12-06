@@ -5,6 +5,8 @@ import { PriceOracle } from "./base/PriceOracle";
 import _ from "lodash";
 
 export namespace Pancakeswap {
+  export const LP_ABI = require("@defi.org/web3-candies/abi/PancakeswapLPAbi.json");
+
   // const POOL_ID_MAPPING_URL = "https://raw.githubusercontent.com/pancakeswap/pancake-frontend/master/src/config/constants/farms.ts";
 
   export class Farm implements Position {
@@ -18,6 +20,7 @@ export namespace Pancakeswap {
       value1: zero,
       rewardAmount: zero,
       rewardValue: zero,
+      tvl: zero,
     };
 
     constructor(
@@ -72,26 +75,32 @@ export namespace Pancakeswap {
       },
     ];
 
+    getTVL = () => this.data.tvl;
+
     async load() {
       if ((await getNetwork()).id !== this.getNetwork().id) return;
 
-      const [userInfo, reserves, token0, totalSupply, pending] = await Promise.all([
-        await this.masterchef.methods.userInfo(this.poolId, this.args.address).call(),
-        await this.lpToken.methods.getReserves().call(),
-        await this.lpToken.methods.token0().call(),
-        await this.lpToken.methods.totalSupply().call(),
-        await this.masterchef.methods.pendingCake(this.poolId, this.args.address).call(),
+      const [userInfo, reserves, token0, totalSupply, pending, lpStaked] = await Promise.all([
+        this.masterchef.methods.userInfo(this.poolId, this.args.address).call(),
+        this.lpToken.methods.getReserves().call(),
+        this.lpToken.methods.token0().call(),
+        this.lpToken.methods.totalSupply().call(),
+        this.masterchef.methods.pendingCake(this.poolId, this.args.address).call(),
+        this.lpToken.methods.balanceOf(this.masterchef.options.address).call(),
       ]);
       const { _reserve0, _reserve1 } = reserves;
       const r0 = token0.toLowerCase() === this.asset0.address.toLowerCase() ? _reserve0 : _reserve1;
       const r1 = r0 === _reserve0 ? _reserve1 : _reserve0;
       const amountLP = bn(userInfo.amount);
+      this.data.rewardAmount = bn(pending);
       this.data.amount0 = bn(r0).mul(amountLP).div(bn(totalSupply));
       this.data.amount1 = bn(r1).mul(amountLP).div(bn(totalSupply));
-      this.data.value0 = await this.oracle.valueOf(this.asset0, this.data.amount0);
-      this.data.value1 = await this.oracle.valueOf(this.asset1, this.data.amount1);
-      this.data.rewardAmount = bn(pending);
-      this.data.rewardValue = await this.oracle.valueOf(this.cake, this.data.rewardAmount);
+      [this.data.value0, this.data.value1, this.data.rewardValue, this.data.tvl] = await Promise.all([
+        this.oracle.valueOf(this.asset0, this.data.amount0),
+        this.oracle.valueOf(this.asset1, this.data.amount1),
+        this.oracle.valueOf(this.cake, this.data.rewardAmount),
+        this.oracle.valueOf(this.asset1, bn(r1).muln(2).mul(bn(lpStaked)).div(bn(totalSupply))),
+      ]);
     }
 
     getContractMethods = () => _.functions(this.masterchef.methods);

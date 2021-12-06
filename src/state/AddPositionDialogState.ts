@@ -9,7 +9,7 @@ const AddPositionDialogState = createStore({
     type: "",
     address: "",
     valid: false,
-    allTypes: PositionFactory.allTypes(),
+    allTypes: PositionFactory.allTypes().sort(),
   },
 
   actions: {
