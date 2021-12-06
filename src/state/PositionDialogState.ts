@@ -2,6 +2,7 @@ import { createHook, createSelector, createStore } from "react-sweet-state";
 import { Position } from "../positions/base/Position";
 import _ from "lodash";
 import { fmt18 } from "@defi.org/web3-candies";
+import BN from "bn.js";
 
 const PositionDialogState = createStore({
   name: "PositionDialogState",
@@ -72,17 +73,19 @@ export const usePositionDialogSelector = createHook(PositionDialogState, {
         .split(",")
         .filter((a) => a.length > 0),
     (state) => state.useLegacy,
-    (position, positionMethods, selectedMethod, selectedMethodArgTypes, useLegacy) => ({
+    (state) =>
+      JSON.stringify(
+        _.mapValues(state.position?.getData(), (v) => (v instanceof BN ? fmt18(v) : v)),
+        null,
+        4
+      ),
+    (position, positionMethods, selectedMethod, selectedMethodArgTypes, useLegacy, positionData) => ({
       position,
       positionMethods,
       selectedMethod,
       selectedMethodArgTypes,
       useLegacy,
-      positionData: JSON.stringify(
-        _.mapValues(position?.getData(), (v) => fmt18(v)),
-        null,
-        4
-      ),
+      positionData,
     })
   ),
 });

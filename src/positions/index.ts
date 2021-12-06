@@ -3,6 +3,7 @@ import { erc20s } from "@defi.org/web3-candies";
 import { Pancakeswap } from "./Pancakeswap";
 import { Loops } from "./Loops";
 import { ElrondMaiar } from "./ElrondMaiar";
+import { Revault } from "./Revault";
 
 export function registerAllPositions() {
   PositionFactory.register({
@@ -14,6 +15,8 @@ export function registerAllPositions() {
     "bsc:Pancakeswap:Farm:ADA/BNB": (args, oracle) => new Pancakeswap.Farm(args, oracle, erc20s.bsc.ADA(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_ADA_BNB(), 253),
     "bsc:Pancakeswap:Farm:LINK/BNB": (args, oracle) => new Pancakeswap.Farm(args, oracle, erc20s.bsc.LINK(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_LINK_BNB(), 257),
     "bsc:Pancakeswap:Farm:DOGE/BNB": (args, oracle) => new Pancakeswap.Farm(args, oracle, erc20s.bsc.DOGE(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_DOGE_BNB(), 376),
+
+    "bsc:Revault:Vault:CAKE": (args, oracle) => new Revault.CakeVault(args, oracle),
 
     "eth:Loops:AaveLoop": (args, oracle) => new Loops.AaveLoop(args, oracle),
     "eth:Loops:CompoundLoop": (args, oracle) => new Loops.CompoundLoop(args, oracle),

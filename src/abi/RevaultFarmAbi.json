@@ -1,0 +1,328 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" },
+      { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "address", "name": "admin", "type": "address" }], "name": "SetAdmin", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": false, "internalType": "uint256", "name": "profitToReva", "type": "uint256" }], "name": "SetProfitToReva", "type": "event" },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": false, "internalType": "uint256", "name": "profitToRevaStakers", "type": "uint256" }],
+    "name": "SetProfitToRevaStakers",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [{ "indexed": false, "internalType": "address", "name": "zapAndDepositAddress", "type": "address" }],
+    "name": "SetZapAndDeposit",
+    "type": "event"
+  },
+  { "inputs": [], "name": "MAX_PROFIT_TO_REVA", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "MAX_PROFIT_TO_REVA_STAKERS", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  {
+    "inputs": [],
+    "name": "PROFIT_DISTRIBUTION_PRECISION",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_vaultAddress", "type": "address" },
+      { "internalType": "address", "name": "_depositTokenAddress", "type": "address" },
+      { "internalType": "address", "name": "_nativeTokenAddress", "type": "address" }
+    ],
+    "name": "addVault",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  { "inputs": [], "name": "admin", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "bytes4", "name": "", "type": "bytes4" }
+    ],
+    "name": "approvedDepositPayloads",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "bytes4", "name": "", "type": "bytes4" }
+    ],
+    "name": "approvedHarvestPayloads",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "bytes4", "name": "", "type": "bytes4" }
+    ],
+    "name": "approvedWithdrawPayloads",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_amount", "type": "uint256" },
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_depositPayload", "type": "bytes" }
+    ],
+    "name": "depositToVault",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_amount", "type": "uint256" },
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_depositPayload", "type": "bytes" },
+      { "internalType": "address", "name": "_user", "type": "address" }
+    ],
+    "name": "depositToVaultFor",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "address", "name": "_user", "type": "address" }
+    ],
+    "name": "getUserVaultPrincipal",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_payloadHarvest", "type": "bytes" }
+    ],
+    "name": "harvestVault",
+    "outputs": [
+      { "internalType": "uint256", "name": "returnedTokenAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "returnedRevaAmount", "type": "uint256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "haveApprovedTokenToZap",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "_revaChefAddress", "type": "address" },
+      { "internalType": "address", "name": "_revaTokenAddress", "type": "address" },
+      { "internalType": "address", "name": "_revaUserProxyFactoryAddress", "type": "address" },
+      { "internalType": "address", "name": "_revaFeeReceiver", "type": "address" },
+      { "internalType": "address", "name": "_zap", "type": "address" },
+      { "internalType": "uint256", "name": "_profitToReva", "type": "uint256" },
+      { "internalType": "uint256", "name": "_profitToRevaStakers", "type": "uint256" }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  { "inputs": [], "name": "owner", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "profitToReva", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "profitToRevaStakers", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_fromVid", "type": "uint256" },
+      { "internalType": "uint256", "name": "_toVid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_withdrawPayload", "type": "bytes" },
+      { "internalType": "bytes", "name": "_depositAllPayload", "type": "bytes" }
+    ],
+    "name": "rebalanceDepositAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_fromVid", "type": "uint256" },
+      { "internalType": "uint256", "name": "_toVid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_withdrawPayload", "type": "bytes" },
+      { "internalType": "bytes", "name": "_depositAllPayload", "type": "bytes" }
+    ],
+    "name": "rebalanceDepositAllAsWBNB",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_fromVid", "type": "uint256" },
+      { "internalType": "uint256", "name": "_toVid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_withdrawPayload", "type": "bytes" },
+      { "internalType": "bytes", "name": "_depositLeftPayload", "type": "bytes" },
+      { "internalType": "bytes", "name": "_depositRightPayload", "type": "bytes" }
+    ],
+    "name": "rebalanceDepositAllDynamicAmount",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [], "name": "revaChef", "outputs": [{ "internalType": "contract IRevaChef", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "revaFeeReceiver", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" },
+  {
+    "inputs": [],
+    "name": "revaUserProxyFactory",
+    "outputs": [{ "internalType": "contract IRevaUserProxyFactory", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  { "inputs": [{ "internalType": "address", "name": "_admin", "type": "address" }], "name": "setAdmin", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes4", "name": "_methodSig", "type": "bytes4" },
+      { "internalType": "bool", "name": "_approved", "type": "bool" }
+    ],
+    "name": "setDepositMethod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes4", "name": "_methodSig", "type": "bytes4" },
+      { "internalType": "bool", "name": "_approved", "type": "bool" }
+    ],
+    "name": "setHarvestMethod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "_profitToReva", "type": "uint256" }],
+    "name": "setProfitToReva",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "_profitToRevaStakers", "type": "uint256" }],
+    "name": "setProfitToRevaStakers",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes4", "name": "_methodSig", "type": "bytes4" },
+      { "internalType": "bool", "name": "_approved", "type": "bool" }
+    ],
+    "name": "setWithdrawMethod",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "_zapAndDeposit", "type": "address" }],
+    "name": "setZapAndDeposit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "newOwner", "type": "address" }],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "userProxyContractAddress",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "name": "userVaultPrincipal",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "name": "vaultExists",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  { "inputs": [], "name": "vaultLength", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "vaults",
+    "outputs": [
+      { "internalType": "address", "name": "vaultAddress", "type": "address" },
+      { "internalType": "address", "name": "depositTokenAddress", "type": "address" },
+      { "internalType": "address", "name": "nativeTokenAddress", "type": "address" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_withdrawPayload", "type": "bytes" }
+    ],
+    "name": "withdrawFromVault",
+    "outputs": [
+      { "internalType": "uint256", "name": "returnedTokenAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "returnedRevaAmount", "type": "uint256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "_vid", "type": "uint256" },
+      { "internalType": "bytes", "name": "_withdrawPayload", "type": "bytes" }
+    ],
+    "name": "withdrawFromVaultAndClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "tokenToWithdraw", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "withdrawToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  { "inputs": [], "name": "zap", "outputs": [{ "internalType": "contract IZap", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "zapAndDeposit", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "stateMutability": "payable", "type": "receive" }
+]
