@@ -6,6 +6,7 @@ import { AppHeader } from "./ui/AppHeader";
 import { AllPositionsTable } from "./ui/AllPositionsTable";
 import { AddPositionDialog } from "./ui/AddPositionDialog";
 import { PositionDialog } from "./ui/PositionDialog";
+import { AlertDialog } from "./ui/AlertDialog";
 
 const darkTheme = createTheme({
   palette: {
@@ -24,6 +25,7 @@ export const App = () => {
         <div>
           <AddPositionDialog />
           <PositionDialog />
+          <AlertDialog />
         </div>
 
         <div>

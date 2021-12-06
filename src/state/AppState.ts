@@ -16,6 +16,8 @@ const AppState = createStore({
     wallet: "",
     balance: zero,
     network: {} as Network,
+
+    alertDialog: "",
   },
 
   actions: {
@@ -45,6 +47,12 @@ const AppState = createStore({
       (thunk: () => any) =>
       async ({ setState }) => {
         await _withLoading(setState, thunk);
+      },
+
+    showAlert:
+      (alert: string) =>
+      async ({ setState }) => {
+        setState({ alertDialog: alert });
       },
   },
 });

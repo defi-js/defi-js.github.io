@@ -28,6 +28,8 @@ export const PositionDialog = () => {
 
   const deletePos = () => appStateActions.withLoading(() => allPositionsActions.delete(selector.position!.getArgs().id)).then(close);
 
+  const showData = () => appStateActions.showAlert(selector.positionData);
+
   const harvest = () => appStateActions.withLoading(() => actions.harvest()).then(close);
 
   const send = () => appStateActions.withLoading(() => actions.send()).then(close);
@@ -35,11 +37,10 @@ export const PositionDialog = () => {
   return (
     <div>
       <Dialog open={!!selector.position} onClose={close}>
-        <DialogTitle>Send Transaction to {selector.position?.getArgs()?.type}</DialogTitle>
+        <DialogTitle>Position: {selector.position?.getArgs()?.type}</DialogTitle>
         <DialogContent>
           <DialogContentText>Network: {selector.position?.getNetwork()?.name}</DialogContentText>
           <DialogContentText>Address: {selector.position?.getArgs()?.address}</DialogContentText>
-          <DialogContentText>Data: {selector.positionData}</DialogContentText>
 
           <br />
           <FormControl fullWidth>
@@ -80,10 +81,12 @@ export const PositionDialog = () => {
         <DialogActions>
           <Button onClick={deletePos}>Delete Position</Button>
 
+          <Button onClick={showData}>Show Data</Button>
+
           <Button onClick={harvest}>Just Harvest</Button>
 
           <Button disabled={!selector.selectedMethod} onClick={send}>
-            Send Custom Transaction
+            Send Transaction
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { createHook, createSelector, createStore, StoreActionApi } from "react-sweet-state";
-import { Position, PositionArgs, Threat, TokenAmount } from "../positions/base/Position";
+import { Position, PositionArgs, Threat } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
 import { registerAllPositions } from "../positions";
 import { fmt18, zero } from "@defi.org/web3-candies";
@@ -94,12 +94,6 @@ export const useAllPositionRows = createHook(AllPositionsState, {
 export const useAllPositions = createHook(AllPositionsState, {
   selector: (state) => state.positions,
 });
-
-function fmtAmounts(amnt: TokenAmount[]) {
-  return _(amnt)
-    .map((a) => `${a.asset.name}: ${fmt18(a.amount).split(".")[0]} ($${fmt18(a.value).split(".")[0]})`)
-    .join(" + ");
-}
 
 function fmtHealth(health: Threat[]) {
   if (!health.length) return "🟢";

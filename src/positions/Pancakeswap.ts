@@ -1,12 +1,10 @@
 import { Position, PositionArgs } from "./base/Position";
-import { account, bn, contracts, erc20, erc20s, getNetwork, networks, to18, Token, zero } from "@defi.org/web3-candies";
+import { account, bn, contracts, erc20s, getNetwork, networks, to18, Token, zero } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
 import _ from "lodash";
 
 export namespace Pancakeswap {
-  export const LP_ABI = require("@defi.org/web3-candies/abi/PancakeswapLPAbi.json");
-
   // const POOL_ID_MAPPING_URL = "https://raw.githubusercontent.com/pancakeswap/pancake-frontend/master/src/config/constants/farms.ts";
 
   export class Farm implements Position {

@@ -1,7 +1,7 @@
 import _ from "lodash";
 import BN from "bn.js";
 import Web3 from "web3";
-import { bn18, decimals, ether, getNetwork, to18, Token, zero } from "@defi.org/web3-candies";
+import { bn18, ether, getNetwork, Token } from "@defi.org/web3-candies";
 
 const coingeckoIds = {
   eth: "ethereum",

@@ -1,6 +1,6 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, erc20, ether, fmt18, fmt6, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
+import { bn, erc20, ether, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
 import { Address, ContractFunction, ProxyProvider, SmartContract } from "@elrondnetwork/erdjs/out";
 import _ from "lodash";
 
