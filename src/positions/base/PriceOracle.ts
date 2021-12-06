@@ -14,7 +14,7 @@ export class PriceOracle {
 
   async valueOf(token: Token, amount: BN): Promise<BN> {
     const id = (token as any).tokenId || token.address;
-    if (!this.prices[id]) {
+    if (!this.prices[id] || this.prices[id].isZero()) {
       if ((token as any).esdt) await this.fetchPricesElrond(id);
       else await this.fetchPrices(id);
     }

@@ -39,6 +39,7 @@ export const PositionDialog = () => {
         <DialogContent>
           <DialogContentText>Network: {selector.position?.getNetwork()?.name}</DialogContentText>
           <DialogContentText>Address: {selector.position?.getArgs()?.address}</DialogContentText>
+          <DialogContentText>Data: {selector.positionData}</DialogContentText>
 
           <br />
           <FormControl fullWidth>
