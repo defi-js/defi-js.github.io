@@ -106,6 +106,11 @@ export namespace Revault {
 
     getContractMethods = () => _.functions(this.revault.methods);
 
+    async callContract(method: string, args: string[]) {
+      const tx = (this.revault.methods as any)[method](...args);
+      return await tx.call();
+    }
+
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
       const tx = (this.revault.methods as any)[method](...args);
       alert(`target:\n${this.revault.options.address}\ndata:\n${tx.encodeABI()}`);

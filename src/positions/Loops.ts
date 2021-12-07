@@ -102,6 +102,11 @@ export namespace Loops {
 
     getContractMethods = () => _.functions(this.instance.methods);
 
+    async callContract(method: string, args: string[]) {
+      const tx = (this.instance.methods as any)[method](...args);
+      return await tx.call();
+    }
+
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
       const tx = (this.instance.methods as any)[method](...args);
       alert(`target:\n${this.instance.options.address}\ndata:\n${tx.encodeABI()}`);
@@ -213,6 +218,11 @@ export namespace Loops {
     }
 
     getContractMethods = () => _.functions(this.instance.methods);
+
+    async callContract(method: string, args: string[]) {
+      const tx = (this.instance.methods as any)[method](...args);
+      return await tx.call();
+    }
 
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
       const tx = (this.instance.methods as any)[method](...args);

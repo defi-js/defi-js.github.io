@@ -58,6 +58,16 @@ const PositionDialogState = createStore({
       async ({ getState }) => {
         await getState().position!.sendTransaction(getState().selectedMethod, _.values(getState().selectedMethodArgs), getState().useLegacy);
       },
+
+    call:
+      (showAlert: (a: string) => void) =>
+      async ({ getState }) => {
+        showAlert(
+          await getState()
+            .position!.callContract(getState().selectedMethod, _.values(getState().selectedMethodArgs))
+            .catch((e) => showAlert(e.message))
+        );
+      },
   },
 });
 

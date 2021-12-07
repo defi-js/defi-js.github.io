@@ -110,6 +110,8 @@ export namespace ElrondMaiar {
 
     getContractMethods = () => [];
 
+    async callContract(method: string, args: string[]) {}
+
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {}
 
     async harvest(useLegacyTx: boolean) {}

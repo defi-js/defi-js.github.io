@@ -24,6 +24,7 @@ export interface Position {
   // getAPR(): BN;
 
   getContractMethods(): string[];
+  callContract(method: string, args: string[]): Promise<any>;
   sendTransaction(method: string, args: string[], useLegacyTx: boolean): Promise<void>;
   harvest(useLegacyTx: boolean): Promise<void>;
 }

@@ -34,6 +34,8 @@ export const PositionDialog = () => {
 
   const send = () => appStateActions.withLoading(() => actions.send()).then(close);
 
+  const call = () => appStateActions.withLoading(() => actions.call(appStateActions.showAlert));
+
   return (
     <div>
       <Dialog open={!!selector.position} onClose={close}>
@@ -84,6 +86,10 @@ export const PositionDialog = () => {
           <Button onClick={showData}>Show Data</Button>
 
           <Button onClick={harvest}>Just Harvest</Button>
+
+          <Button disabled={!selector.selectedMethod} onClick={call}>
+            Call Contract
+          </Button>
 
           <Button disabled={!selector.selectedMethod} onClick={send}>
             Send Transaction
