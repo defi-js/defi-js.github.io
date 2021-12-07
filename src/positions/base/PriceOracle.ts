@@ -50,6 +50,7 @@ export class PriceOracle {
    * returns price in USD 18 decimals by token address
    */
   async fetchPrices(addresses: string[]): Promise<{ [address: string]: BN }> {
+    if (_.isEmpty(addresses)) return {};
     const network = await getNetwork();
     const coingeckoId = _.find(coingeckoIds, (v, k) => k === network.shortname)!;
     const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`);
@@ -67,6 +68,7 @@ export class PriceOracle {
    * returns price in USD 18 decimals by token ID
    */
   async fetchPricesElrond(tokenIds: string[]): Promise<{ [address: string]: BN }> {
+    if (_.isEmpty(tokenIds)) return {};
     const body = {
       variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
       query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {

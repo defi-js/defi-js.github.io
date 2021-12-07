@@ -1,21 +1,20 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, contract, getNetwork, networks, web3, zero } from "@defi.org/web3-candies";
+import { account, bn, contract, getNetwork, networks, Token, web3, zero } from "@defi.org/web3-candies";
 import { contracts, erc20s } from "./consts";
 import _ from "lodash";
 import { RevaultChefAbi } from "../../typechain-abi/RevaultChefAbi";
 
 export namespace Revault {
-  export class CakeVault implements Position {
+  export class SingleVault implements Position {
     revault = contracts.bsc.Revault_Farm();
-    cake = erc20s.bsc.CAKE();
     reva = erc20s.bsc.REVA();
 
     data = {
       amount: zero,
       value: zero,
-      pendingCake: zero,
-      pendingCakeValue: zero,
+      pending: zero,
+      pendingValue: zero,
       pendingReva: zero,
       pendingRevaValue: zero,
       tvl: zero,
@@ -23,7 +22,7 @@ export namespace Revault {
       vaultHarvestPayload: "",
     };
 
-    constructor(public args: PositionArgs, public oracle: PriceOracle) {}
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public asset: Token) {}
 
     getNetwork = () => networks.bsc;
 
@@ -31,25 +30,25 @@ export namespace Revault {
 
     getData = () => this.data;
 
-    getAssets = () => [this.cake];
+    getAssets = () => [this.asset];
 
-    getRewardAssets = () => [this.cake, this.reva];
+    getRewardAssets = () => [this.asset, this.reva];
 
     getHealth = () => [];
 
     getTVL = () => this.data.tvl;
 
-    getAmounts = () => [{ asset: this.cake, amount: this.data.amount, value: this.data.value }];
+    getAmounts = () => [{ asset: this.asset, amount: this.data.amount, value: this.data.value }];
 
     getPendingRewards = () => [
-      { asset: this.cake, amount: this.data.pendingCake, value: this.data.pendingCakeValue },
+      { asset: this.asset, amount: this.data.pending, value: this.data.pendingValue },
       { asset: this.reva, amount: this.data.pendingReva, value: this.data.pendingRevaValue },
     ];
 
     async load() {
       if ((await getNetwork()).id !== this.getNetwork().id) return;
 
-      const vault = await this.findCakeVault();
+      const vault = await this.findVault();
       this.data.vaultId = vault.id;
       this.data.amount = vault.principal;
       this.data.vaultHarvestPayload = vault.payload;
@@ -58,50 +57,28 @@ export namespace Revault {
         .harvestVault(this.data.vaultId, this.data.vaultHarvestPayload)
         .call({ from: this.args.address });
       this.data.pendingReva = bn(returnedRevaAmount);
-      this.data.pendingCake = bn(returnedTokenAmount);
-      [this.data.value, this.data.pendingRevaValue, this.data.pendingCakeValue] = await Promise.all([
-        this.oracle.valueOf(this.cake, this.data.amount),
+      this.data.pending = bn(returnedTokenAmount);
+      [this.data.value, this.data.pendingRevaValue, this.data.pendingValue] = await Promise.all([
+        this.oracle.valueOf(this.asset, this.data.amount),
         this.oracle.valueOf(this.reva, this.data.pendingReva),
-        this.oracle.valueOf(this.cake, this.data.pendingCake),
+        this.oracle.valueOf(this.asset, this.data.pending),
       ]);
 
       const chef = contract<RevaultChefAbi>(require("../abi/RevaultChefAbi.json"), await this.revault.methods.revaChef().call());
-      const { tvlBusd } = await chef.methods.tokens(this.cake.address).call();
+      const { tvlBusd } = await chef.methods.tokens(this.asset.address).call();
       this.data.tvl = bn(tvlBusd);
     }
 
-    private async findCakeVault() {
-      const vaultsLength = parseInt(await this.revault.methods.vaultLength().call());
-      const principals = await Promise.all(
-        _.times(vaultsLength).map((n) =>
-          this.revault.methods
-            .getUserVaultPrincipal(n, this.args.address)
-            .call()
-            .then((r) => ({ id: n, principal: bn(r) }))
-        )
-      );
-      const vaults = await Promise.all(
-        principals
-          .filter((p) => !p.principal.isZero())
-          .map((p) =>
-            this.revault.methods
-              .vaults(p.id)
-              .call()
-              .then((r) => ({ ...r, id: p.id, principal: p.principal }))
-          )
-      );
-      const cakeVaults = vaults.filter((v) => v.depositTokenAddress.toLowerCase() === this.cake.address.toLowerCase());
-      if (cakeVaults.length !== 1) throw new Error(`expected only 1 vault with balance, got: ${cakeVaults}`);
-
-      const vault = { ...cakeVaults[0], payload: "" };
-      switch (vault.id) {
-        case 2:
-          vault.payload = web3().eth.abi.encodeFunctionSignature("getReward()");
-          break;
-        default:
-          throw new Error(`unsupported yet ${cakeVaults}`);
-      }
-      return vault;
+    private async findVault() {
+      const supportedVaults = {
+        [erc20s.bsc.WBNB().address]: { id: 0 },
+        [erc20s.bsc.BUSD().address]: { id: 1 },
+        [erc20s.bsc.CAKE().address]: { id: 2 },
+      };
+      const payload = web3().eth.abi.encodeFunctionSignature("getReward()"); //all bunny vaults
+      const vaultId = supportedVaults[this.asset.address].id;
+      const [vault, principal] = await Promise.all([this.revault.methods.vaults(vaultId).call(), this.revault.methods.getUserVaultPrincipal(vaultId, this.args.address).call()]);
+      return { ...vault, id: vaultId, principal: bn(principal), payload };
     }
 
     getContractMethods = () => _.functions(this.revault.methods);

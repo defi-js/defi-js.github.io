@@ -16,7 +16,9 @@ export function registerAllPositions() {
     "bsc:Pancakeswap:Farm:LINK/BNB": (args, oracle) => new Pancakeswap.Farm(args, oracle, erc20s.bsc.LINK(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_LINK_BNB(), 257),
     "bsc:Pancakeswap:Farm:DOGE/BNB": (args, oracle) => new Pancakeswap.Farm(args, oracle, erc20s.bsc.DOGE(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_DOGE_BNB(), 376),
 
-    "bsc:Revault:Vault:CAKE": (args, oracle) => new Revault.CakeVault(args, oracle),
+    "bsc:Revault:SingleVault:CAKE": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.CAKE()),
+    "bsc:Revault:SingleVault:BUSD": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.BUSD()),
+    "bsc:Revault:SingleVault:BNB": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.WBNB()),
 
     "eth:Loops:AaveLoop": (args, oracle) => new Loops.AaveLoop(args, oracle),
     "eth:Loops:CompoundLoop": (args, oracle) => new Loops.CompoundLoop(args, oracle),
