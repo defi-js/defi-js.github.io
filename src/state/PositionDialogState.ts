@@ -62,11 +62,7 @@ const PositionDialogState = createStore({
     call:
       (showAlert: (a: string) => void) =>
       async ({ getState }) => {
-        showAlert(
-          await getState()
-            .position!.callContract(getState().selectedMethod, _.values(getState().selectedMethodArgs))
-            .catch((e) => showAlert(e.message))
-        );
+        showAlert(await getState().position!.callContract(getState().selectedMethod, _.values(getState().selectedMethodArgs)));
       },
   },
 });
