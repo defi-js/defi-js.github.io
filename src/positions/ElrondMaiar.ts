@@ -5,6 +5,8 @@ import { Address, ContractFunction, ProxyProvider, SmartContract } from "@elrond
 import _ from "lodash";
 
 export namespace ElrondMaiar {
+  export const network = { id: -508, name: "Elrond", shortname: "egld" };
+
   const provider = new ProxyProvider("https://gateway.elrond.com", { timeout: 60 * 1000 });
 
   export type ESDT = Token & { esdt: true; tokenId: string; dec: number };
@@ -46,7 +48,7 @@ export namespace ElrondMaiar {
 
     getArgs = () => this.args;
 
-    getNetwork = () => ({ id: -508, name: "Elrond", shortname: "egld" });
+    getNetwork = () => network;
 
     getAssets = () => this.strategy.assets;
 

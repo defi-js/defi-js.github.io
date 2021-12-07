@@ -10,7 +10,7 @@ type Factory = (args: PositionArgs, oracle: PriceOracle) => Position;
 const registry = {} as Record<string, Factory>;
 
 export namespace PositionFactory {
-  const oracle = new PriceOracle();
+  export const oracle = new PriceOracle();
 
   export function register(types: Record<string, Factory>) {
     _.merge(registry, types);

@@ -1,5 +1,5 @@
 import { Position, PositionArgs } from "./base/Position";
-import { account, bn, contracts, erc20s, getNetwork, networks, to18, Token, zero } from "@defi.org/web3-candies";
+import { account, bn, contracts, erc20s, getNetwork, networks, Token, zero } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
 import _ from "lodash";
@@ -91,12 +91,10 @@ export namespace Pancakeswap {
       const r1 = r0 === _reserve0 ? _reserve1 : _reserve0;
       const amountLP = bn(userInfo.amount);
       this.data.rewardAmount = bn(pending);
-      this.data.amount0 = to18(r0, await this.asset0.methods.decimals().call())
-        .mul(amountLP)
-        .div(bn(totalSupply));
-      this.data.amount1 = to18(r1, await this.asset1.methods.decimals().call())
-        .mul(amountLP)
-        .div(bn(totalSupply));
+
+      this.data.amount0 = await this.asset0.mantissa(bn(r0).mul(amountLP).div(bn(totalSupply)));
+      this.data.amount1 = await this.asset1.mantissa(bn(r1).mul(amountLP).div(bn(totalSupply)));
+
       [this.data.value0, this.data.value1, this.data.rewardValue, this.data.tvl] = await Promise.all([
         this.oracle.valueOf(this.asset0, this.data.amount0),
         this.oracle.valueOf(this.asset1, this.data.amount1),

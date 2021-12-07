@@ -95,7 +95,9 @@ export namespace Loops {
       this.data.totalDebtValue = await this.oracle.valueOf(this.weth, this.data.totalDebtETH);
       this.data.rewardAmount = bn(await this.instance.methods.getBalanceReward().call());
       this.data.rewardValue = await this.oracle.valueOf(this.aave, this.data.rewardAmount);
-      this.data.tvl = await this.oracle.valueOf(this.asset, to18(await erc20s.eth.Aave_aUSDC().methods.totalSupply().call(), 6));
+
+      const atoken = erc20s.eth.Aave_aUSDC();
+      this.data.tvl = await this.oracle.valueOf(this.asset, await atoken.mantissa(await atoken.methods.totalSupply().call()));
     }
 
     getContractMethods = () => _.functions(this.instance.methods);
@@ -190,18 +192,24 @@ export namespace Loops {
     async load() {
       if ((await getNetwork()).id !== this.getNetwork().id) return;
 
-      this.data.borrowBalance = to18(await this.instance.methods.borrowBalanceCurrent().call(), 6);
-      this.data.supplyBalance = to18(await erc20s.eth.Compound_cUSDC().methods.balanceOfUnderlying(this.args.address).call(), 6);
-      this.data.rewardAmount = bn(await this.instance.methods["claimComp()"]().call());
-      this.data.rewardValue = await this.oracle.valueOf(this.rewardAsset, this.data.rewardAmount);
-      const { accountLiquidity, accountShortfall } = await this.instance.methods.getAccountLiquidityWithInterest().call();
-      this.data.accountLiquidity = bn(accountLiquidity);
-      this.data.accountShortfall = bn(accountShortfall);
-      const [totalSupply, exchangeRate] = await Promise.all([
-        erc20s.eth.Compound_cUSDC().methods.totalSupply().call(),
-        erc20s.eth.Compound_cUSDC().methods.exchangeRateCurrent().call(),
+      const ctoken = erc20s.eth.Compound_cUSDC();
+      const [totalSupply, exchangeRate, underlyingBalance, borrowBalance, pending, liquidity] = await Promise.all([
+        ctoken.methods.totalSupply().call(),
+        ctoken.methods.exchangeRateCurrent().call(),
+        ctoken.methods.balanceOfUnderlying(this.args.address).call(),
+        this.instance.methods.borrowBalanceCurrent().call(),
+        this.instance.methods["claimComp()"]().call(),
+        this.instance.methods.getAccountLiquidityWithInterest().call(),
       ]);
-      this.data.tvl = to18(totalSupply, 8).mul(to18(exchangeRate, 16)).div(ether);
+
+      this.data.supplyBalance = await this.asset.mantissa(underlyingBalance);
+      this.data.borrowBalance = await this.asset.mantissa(borrowBalance);
+      this.data.rewardAmount = bn(pending);
+      this.data.rewardValue = await this.oracle.valueOf(this.rewardAsset, this.data.rewardAmount);
+      this.data.accountLiquidity = bn(liquidity.accountLiquidity);
+      this.data.accountShortfall = bn(liquidity.accountShortfall);
+
+      this.data.tvl = (await ctoken.mantissa(totalSupply)).mul(to18(exchangeRate, 16)).div(ether);
     }
 
     getContractMethods = () => _.functions(this.instance.methods);

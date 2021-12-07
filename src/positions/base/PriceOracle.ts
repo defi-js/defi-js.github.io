@@ -2,6 +2,8 @@ import _ from "lodash";
 import BN from "bn.js";
 import Web3 from "web3";
 import { bn18, ether, getNetwork, Token } from "@defi.org/web3-candies";
+import { Position } from "./Position";
+import { ElrondMaiar } from "../ElrondMaiar";
 
 const coingeckoIds = {
   eth: "ethereum",
@@ -14,18 +16,40 @@ export class PriceOracle {
 
   async valueOf(token: Token, amount: BN): Promise<BN> {
     const id = (token as any).tokenId || token.address;
+
     if (!this.prices[id] || this.prices[id].isZero()) {
-      if ((token as any).esdt) await this.fetchPricesElrond(id);
-      else await this.fetchPrices(id);
+      if ((token as any).esdt) await this.fetchPricesElrond([id]);
+      else await this.fetchPrices([id]);
     }
 
     return amount.mul(this.prices[id]).div(ether);
   }
 
+  async warmup(positions: Position[]) {
+    await Promise.all([
+      this.fetchPrices(
+        _(positions)
+          .filter((p) => p.getNetwork().id > 0)
+          .map((p) => p.getAssets().concat(p.getRewardAssets()))
+          .flatten()
+          .map((a) => a.address)
+          .value()
+      ),
+      this.fetchPricesElrond(
+        _(positions)
+          .filter((p) => p.getNetwork().id === ElrondMaiar.network.id)
+          .map((p) => p.getAssets().concat(p.getRewardAssets()))
+          .flatten()
+          .map((a) => a.address)
+          .value()
+      ),
+    ]);
+  }
+
   /**
    * returns price in USD 18 decimals by token address
    */
-  async fetchPrices(...addresses: string[]): Promise<{ [address: string]: BN }> {
+  async fetchPrices(addresses: string[]): Promise<{ [address: string]: BN }> {
     const network = await getNetwork();
     const coingeckoId = _.find(coingeckoIds, (v, k) => k === network.shortname)!;
     const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`);
@@ -42,7 +66,7 @@ export class PriceOracle {
   /**
    * returns price in USD 18 decimals by token ID
    */
-  async fetchPricesElrond(...tokenIds: string[]): Promise<{ [address: string]: BN }> {
+  async fetchPricesElrond(tokenIds: string[]): Promise<{ [address: string]: BN }> {
     const body = {
       variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
       query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {

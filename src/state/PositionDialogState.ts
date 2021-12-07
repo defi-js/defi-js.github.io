@@ -1,8 +1,8 @@
 import { createHook, createSelector, createStore } from "react-sweet-state";
 import { Position } from "../positions/base/Position";
 import _ from "lodash";
-import { fmt18 } from "@defi.org/web3-candies";
 import BN from "bn.js";
+import { fmt18 } from "@defi.org/web3-candies";
 
 const PositionDialogState = createStore({
   name: "PositionDialogState",
@@ -64,28 +64,31 @@ const PositionDialogState = createStore({
 export const usePositionDialogActions = createHook(PositionDialogState, { selector: null });
 export const usePositionDialogSelector = createHook(PositionDialogState, {
   selector: createSelector(
-    (state) => state.position,
+    (state) => state,
     (state) => state.position?.getContractMethods().filter((m) => !m.startsWith("0x") && m.endsWith(")")) || [],
-    (state) => state.selectedMethod,
     (state) =>
       state.selectedMethod
         .substring(state.selectedMethod.indexOf("(") + 1, state.selectedMethod.length - 1)
         .split(",")
         .filter((a) => a.length > 0),
-    (state) => state.useLegacy,
     (state) =>
-      JSON.stringify(
-        _.mapValues(state.position?.getData(), (v) => (v instanceof BN ? fmt18(v) : v)),
-        null,
-        4
-      ),
-    (position, positionMethods, selectedMethod, selectedMethodArgTypes, useLegacy, positionData) => ({
-      position,
+      _(state.position?.getAssets())
+        .mapKeys((a) => a.name)
+        .mapValues((v) => v.address)
+        .value(),
+    (state) =>
+      _(state.position?.getRewardAssets())
+        .mapKeys((a) => a.name)
+        .mapValues((v) => v.address)
+        .value(),
+    (state) => _.mapValues(state.position?.getData(), (v) => (v instanceof BN ? fmt18(v) : v)),
+    (state, positionMethods, selectedMethodArgTypes, assets, rewardAssets, data) => ({
+      position: state.position,
       positionMethods,
-      selectedMethod,
+      selectedMethod: state.selectedMethod,
       selectedMethodArgTypes,
-      useLegacy,
-      positionData,
+      useLegacy: state.useLegacy,
+      positionData: JSON.stringify({ assets, rewardAssets, data }, null, 4),
     })
   ),
 });

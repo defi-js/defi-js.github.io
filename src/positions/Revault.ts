@@ -1,6 +1,6 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, contract, networks, web3, zero } from "@defi.org/web3-candies";
+import { account, bn, contract, getNetwork, networks, web3, zero } from "@defi.org/web3-candies";
 import { contracts, erc20s } from "./consts";
 import _ from "lodash";
 import { RevaultChefAbi } from "../../typechain-abi/RevaultChefAbi";
@@ -47,6 +47,8 @@ export namespace Revault {
     ];
 
     async load() {
+      if ((await getNetwork()).id !== this.getNetwork().id) return;
+
       const vault = await this.findCakeVault();
       this.data.vaultId = vault.id;
       this.data.amount = vault.principal;
