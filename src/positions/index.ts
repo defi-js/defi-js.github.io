@@ -1,9 +1,10 @@
 import { PositionFactory } from "./base/PositionFactory";
-import { erc20s } from "@defi.org/web3-candies";
+import { erc20s } from "./consts";
 import { Pancakeswap } from "./Pancakeswap";
 import { Loops } from "./Loops";
 import { ElrondMaiar } from "./ElrondMaiar";
 import { Revault } from "./Revault";
+import { Unicly } from "./Unicly";
 
 export function registerAllPositions() {
   PositionFactory.register({
@@ -19,6 +20,9 @@ export function registerAllPositions() {
     "bsc:Revault:SingleVault:CAKE": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.CAKE()),
     "bsc:Revault:SingleVault:BUSD": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.BUSD()),
     "bsc:Revault:SingleVault:BNB": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.WBNB()),
+
+    "eth:Unicly:XUnicFarm:uPunks": (args, oracle) => new Unicly.XUnicFarm(args, oracle, Unicly.Strategies.uPunks()),
+    "eth:Unicly:XUnicFarm:uJenny": (args, oracle) => new Unicly.XUnicFarm(args, oracle, Unicly.Strategies.uJenny()),
 
     "eth:Loops:AaveLoop": (args, oracle) => new Loops.AaveLoop(args, oracle),
     "eth:Loops:CompoundLoop": (args, oracle) => new Loops.CompoundLoop(args, oracle),

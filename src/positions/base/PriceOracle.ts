@@ -1,7 +1,7 @@
 import _ from "lodash";
 import BN from "bn.js";
 import Web3 from "web3";
-import { bn18, ether, getNetwork, Network, networks, Token } from "@defi.org/web3-candies";
+import { bn18, ether, getNetwork, networks, Token } from "@defi.org/web3-candies";
 import { Position } from "./Position";
 import { ElrondMaiar } from "../ElrondMaiar";
 
