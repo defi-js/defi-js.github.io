@@ -1,14 +1,14 @@
 import _ from "lodash";
 import BN from "bn.js";
 import Web3 from "web3";
-import { bn18, ether, getNetwork, Token } from "@defi.org/web3-candies";
+import { bn18, ether, getNetwork, Network, networks, Token } from "@defi.org/web3-candies";
 import { Position } from "./Position";
 import { ElrondMaiar } from "../ElrondMaiar";
 
 const coingeckoIds = {
-  eth: "ethereum",
-  bsc: "binance-smart-chain",
-  poly: "polygon-pos",
+  [networks.eth.id]: "ethereum",
+  [networks.bsc.id]: "binance-smart-chain",
+  [networks.poly.id]: "polygon-pos",
 };
 
 export class PriceOracle {
@@ -19,40 +19,46 @@ export class PriceOracle {
 
     if (!this.prices[id] || this.prices[id].isZero()) {
       if ((token as any).esdt) await this.fetchPricesElrond([id]);
-      else await this.fetchPrices([id]);
+      else await this.fetchPrices((await getNetwork()).id, [id]);
     }
 
     return amount.mul(this.prices[id]).div(ether);
   }
 
   async warmup(positions: Position[]) {
+    const bynetwork = _.groupBy(positions, (p) => p.getNetwork().id);
+
     await Promise.all([
-      this.fetchPrices(
-        _(positions)
-          .filter((p) => p.getNetwork().id > 0)
-          .map((p) => p.getAssets().concat(p.getRewardAssets()))
-          .flatten()
-          .map((a) => a.address)
-          .value()
-      ),
       this.fetchPricesElrond(
-        _(positions)
-          .filter((p) => p.getNetwork().id === ElrondMaiar.network.id)
+        _(bynetwork[ElrondMaiar.network.id])
           .map((p) => p.getAssets().concat(p.getRewardAssets()))
           .flatten()
           .map((a) => a.address)
           .value()
       ),
+      ..._(bynetwork)
+        .keys()
+        .filter((id) => parseInt(id) > 0)
+        .map((id) =>
+          this.fetchPrices(
+            id,
+            _(bynetwork[id])
+              .map((p) => p.getAssets().concat(p.getRewardAssets()))
+              .flatten()
+              .map((a) => a.address)
+              .value()
+          )
+        )
+        .value(),
     ]);
   }
 
   /**
    * returns price in USD 18 decimals by token address
    */
-  async fetchPrices(addresses: string[]): Promise<{ [address: string]: BN }> {
+  async fetchPrices(networkId: number | string, addresses: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(addresses)) return {};
-    const network = await getNetwork();
-    const coingeckoId = _.find(coingeckoIds, (v, k) => k === network.shortname)!;
+    const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
     const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`);
     const json = (await response.json()) as Record<string, any>;
 
