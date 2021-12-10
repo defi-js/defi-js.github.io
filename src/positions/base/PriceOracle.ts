@@ -59,7 +59,9 @@ export class PriceOracle {
   async fetchPrices(networkId: number | string, addresses: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(addresses)) return {};
     const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
-    const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`);
+    const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`, {
+      mode: "cors",
+    });
     const json = (await response.json()) as Record<string, any>;
 
     const result = _(json)

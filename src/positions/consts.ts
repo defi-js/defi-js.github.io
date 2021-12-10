@@ -3,6 +3,7 @@ import { erc20s as erc20sOrig, contracts as contractsOrig, erc20, contract } fro
 import type { RevaultFarmAbi } from "../../typechain-abi/RevaultFarmAbi";
 import type { UniclyXUnicAbi } from "../../typechain-abi/UniclyXUnicAbi";
 import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
+import type { RevaultChefAbi } from "../../typechain-abi/RevaultChefAbi";
 
 export const erc20s = _.merge({}, erc20sOrig, {
   eth: {
@@ -25,5 +26,6 @@ export const contracts = _.merge({}, contractsOrig, {
   },
   bsc: {
     Revault_Farm: () => contract<RevaultFarmAbi>(require("../abi/RevaultFarmAbi.json"), "0x2642fa04bd1f7250be6539c5bDa36335333d9Ccd"),
+    Revault_Chef: () => contract<RevaultChefAbi>(require("../abi/RevaultChefAbi.json"), "0xd7550285532f1642511b16Df858546F2593d638B"),
   },
 });

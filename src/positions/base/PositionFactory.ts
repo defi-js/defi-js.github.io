@@ -32,7 +32,11 @@ export namespace PositionFactory {
     return p.getNetwork().id === current.id || p.getNetwork().id < 0; // non-web3 network
   }
 
-  export function isValidInput(type: string, address: string) {
+  export function isValidWallet(address: string) {
+    return Web3.utils.isAddress(address) || isElrondAddress("egld:", address);
+  }
+
+  export function isValidArgs(type: string, address: string) {
     return !!type && (Web3.utils.isAddress(address) || isElrondAddress(type, address));
   }
 

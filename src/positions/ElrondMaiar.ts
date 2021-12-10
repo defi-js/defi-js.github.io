@@ -1,8 +1,10 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, erc20, ether, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
-import { Address, ContractFunction, ProxyProvider, SmartContract } from "@elrondnetwork/erdjs/out";
+import { Address, BigUIntValue, BytesValue, ContractFunction, ProxyProvider, SmartContract } from "@elrondnetwork/erdjs/out";
 import _ from "lodash";
+import BigNumberExt from "bignumber.js";
+import BN from "bn.js";
 
 export namespace ElrondMaiar {
   export const network = { id: -508, name: "Elrond", shortname: "egld" };
@@ -33,14 +35,17 @@ export namespace ElrondMaiar {
   };
 
   export class Farm implements Position {
+    mex = tokens.MEX();
+    lkmex = tokens.LKMEX();
+
     data = {
+      lpBalanceStaked: zero,
       amount0: zero,
       amount1: zero,
       value0: zero,
       value1: zero,
       rewardAmount: zero,
       rewardValue: zero,
-      balanceEGLD: zero,
       tvl: zero,
     };
 
@@ -52,7 +57,7 @@ export namespace ElrondMaiar {
 
     getAssets = () => this.strategy.assets;
 
-    getRewardAssets = () => [tokens.MEX()];
+    getRewardAssets = () => [this.lkmex];
 
     getData = () => this.data;
 
@@ -71,7 +76,7 @@ export namespace ElrondMaiar {
       },
     ];
 
-    getPendingRewards = () => [];
+    getPendingRewards = () => [{ asset: this.mex, amount: this.data.rewardAmount, value: this.data.rewardValue }];
 
     getTVL = () => this.data.tvl;
 
@@ -80,31 +85,33 @@ export namespace ElrondMaiar {
       const pair = new SmartContract({ address: new Address(this.strategy.pool) });
       const farm = new SmartContract({ address: new Address(this.strategy.farm) });
 
-      const [balanceEGLD, esdts, lpTotalStakedInFarm, farmNftTotalSupply, token0Id, reserves] = await Promise.all([
-        provider.getAccount(account).then((r) => bn(r.balance.toString())),
+      const [esdts, farmingTokenReserve, token0Id, reserves] = await Promise.all([
         provider.getAddressEsdtList(account),
         call(farm, "getFarmingTokenReserve").then((r) => base64(r[0])),
-        call(farm, "getFarmTokenSupply").then((r) => base64(r[0])),
         call(pair, "getFirstTokenId").then((r) => r[0]),
         call(pair, "getReservesAndTotalSupply").then((r) => r.map(base64)),
       ]);
-      this.data.balanceEGLD = balanceEGLD;
+      const [token0r, token1r, lpTotalSupply] = reserves;
 
       const farmNfts = _.filter(esdts, (v) => v.creator === this.strategy.farm);
-      const farmNftBalance = farmNfts.map((nft) => bn(nft.balance)).reduce((sum, b) => sum.add(b), zero);
-      const farmNftPercentOfSupply = farmNftBalance.mul(ether).div(farmNftTotalSupply);
-      const lpBalance = lpTotalStakedInFarm.mul(farmNftPercentOfSupply).div(ether);
+      if (!farmNfts.length) return;
 
-      const [token0r, token1r, totalSupply] = reserves;
-      const percentOfPool = lpBalance.mul(ether).div(totalSupply);
+      this.data.lpBalanceStaked = farmNfts.map((nft) => parseAmountLpFromAttributes(nft.attributes)).reduce((sum, b) => sum.add(b), zero);
+
+      this.data.rewardAmount = await Promise.all(farmNfts.map((nft) => callAndParseGetPendingRewards(farm, nft.balance, nft.attributes))).then((r) =>
+        r.reduce((sum, r) => sum.add(r), zero)
+      );
+
+      const percentOfPool = this.data.lpBalanceStaked.mul(ether).div(lpTotalSupply);
       const token0 = to18(this.strategy.assets[0].tokenId === token0Id[0] ? token0r : token1r, this.strategy.assets[0].dec);
       const token1 = to18(this.data.amount0 === token0r ? token1r : token0r, this.strategy.assets[1].dec);
       this.data.amount0 = percentOfPool.mul(token0).div(ether);
       this.data.amount1 = percentOfPool.mul(token1).div(ether);
-      [this.data.value0, this.data.value1, this.data.tvl] = await Promise.all([
+      [this.data.value0, this.data.value1, this.data.tvl, this.data.rewardValue] = await Promise.all([
         this.oracle.valueOf(this.strategy.assets[0], this.data.amount0),
         this.oracle.valueOf(this.strategy.assets[1], this.data.amount1),
-        this.oracle.valueOf(this.strategy.assets[0], token0.muln(2).mul(lpTotalStakedInFarm).div(totalSupply)),
+        this.oracle.valueOf(this.strategy.assets[1], token1.muln(2).mul(farmingTokenReserve).div(lpTotalSupply)),
+        this.oracle.valueOf(this.mex, this.data.rewardAmount),
       ]);
     }
 
@@ -129,12 +136,50 @@ export namespace ElrondMaiar {
     return bn(Buffer.from(s, "base64").toString("hex"), 16);
   }
 
-  function base64Str(s: string) {
-    return Buffer.from(s, "base64").toString("utf8");
-  }
-
   function call(contract: SmartContract, fn: string) {
     return contract.runQuery(provider, { func: new ContractFunction(fn) }).then((r) => r.returnData);
+  }
+
+  //#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, Clone)]
+  // pub struct FarmTokenAttributes<M: ManagedTypeApi> {
+  //     pub reward_per_share: BigUint<M>,
+  //     pub original_entering_epoch: u64,
+  //     pub entering_epoch: u64,
+  //     pub apr_multiplier: u8,
+  //     pub with_locked_rewards: bool,
+  //     pub initial_farming_amount: BigUint<M>,
+  //     pub compounded_reward: Bigu32,
+  //     pub current_farm_amount: BigUint<M>,
+  // }
+  //000000000000000008 08b17d48809d7fc0 00000000000001e9 00000000000001e9 0f 01 00000008 77a3ec302d1cd52c 00000000 00000009 07029ad6d2a4b07d94
+  function parseAmountLpFromAttributes(attributes: string) {
+    let hex = base64(attributes).toString("hex");
+    if (hex.length % 2 != 0) {
+      hex = "0" + hex;
+    }
+
+    let bytes = [];
+    for (let i = 0; i < hex.length - 1; i += 2) bytes.push(hex[i] + hex[i + 1]);
+
+    const perShare_z = parseInt(bytes[0], 16);
+    const origEpoch_z = 8;
+    const enterEpoch_z = 8;
+    const apr_z = 1;
+    const locked_z = 1;
+    const lp_z_z = 4;
+    const lp_z_index = perShare_z + origEpoch_z + enterEpoch_z + apr_z + locked_z + lp_z_z;
+    const lp_z = parseInt(bytes[lp_z_index], 16);
+    const lp_index = lp_z_index + 1;
+    return bn(_.slice(bytes, lp_index, lp_index + lp_z).join(""), 16);
+  }
+
+  async function callAndParseGetPendingRewards(farm: SmartContract, balanceFarmNFT: BN, attributes: string) {
+    const result = await farm.runQuery(provider, {
+      func: new ContractFunction("calculateRewardsForGivenPosition"),
+      args: [new BigUIntValue(BigNumberExt.max(balanceFarmNFT.toString())), new BytesValue(Buffer.from(attributes, "base64"))],
+    });
+    result.assertSuccess();
+    return base64(result.returnData[0]);
   }
 }
 

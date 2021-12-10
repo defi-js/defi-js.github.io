@@ -3,6 +3,7 @@ import { AddPositionBtn } from "./AddPositionDialog";
 import { useAppState, useIsAppConnected } from "../state/AppState";
 import { Button } from "@mui/material";
 import { fmt18 } from "@defi.org/web3-candies";
+import { AddWalletBtn } from "./AddWalletDialog";
 
 export const AppHeader = () => (
   <div style={{ fontSize: "large", minWidth: "42em" }}>
@@ -11,7 +12,7 @@ export const AppHeader = () => (
 
     <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-around" }}>
       <ConnectBtn />
-
+      <AddWalletBtn />
       <AddPositionBtn />
     </div>
 

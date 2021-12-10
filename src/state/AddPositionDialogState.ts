@@ -28,14 +28,14 @@ const AddPositionDialogState = createStore({
     setType:
       (type: string) =>
       async ({ setState, getState }) => {
-        const valid = PositionFactory.isValidInput(type, getState().address);
+        const valid = PositionFactory.isValidArgs(type, getState().address);
         setState({ type, valid });
       },
 
     setAddress:
       (address: string) =>
       async ({ setState, getState }) => {
-        const valid = PositionFactory.isValidInput(getState().type, address);
+        const valid = PositionFactory.isValidArgs(getState().type, address);
         setState({ address, valid });
       },
   },

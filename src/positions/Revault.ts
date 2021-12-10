@@ -1,13 +1,13 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, contract, getNetwork, networks, Token, web3, zero } from "@defi.org/web3-candies";
+import { account, bn, getNetwork, networks, Token, web3, zero } from "@defi.org/web3-candies";
 import { contracts, erc20s } from "./consts";
 import _ from "lodash";
-import { RevaultChefAbi } from "../../typechain-abi/RevaultChefAbi";
 
 export namespace Revault {
   export class SingleVault implements Position {
     revault = contracts.bsc.Revault_Farm();
+    chef = contracts.bsc.Revault_Chef();
     reva = erc20s.bsc.REVA();
 
     data = {
@@ -58,26 +58,27 @@ export namespace Revault {
         .call({ from: this.args.address });
       this.data.pendingReva = bn(returnedRevaAmount);
       this.data.pending = bn(returnedTokenAmount);
-      [this.data.value, this.data.pendingRevaValue, this.data.pendingValue] = await Promise.all([
+
+      let info;
+      [this.data.value, this.data.pendingRevaValue, this.data.pendingValue, info] = await Promise.all([
         this.oracle.valueOf(this.asset, this.data.amount),
         this.oracle.valueOf(this.reva, this.data.pendingReva),
         this.oracle.valueOf(this.asset, this.data.pending),
+        this.chef.methods.tokens(this.asset.address).call(),
       ]);
-
-      const chef = contract<RevaultChefAbi>(require("../abi/RevaultChefAbi.json"), await this.revault.methods.revaChef().call());
-      const { tvlBusd } = await chef.methods.tokens(this.asset.address).call();
+      const { tvlBusd } = info;
       this.data.tvl = bn(tvlBusd);
     }
 
     private async findVault() {
       const supportedVaults = {
-        [erc20s.bsc.WBNB().address]: { id: 0 },
-        [erc20s.bsc.BUSD().address]: { id: 1 },
-        [erc20s.bsc.CAKE().address]: { id: 2 },
+        [erc20s.bsc.WBNB().address]: { id: 0 }, // bunny
+        [erc20s.bsc.BUSD().address]: { id: 1 }, // bunny
+        [erc20s.bsc.CAKE().address]: { id: 2 }, // bunny
       };
       const payload = web3().eth.abi.encodeFunctionSignature("getReward()"); //all bunny vaults
       const vaultId = supportedVaults[this.asset.address].id;
-      const [vault, principal] = await Promise.all([this.revault.methods.vaults(vaultId).call(), this.revault.methods.getUserVaultPrincipal(vaultId, this.args.address).call()]);
+      const [vault, principal] = await Promise.all([this.revault.methods.vaults(vaultId).call(), this.revault.methods.userVaultPrincipal(vaultId, this.args.address).call()]);
       return { ...vault, id: vaultId, principal: bn(principal), payload };
     }
 
@@ -95,7 +96,10 @@ export namespace Revault {
     }
 
     async harvest(useLegacyTx: boolean) {
-      await this.revault.methods.harvestVault(this.data.vaultId, this.data.vaultHarvestPayload).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await this.revault.methods.harvestVault(this.data.vaultId, this.data.vaultHarvestPayload).send({
+        from: await account(),
+        type: useLegacyTx ? "0x0" : "0x2",
+      } as any);
     }
   }
 }

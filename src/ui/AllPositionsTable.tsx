@@ -25,7 +25,7 @@ export const AllPositionsTable = () => {
   const click = (p: any) => positionDialogActions.showPosition(positions[p.id.toString()]);
 
   return (
-    <div style={{ height: "100%", minHeight: 500, width: "90%" }}>
+    <div hidden={!rows.length} style={{ height: "100%", minHeight: 500, width: "90%" }}>
       <DataGrid rows={rows} columns={columns} onCellClick={click} />
     </div>
   );
