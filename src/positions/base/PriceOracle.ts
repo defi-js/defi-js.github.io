@@ -33,7 +33,7 @@ export class PriceOracle {
         _(bynetwork[ElrondMaiar.network.id])
           .map((p) => p.getAssets().concat(p.getRewardAssets()))
           .flatten()
-          .map((a) => a.address)
+          .map((a) => (a as any).tokenId)
           .value()
       ),
       ..._(bynetwork)
@@ -58,6 +58,7 @@ export class PriceOracle {
    */
   async fetchPrices(networkId: number | string, addresses: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(addresses)) return {};
+    console.log("fetch", addresses);
     const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
     const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`, {
       mode: "cors",
@@ -77,6 +78,7 @@ export class PriceOracle {
    */
   async fetchPricesElrond(tokenIds: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(tokenIds)) return {};
+    console.log("fetch elrond", tokenIds);
     const body = {
       variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
       query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {

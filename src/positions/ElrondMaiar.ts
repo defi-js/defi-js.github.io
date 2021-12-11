@@ -1,4 +1,4 @@
-import { Position, PositionArgs } from "./base/Position";
+import { Position, PositionArgs, TokenAmount } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, erc20, ether, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
 import { Address, BigUIntValue, BytesValue, ContractFunction, ProxyProvider, SmartContract } from "@elrondnetwork/erdjs/out";
@@ -19,6 +19,34 @@ export namespace ElrondMaiar {
     MEX: () => esdt("MEX", "MEX-455c57", 18),
     LKMEX: () => esdt("LKMEX", "LKMEX-aab910", 18),
   };
+
+  export async function balances(oracle: PriceOracle, address: string) {
+    const usdc = tokens.USDC();
+    const mex = tokens.MEX();
+    const lkmex = tokens.LKMEX();
+    const egld = tokens.EGLD();
+
+    const [esdts, balanceEGLD] = await Promise.all([
+      provider.getAddressEsdtList(new Address(address)),
+      provider.getAccount(new Address(address)).then((r) => bn(r.balance.toString())),
+    ]);
+    const balanceUSDC = bn(_.find(esdts, (t) => t.tokenIdentifier === usdc.tokenId)?.balance);
+    const balanceMEX = bn(_.find(esdts, (t) => t.tokenIdentifier === mex.tokenId)?.balance);
+    const balanceLKMEX = bn(_.find(esdts, (t) => t.tokenIdentifier === lkmex.tokenId)?.balance);
+
+    const [vEGLD, vUSDC, vMEX, vLKMEX] = await Promise.all([
+      oracle.valueOf(egld, balanceEGLD),
+      oracle.valueOf(usdc, balanceUSDC),
+      oracle.valueOf(mex, balanceMEX),
+      oracle.valueOf(mex, balanceLKMEX),
+    ]);
+    return [
+      { asset: egld, amount: balanceEGLD, value: vEGLD },
+      { asset: usdc, amount: balanceUSDC, value: vUSDC },
+      { asset: mex, amount: balanceMEX, value: vMEX },
+      { asset: lkmex, amount: balanceLKMEX, value: vLKMEX },
+    ] as TokenAmount[];
+  }
 
   export type Strategy = { assets: ESDT[]; pool: string; farm: string };
   export const Strategies = {
@@ -154,7 +182,7 @@ export namespace ElrondMaiar {
   //000000000000000008 08b17d48809d7fc0 00000000000001e9 00000000000001e9 0f 01 00000008 77a3ec302d1cd52c 00000000 00000009 07029ad6d2a4b07d94
   function parseAmountLpFromAttributes(attributes: string) {
     let hex = base64(attributes).toString("hex");
-    if (hex.length % 2 != 0) {
+    if (hex.length % 2 !== 0) {
       hex = "0" + hex;
     }
 

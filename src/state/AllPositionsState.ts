@@ -16,6 +16,7 @@ const AllPositionsState = createStore({
 
   initialState: {
     positions: {} as Record<string, Position>,
+    ready: false,
   },
 
   actions: {
@@ -67,10 +68,13 @@ async function load({ getState, setState }: StoreActionApi<typeof AllPositionsSt
   console.log("LOAD");
   const current = getState().positions;
   const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
+
   for (const id in positions) if (!positions[id]) delete positions[id];
-  await PositionFactory.oracle.warmup(_.values(positions));
+
+  if (!getState().ready) await PositionFactory.oracle.warmup(_.values(positions));
+
   await Promise.all(_.map(positions, (p) => p?.load().catch((e) => console.log(p.getArgs().type, e))));
-  setState({ positions });
+  setState({ positions, ready: true });
 }
 
 export const useAllPositionsActions = createHook(AllPositionsState, { selector: null });
@@ -95,6 +99,9 @@ export const useAllPositionRows = createHook(AllPositionsState, {
 });
 export const useAllPositions = createHook(AllPositionsState, {
   selector: (state) => state.positions,
+});
+export const useAllPositionsReady = createHook(AllPositionsState, {
+  selector: (state) => state.ready,
 });
 
 function fmtHealth(health: Threat[]) {

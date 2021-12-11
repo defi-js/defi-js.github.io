@@ -22,8 +22,11 @@ export const App = () => {
       <div className="App">
         <AppHeader />
 
+        <br />
         <AllPositionsTable />
 
+        <br />
+        <br />
         <AllBalancesTable />
 
         <div>

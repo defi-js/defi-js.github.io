@@ -6,7 +6,7 @@ import { usePositionDialogActions } from "../state/PositionDialogState";
 
 const columns: GridColDef[] = [
   { field: "type", headerName: "Type", width: 300, align: "left" },
-  { field: "health", headerName: "Health", width: 60, align: "center" },
+  { field: "health", headerName: "Health", width: 100, align: "center" },
   { field: "value", headerName: "Market Value", width: 100, align: "right" },
   { field: "pending", headerName: "Pending", width: 100, align: "right" },
   { field: "tvl", headerName: "TVL", width: 150, align: "right" },
