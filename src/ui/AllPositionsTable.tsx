@@ -1,10 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useAllPositionRows, useAllPositions } from "../state/AllPositionsState";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
 import { commafy } from "@defi.org/web3-candies";
 import { Threat } from "../positions/base/Position";
+import _ from "lodash";
+import { ListItem, ListItemText } from "@mui/material";
 
 const columns: GridColDef[] = [
   { field: "type", headerName: "Position", width: 300, align: "left" },
@@ -65,9 +67,15 @@ export const AllPositionsTable = () => {
 
   const click = (p: any) => positionDialogActions.showPosition(positions[p.id.toString()]);
 
+  const total = useMemo(() => commafy(_.reduce(rows, (sum, row) => sum + row.value, 0).toFixed(0)), [rows]);
+
   return (
     <div hidden={!rows.length} style={{ height: "100%", width: "90%" }}>
       <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
+
+      <ListItem>
+        <ListItemText>Total Positions Market Value: $ {total}</ListItemText>
+      </ListItem>
     </div>
   );
 };

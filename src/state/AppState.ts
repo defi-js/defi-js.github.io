@@ -1,8 +1,7 @@
 import Web3 from "web3";
 import { createHook, createStore } from "react-sweet-state";
 import { account, bn, Network, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
-import { currentNetwork, networks } from "../positions/consts";
-import _ from "lodash";
+import { currentNetwork } from "../positions/consts";
 
 // defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
 //   const result = next(arg);
@@ -75,6 +74,7 @@ async function _onConnect(setState: any, ethereum: any) {
   const wallet = await account();
   const network = await currentNetwork();
   console.log("network", network);
+  if (!network) throw new Error(`network not supported yet`);
   setState({
     wallet,
     network,
