@@ -5,7 +5,7 @@ import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
 
 const columns: GridColDef[] = [
-  { field: "type", headerName: "Type", width: 300, align: "left" },
+  { field: "type", headerName: "Position", width: 300, align: "left" },
   { field: "health", headerName: "Health", width: 100, align: "center" },
   { field: "value", headerName: "Market Value", width: 100, align: "right" },
   { field: "pending", headerName: "Pending", width: 100, align: "right" },
@@ -25,8 +25,8 @@ export const AllPositionsTable = () => {
   const click = (p: any) => positionDialogActions.showPosition(positions[p.id.toString()]);
 
   return (
-    <div hidden={!rows.length} style={{ height: "100%", minHeight: 500, width: "90%" }}>
-      <DataGrid rows={rows} columns={columns} onCellClick={click} />
+    <div hidden={!rows.length} style={{ height: "100%", width: "90%" }}>
+      <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
     </div>
   );
 };

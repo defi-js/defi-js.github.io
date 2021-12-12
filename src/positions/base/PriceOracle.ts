@@ -1,7 +1,6 @@
 import _ from "lodash";
 import BN from "bn.js";
-import Web3 from "web3";
-import { bn18, ether, getNetwork, networks, Token } from "@defi.org/web3-candies";
+import { bn18, ether, getNetwork, networks, Token, web3 } from "@defi.org/web3-candies";
 import { Position } from "./Position";
 import { ElrondMaiar } from "../ElrondMaiar";
 
@@ -34,6 +33,7 @@ export class PriceOracle {
           .map((p) => p.getAssets().concat(p.getRewardAssets()))
           .flatten()
           .map((a) => (a as any).tokenId)
+          .uniq()
           .value()
       ),
       ..._(bynetwork)
@@ -46,6 +46,7 @@ export class PriceOracle {
               .map((p) => p.getAssets().concat(p.getRewardAssets()))
               .flatten()
               .map((a) => a.address)
+              .uniq()
               .value()
           )
         )
@@ -60,13 +61,11 @@ export class PriceOracle {
     if (_.isEmpty(addresses)) return {};
     console.log("fetch", addresses);
     const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
-    const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`, {
-      mode: "cors",
-    });
+    const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`);
     const json = (await response.json()) as Record<string, any>;
 
     const result = _(json)
-      .mapKeys((v, k) => Web3.utils.toChecksumAddress(k))
+      .mapKeys((v, k) => web3().utils.toChecksumAddress(k))
       .mapValues((v) => bn18(v.usd))
       .value();
 

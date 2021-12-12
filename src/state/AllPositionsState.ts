@@ -20,35 +20,29 @@ const AllPositionsState = createStore({
   },
 
   actions: {
-    load:
-      () =>
-      async ({ dispatch }) => {
-        await dispatch(load);
-      },
+    load: () => async (api) => {
+      await load(api);
+    },
 
-    addPosition:
-      (type: string, address: string) =>
-      async ({ getState, dispatch }) => {
-        const position = PositionFactory.create({ type, address, id: "" });
-        if (!position) {
-          alert(`unknown type ${type} at ${address}`);
-          return;
-        }
+    addPosition: (type: string, address: string) => async (api) => {
+      const position = PositionFactory.create({ type, address, id: "" });
+      if (!position) {
+        alert(`unknown type ${type} at ${address}`);
+        return;
+      }
 
-        const data = _.mapValues(getState().positions, (p) => p.getArgs());
-        data[position.getArgs().id] = position.getArgs();
-        saveToStorage(data);
-        await dispatch(load);
-      },
+      const data = _.mapValues(api.getState().positions, (p) => p.getArgs());
+      data[position.getArgs().id] = position.getArgs();
+      saveToStorage(data);
+      await load(api);
+    },
 
-    delete:
-      (posId: string) =>
-      async ({ getState, dispatch }) => {
-        const data = _.mapValues(getState().positions, (p) => p.getArgs());
-        delete data[posId];
-        saveToStorage(data);
-        await dispatch(load);
-      },
+    delete: (posId: string) => async (api) => {
+      const data = _.mapValues(api.getState().positions, (p) => p.getArgs());
+      delete data[posId];
+      saveToStorage(data);
+      await load(api);
+    },
 
     sendTransaction:
       (posId: string, useLegacyTx: boolean, method: string, args: string[]) =>
@@ -64,17 +58,18 @@ const AllPositionsState = createStore({
   },
 });
 
-async function load({ getState, setState }: StoreActionApi<typeof AllPositionsState.initialState>) {
+async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) {
   console.log("LOAD");
-  const current = getState().positions;
+  const current = api.getState().positions;
   const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
 
   for (const id in positions) if (!positions[id]) delete positions[id];
 
-  if (!getState().ready) await PositionFactory.oracle.warmup(_.values(positions));
+  if (!api.getState().ready) await PositionFactory.oracle.warmup(_.values(positions));
 
   await Promise.all(_.map(positions, (p) => p?.load().catch((e) => console.log(p.getArgs().type, e))));
-  setState({ positions, ready: true });
+  api.setState({ positions });
+  api.setState({ ready: true });
 }
 
 export const useAllPositionsActions = createHook(AllPositionsState, { selector: null });

@@ -22,12 +22,13 @@ export const App = () => {
       <div className="App">
         <AppHeader />
 
-        <br />
         <AllPositionsTable />
 
         <br />
         <br />
         <AllBalancesTable />
+
+        <br />
 
         <div>
           <AddPositionDialog />

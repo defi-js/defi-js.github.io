@@ -2,14 +2,14 @@ import _ from "lodash";
 import { createHook, createStore, StoreActionApi } from "react-sweet-state";
 import { fetchBalances } from "../positions/base/Balances";
 import { TokenAmount } from "../positions/base/Position";
-import { fmt18 } from "@defi.org/web3-candies";
+import { ether, fmt18, getNetwork } from "@defi.org/web3-candies";
+import { PositionFactory } from "../positions/base/PositionFactory";
 
 const STORAGE_KEY = "Wallets:v1";
 const loadFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as string[];
 const saveToStorage = (data: string[]) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
-type NetworkShortname = string;
-type WalletBalances = Record<NetworkShortname, TokenAmount[]>;
+type WalletBalances = Record<string, TokenAmount[]>;
 type WalletRow = { id: string; wallet: string; network: string; asset: string; amount: string; value: string };
 
 const WalletsState = createStore({
@@ -22,29 +22,23 @@ const WalletsState = createStore({
   },
 
   actions: {
-    load:
-      () =>
-      async ({ dispatch }) => {
-        await dispatch(load);
-      },
+    load: () => async (api) => {
+      await load(api);
+    },
 
-    add:
-      (address: string) =>
-      async ({ getState, dispatch }) => {
-        const current = getState().wallets;
-        saveToStorage(_.uniq(_.concat(current, address)));
-        await dispatch(load);
-      },
+    add: (address: string) => async (api) => {
+      const current = api.getState().wallets;
+      saveToStorage(_.uniq(_.concat(current, address)));
+      await load(api);
+    },
 
-    delete:
-      (address: string) =>
-      async ({ getState, setState, dispatch }) => {
-        const current = getState().wallets;
-        const wallets = _.filter(current, (a) => a !== address);
-        saveToStorage(wallets);
-        setState({ wallets });
-        await dispatch(load);
-      },
+    delete: (address: string) => async (api) => {
+      const current = api.getState().wallets;
+      const wallets = _.filter(current, (a) => a !== address);
+      saveToStorage(wallets);
+      api.setState({ wallets });
+      await load(api);
+    },
   },
 });
 
@@ -53,15 +47,17 @@ async function load({ getState, setState }: StoreActionApi<typeof WalletsState.i
   const wallets = _.merge(loadFromStorage(), getState().wallets);
   setState({ wallets });
 
-  const fetched = await Promise.all(wallets.map((w) => fetchBalances(w)));
-  const balances = {} as Record<string, Record<string, TokenAmount[]>>;
-  setState({ balances });
+  const network = await getNetwork();
+  const oracle = PositionFactory.oracle;
+  const fetched = await Promise.all(wallets.map((w) => fetchBalances(oracle, network, w)));
+  const balances = getState().balances;
 
   const rows = [] as WalletRow[];
   _.forEach(wallets, (w, i) => {
-    balances[w] = fetched[i];
+    balances[w] = _.merge({}, balances[w], fetched[i]);
+
     _.forEach(balances[w], (aa, n) => {
-      const nonzero = _.filter(aa, (a) => !a.amount.isZero());
+      const nonzero = _.filter(aa, (a) => a.value.gte(ether));
       _.forEach(nonzero, (a) => {
         rows.push({
           id: `${w}:${n}:${a.asset.name}`,

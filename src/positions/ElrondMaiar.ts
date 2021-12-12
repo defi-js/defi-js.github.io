@@ -14,7 +14,7 @@ export namespace ElrondMaiar {
   export type ESDT = Token & { esdt: true; tokenId: string; dec: number };
 
   const tokens = {
-    EGLD: () => esdt("EGLD", "WEGLD-bd4d79", 18),
+    EGLD: () => esdt("WEGLD", "WEGLD-bd4d79", 18),
     USDC: () => esdt("USDC", "USDC-c76f1f", 6),
     MEX: () => esdt("MEX", "MEX-455c57", 18),
     LKMEX: () => esdt("LKMEX", "LKMEX-aab910", 18),
@@ -33,15 +33,18 @@ export namespace ElrondMaiar {
     const balanceUSDC = bn(_.find(esdts, (t) => t.tokenIdentifier === usdc.tokenId)?.balance);
     const balanceMEX = bn(_.find(esdts, (t) => t.tokenIdentifier === mex.tokenId)?.balance);
     const balanceLKMEX = bn(_.find(esdts, (t) => t.tokenIdentifier === lkmex.tokenId)?.balance);
+    const balanceWEGLD = bn(_.find(esdts, (t) => t.tokenIdentifier === egld.tokenId)?.balance);
 
-    const [vEGLD, vUSDC, vMEX, vLKMEX] = await Promise.all([
+    const [vEGLD, vWEGLD, vUSDC, vMEX, vLKMEX] = await Promise.all([
       oracle.valueOf(egld, balanceEGLD),
+      oracle.valueOf(egld, balanceWEGLD),
       oracle.valueOf(usdc, balanceUSDC),
       oracle.valueOf(mex, balanceMEX),
       oracle.valueOf(mex, balanceLKMEX),
     ]);
     return [
-      { asset: egld, amount: balanceEGLD, value: vEGLD },
+      { asset: esdt("EGLD", "", 18), amount: balanceEGLD, value: vEGLD },
+      { asset: egld, amount: balanceWEGLD, value: vWEGLD },
       { asset: usdc, amount: balanceUSDC, value: vUSDC },
       { asset: mex, amount: balanceMEX, value: vMEX },
       { asset: lkmex, amount: balanceLKMEX, value: vLKMEX },
@@ -60,11 +63,15 @@ export namespace ElrondMaiar {
       pool: "erd1qqqqqqqqqqqqqpgqa0fsfshnff4n76jhcye6k7uvd7qacsq42jpsp6shh2",
       farm: "erd1qqqqqqqqqqqqqpgqye633y7k0zd7nedfnp3m48h24qygm5jl2jpslxallh",
     }),
+    MEX: () => ({
+      assets: [tokens.MEX()],
+      pool: "erd1qqqqqqqqqqqqqpgqv4ks4nzn2cw96mm06lt7s2l3xfrsznmp2jpsszdry5",
+      farm: "erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl",
+    }),
   };
 
   export class Farm implements Position {
     mex = tokens.MEX();
-    lkmex = tokens.LKMEX();
 
     data = {
       lpBalanceStaked: zero,
@@ -85,24 +92,33 @@ export namespace ElrondMaiar {
 
     getAssets = () => this.strategy.assets;
 
-    getRewardAssets = () => [this.lkmex];
+    getRewardAssets = () => [this.mex];
 
     getData = () => this.data;
 
     getHealth = () => [];
 
-    getAmounts = () => [
-      {
-        asset: this.strategy.assets[0],
-        amount: this.data.amount0,
-        value: this.data.value0,
-      },
-      {
-        asset: this.strategy.assets[1],
-        amount: this.data.amount1,
-        value: this.data.value1,
-      },
-    ];
+    getAmounts = () =>
+      this.strategy.assets.length === 2
+        ? [
+            {
+              asset: this.strategy.assets[0],
+              amount: this.data.amount0,
+              value: this.data.value0,
+            },
+            {
+              asset: this.strategy.assets[1],
+              amount: this.data.amount1,
+              value: this.data.value1,
+            },
+          ]
+        : [
+            {
+              asset: this.strategy.assets[0],
+              amount: this.data.amount0,
+              value: this.data.value0,
+            },
+          ];
 
     getPendingRewards = () => [{ asset: this.mex, amount: this.data.rewardAmount, value: this.data.rewardValue }];
 

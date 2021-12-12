@@ -6,7 +6,7 @@ import { fmt18 } from "@defi.org/web3-candies";
 import { AddWalletBtn } from "./AddWalletDialog";
 
 export const AppHeader = () => (
-  <div style={{ fontSize: "large", minWidth: "42em" }}>
+  <div style={{ fontSize: "medium", minWidth: "42em" }}>
     <br />
     <br />
 
@@ -38,9 +38,10 @@ const WalletInfo = () => {
   const [state] = useAppState();
   return (
     <div>
-      <p>Network 🌐 {state.network?.name}</p>
-      <p>Wallet 🔑 {state.wallet}</p>
-      <p>Balance 💰 {fmt18(state.balance)}</p>
+      <br />
+      <div>Network 🌐 {state.network?.name}</div>
+      <div>Wallet 🔑 {state.wallet}</div>
+      <div>Balance 💰 {fmt18(state.balance)}</div>
     </div>
   );
 };

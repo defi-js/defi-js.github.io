@@ -1,8 +1,7 @@
 import _ from "lodash";
 import { Position, PositionArgs } from "./Position";
 import { PriceOracle } from "./PriceOracle";
-import { Network } from "@defi.org/web3-candies";
-import Web3 from "web3";
+import { Network, web3 } from "@defi.org/web3-candies";
 import { Address } from "@elrondnetwork/erdjs/out";
 
 type Factory = (args: PositionArgs, oracle: PriceOracle) => Position;
@@ -33,11 +32,11 @@ export namespace PositionFactory {
   }
 
   export function isValidWallet(address: string) {
-    return Web3.utils.isAddress(address) || isElrondAddress("egld:", address);
+    return web3()?.utils?.isAddress(address) || isElrondAddress("egld:", address);
   }
 
   export function isValidArgs(type: string, address: string) {
-    return !!type && (Web3.utils.isAddress(address) || isElrondAddress(type, address));
+    return !!type && (web3()?.utils?.isAddress(address) || isElrondAddress(type, address));
   }
 
   function isElrondAddress(type: string, address: string) {
