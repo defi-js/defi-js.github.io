@@ -36,11 +36,11 @@ export namespace ElrondMaiar {
     const balanceWEGLD = bn(_.find(esdts, (t) => t.tokenIdentifier === egld.tokenId)?.balance);
 
     const [vEGLD, vWEGLD, vUSDC, vMEX, vLKMEX] = await Promise.all([
-      oracle.valueOf(egld, balanceEGLD),
-      oracle.valueOf(egld, balanceWEGLD),
-      oracle.valueOf(usdc, balanceUSDC),
-      oracle.valueOf(mex, balanceMEX),
-      oracle.valueOf(mex, balanceLKMEX),
+      oracle.valueOf(network.id, egld, balanceEGLD),
+      oracle.valueOf(network.id, egld, balanceWEGLD),
+      oracle.valueOf(network.id, usdc, balanceUSDC),
+      oracle.valueOf(network.id, mex, balanceMEX),
+      oracle.valueOf(network.id, mex, balanceLKMEX),
     ]);
     return [
       { asset: esdt("EGLD", "", 18), amount: balanceEGLD, value: vEGLD },
@@ -152,10 +152,10 @@ export namespace ElrondMaiar {
       this.data.amount0 = percentOfPool.mul(token0).div(ether);
       this.data.amount1 = percentOfPool.mul(token1).div(ether);
       [this.data.value0, this.data.value1, this.data.tvl, this.data.rewardValue] = await Promise.all([
-        this.oracle.valueOf(this.strategy.assets[0], this.data.amount0),
-        this.oracle.valueOf(this.strategy.assets[1], this.data.amount1),
-        this.oracle.valueOf(this.strategy.assets[1], token1.muln(2).mul(farmingTokenReserve).div(lpTotalSupply)),
-        this.oracle.valueOf(this.mex, this.data.rewardAmount),
+        this.oracle.valueOf(network.id, this.strategy.assets[0], this.data.amount0),
+        this.oracle.valueOf(network.id, this.strategy.assets[1], this.data.amount1),
+        this.oracle.valueOf(network.id, this.strategy.assets[1], token1.muln(2).mul(farmingTokenReserve).div(lpTotalSupply)),
+        this.oracle.valueOf(network.id, this.mex, this.data.rewardAmount),
       ]);
     }
 

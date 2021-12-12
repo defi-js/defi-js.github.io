@@ -1,9 +1,10 @@
 import { Position, PositionArgs, Severity } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, bn18, contract, erc20s, ether, getNetwork, networks, to18, zero } from "@defi.org/web3-candies";
+import { account, bn, bn18, contract, erc20s, ether, to18, zero } from "@defi.org/web3-candies";
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
 import _ from "lodash";
+import { networks } from "./consts";
 
 export namespace Loops {
   /**
@@ -85,19 +86,18 @@ export namespace Loops {
     getTVL = () => this.data.tvl;
 
     async load() {
-      if ((await getNetwork()).id !== this.getNetwork().id) return;
-
       const posData = await this.instance.methods.getPositionData().call();
       this.data.healthFactor = bn(posData.healthFactor);
       this.data.totalCollateralETH = bn(posData.totalCollateralETH);
       this.data.totalDebtETH = bn(posData.totalDebtETH);
-      this.data.totalCollateralValue = await this.oracle.valueOf(this.weth, this.data.totalCollateralETH);
-      this.data.totalDebtValue = await this.oracle.valueOf(this.weth, this.data.totalDebtETH);
+
+      this.data.totalCollateralValue = await this.oracle.valueOf(this.getNetwork().id, this.weth, this.data.totalCollateralETH);
+      this.data.totalDebtValue = await this.oracle.valueOf(this.getNetwork().id, this.weth, this.data.totalDebtETH);
       this.data.rewardAmount = bn(await this.instance.methods.getBalanceReward().call());
-      this.data.rewardValue = await this.oracle.valueOf(this.aave, this.data.rewardAmount);
+      this.data.rewardValue = await this.oracle.valueOf(this.getNetwork().id, this.aave, this.data.rewardAmount);
 
       const atoken = erc20s.eth.Aave_aUSDC();
-      this.data.tvl = await this.oracle.valueOf(this.asset, await atoken.mantissa(await atoken.methods.totalSupply().call()));
+      this.data.tvl = await this.oracle.valueOf(this.getNetwork().id, this.asset, await atoken.mantissa(await atoken.methods.totalSupply().call()));
     }
 
     getContractMethods = () => _.functions(this.instance.methods);
@@ -195,8 +195,6 @@ export namespace Loops {
     }
 
     async load() {
-      if ((await getNetwork()).id !== this.getNetwork().id) return;
-
       const ctoken = erc20s.eth.Compound_cUSDC();
       const [totalSupply, exchangeRate, underlyingBalance, borrowBalance, pending, liquidity] = await Promise.all([
         ctoken.methods.totalSupply().call(),
@@ -210,7 +208,7 @@ export namespace Loops {
       this.data.supplyBalance = await this.asset.mantissa(underlyingBalance);
       this.data.borrowBalance = await this.asset.mantissa(borrowBalance);
       this.data.rewardAmount = bn(pending);
-      this.data.rewardValue = await this.oracle.valueOf(this.rewardAsset, this.data.rewardAmount);
+      this.data.rewardValue = await this.oracle.valueOf(this.getNetwork().id, this.rewardAsset, this.data.rewardAmount);
       this.data.accountLiquidity = bn(liquidity.accountLiquidity);
       this.data.accountShortfall = bn(liquidity.accountShortfall);
 

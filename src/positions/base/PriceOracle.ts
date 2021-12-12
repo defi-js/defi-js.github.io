@@ -1,24 +1,32 @@
 import _ from "lodash";
 import BN from "bn.js";
-import { bn18, ether, getNetwork, networks, Token, web3 } from "@defi.org/web3-candies";
+import { bn18, ether, Token, web3 } from "@defi.org/web3-candies";
 import { Position } from "./Position";
 import { ElrondMaiar } from "../ElrondMaiar";
+import { networks } from "../consts";
 
 const coingeckoIds = {
   [networks.eth.id]: "ethereum",
   [networks.bsc.id]: "binance-smart-chain",
   [networks.poly.id]: "polygon-pos",
+  [networks.arb.id]: "arbitrum-one",
+  [networks.avax.id]: "avalanche",
 };
 
 export class PriceOracle {
   prices: Record<string, BN> = {};
 
-  async valueOf(token: Token, amount: BN): Promise<BN> {
-    const id = (token as any).tokenId || token.address;
+  async valueOf(networkId: number, token: Token, amount: BN): Promise<BN> {
+    const isElrond = networkId === ElrondMaiar.network.id || !!(token as any).tokenId;
+    const id = isElrond ? (token as ElrondMaiar.ESDT).tokenId : token.address;
 
     if (!this.prices[id] || this.prices[id].isZero()) {
-      if ((token as any).esdt) await this.fetchPricesElrond([id]);
-      else await this.fetchPrices((await getNetwork()).id, [id]);
+      if (isElrond) await this.fetchPricesElrond([id]);
+      else await this.fetchPrices(networkId, [id]);
+    }
+
+    if (!this.prices[id]) {
+      throw new Error(`no price for ${token.name} ${token.address} for amount ${amount.toString()} on ${networkId}`);
     }
 
     return amount.mul(this.prices[id]).div(ether);
@@ -61,7 +69,8 @@ export class PriceOracle {
     if (_.isEmpty(addresses)) return {};
     console.log("fetch", addresses);
     const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
-    const response = await fetch(`https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`);
+    const url = `https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`;
+    const response = await fetch(url);
     const json = (await response.json()) as Record<string, any>;
 
     const result = _(json)

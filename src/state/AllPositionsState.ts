@@ -1,9 +1,10 @@
 import _ from "lodash";
 import { createHook, createSelector, createStore, StoreActionApi } from "react-sweet-state";
-import { Position, PositionArgs, Threat } from "../positions/base/Position";
+import { Position, PositionArgs } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
 import { registerAllPositions } from "../positions";
-import { fmt18, zero } from "@defi.org/web3-candies";
+import { to3, zero } from "@defi.org/web3-candies";
+import { currentNetwork } from "../positions/consts";
 
 registerAllPositions();
 
@@ -67,9 +68,15 @@ async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) 
 
   if (!api.getState().ready) await PositionFactory.oracle.warmup(_.values(positions));
 
-  await Promise.all(_.map(positions, (p) => p?.load().catch((e) => console.log(p.getArgs().type, e))));
-  api.setState({ positions });
-  api.setState({ ready: true });
+  const network = await currentNetwork();
+
+  await Promise.all(
+    _.map(positions, (p) => {
+      if (!p || !network || !PositionFactory.shouldLoad(p, network)) return;
+      return p.load().catch((e) => console.log(p.getArgs().type, e));
+    })
+  );
+  api.setState({ positions, ready: true });
 }
 
 export const useAllPositionsActions = createHook(AllPositionsState, { selector: null });
@@ -84,11 +91,20 @@ export const useAllPositionRows = createHook(AllPositionsState, {
       _.map(positions, (p) => ({
         id: p.getArgs().id,
         type: p.getArgs().type,
-        health: fmtHealth(p.getHealth()),
-        value: "$" + fmt18(p.getAmounts().reduce((sum, v) => sum.add(v.value), zero)).split(".")[0],
-        pending: "$" + fmt18(p.getPendingRewards().reduce((sum, v) => sum.add(v.value), zero)).split(".")[0],
-        tvl: "$" + fmt18(p.getTVL()).split(".")[0],
+        health: p.getHealth(),
+        value:
+          to3(
+            p.getAmounts().reduce((sum, v) => sum.add(v.value), zero),
+            18
+          ).toNumber() / 1000,
+        pending:
+          to3(
+            p.getPendingRewards().reduce((sum, v) => sum.add(v.value), zero),
+            18
+          ).toNumber() / 1000,
+        tvl: to3(p.getTVL(), 18).toNumber() / 1000,
         position: p,
+        address: p.getArgs().address,
       }))
   ),
 });
@@ -98,8 +114,3 @@ export const useAllPositions = createHook(AllPositionsState, {
 export const useAllPositionsReady = createHook(AllPositionsState, {
   selector: (state) => state.ready,
 });
-
-function fmtHealth(health: Threat[]) {
-  if (!health.length) return "🟢";
-  return health.map((t) => t.message).join("⚠️");
-}

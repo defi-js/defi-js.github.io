@@ -1,6 +1,8 @@
 import Web3 from "web3";
 import { createHook, createStore } from "react-sweet-state";
-import { account, bn, getNetwork, Network, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
+import { account, bn, Network, setWeb3Instance, web3, zero } from "@defi.org/web3-candies";
+import { currentNetwork, networks } from "../positions/consts";
+import _ from "lodash";
 
 // defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
 //   const result = next(arg);
@@ -62,7 +64,7 @@ async function _withLoading(setState: any, t: () => Promise<void>) {
     setState({ loading: true });
     await t();
   } catch (e: any) {
-    alert(`${e.message}`);
+    alert(`${e.message} ${e.stack}`);
   } finally {
     setState({ loading: false });
   }
@@ -71,9 +73,11 @@ async function _withLoading(setState: any, t: () => Promise<void>) {
 async function _onConnect(setState: any, ethereum: any) {
   setWeb3Instance(new Web3(ethereum));
   const wallet = await account();
+  const network = await currentNetwork();
+  console.log("network", network);
   setState({
     wallet,
-    network: await getNetwork(),
+    network,
     balance: bn(await web3().eth.getBalance(wallet)),
   });
 }

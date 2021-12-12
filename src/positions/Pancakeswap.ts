@@ -1,8 +1,9 @@
 import { Position, PositionArgs } from "./base/Position";
-import { account, bn, contracts, erc20s, getNetwork, networks, Token, zero } from "@defi.org/web3-candies";
+import { account, bn, contracts, erc20s, Token, zero } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
 import _ from "lodash";
+import { networks } from "./consts";
 
 export namespace Pancakeswap {
   // const POOL_ID_MAPPING_URL = "https://raw.githubusercontent.com/pancakeswap/pancake-frontend/master/src/config/constants/farms.ts";
@@ -30,27 +31,17 @@ export namespace Pancakeswap {
       public poolId: number
     ) {}
 
-    getArgs() {
-      return this.args;
-    }
+    getArgs = () => this.args;
 
-    getNetwork() {
-      return networks.bsc;
-    }
+    getNetwork = () => networks.bsc;
 
-    getAssets() {
-      return [this.asset0, this.asset1];
-    }
+    getAssets = () => [this.asset0, this.asset1];
 
-    getRewardAssets() {
-      return [this.cake];
-    }
+    getRewardAssets = () => [this.cake];
 
     getData = () => this.data;
 
-    getHealth() {
-      return [];
-    }
+    getHealth = () => [];
 
     getAmounts = () => [
       {
@@ -76,8 +67,6 @@ export namespace Pancakeswap {
     getTVL = () => this.data.tvl;
 
     async load() {
-      if ((await getNetwork()).id !== this.getNetwork().id) return;
-
       const [userInfo, reserves, token0, totalSupply, pending, lpStaked] = await Promise.all([
         this.masterchef.methods.userInfo(this.poolId, this.args.address).call(),
         this.lpToken.methods.getReserves().call(),
@@ -96,10 +85,10 @@ export namespace Pancakeswap {
       this.data.amount1 = await this.asset1.mantissa(bn(r1).mul(amountLP).div(bn(totalSupply)));
 
       [this.data.value0, this.data.value1, this.data.rewardValue, this.data.tvl] = await Promise.all([
-        this.oracle.valueOf(this.asset0, this.data.amount0),
-        this.oracle.valueOf(this.asset1, this.data.amount1),
-        this.oracle.valueOf(this.cake, this.data.rewardAmount),
-        this.oracle.valueOf(this.asset1, bn(r1).muln(2).mul(bn(lpStaked)).div(bn(totalSupply))),
+        this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0),
+        this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1),
+        this.oracle.valueOf(this.getNetwork().id, this.cake, this.data.rewardAmount),
+        this.oracle.valueOf(this.getNetwork().id, this.asset1, bn(r1).muln(2).mul(bn(lpStaked)).div(bn(totalSupply))),
       ]);
     }
 

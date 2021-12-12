@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { Position, PositionArgs } from "./base/Position";
-import { account, bn, ether, getNetwork, networks, Token, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s } from "./consts";
+import { account, bn, ether, Token, zero } from "@defi.org/web3-candies";
+import { contracts, erc20s, networks } from "./consts";
 import { PriceOracle } from "./base/PriceOracle";
 import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
 
@@ -80,8 +80,6 @@ export namespace Unicly {
     getTVL = () => this.data.tvl;
 
     async load() {
-      if ((await getNetwork()).id !== this.getNetwork().id) return;
-
       const [userInfo, reserves, token0, totalSupply, pending, poolInfo, xunicrate] = await Promise.all([
         this.xfarm.methods.userInfo(this.strategy.poolId, this.args.address).call(),
         this.strategy.lp.methods.getReserves().call(),
@@ -101,10 +99,10 @@ export namespace Unicly {
       this.data.amountETH = await this.eth.mantissa(bn(r1).mul(this.data.amountLP).div(bn(totalSupply)));
 
       [this.data.valueAsset, this.data.valueETH, this.data.rewardValue, this.data.tvl] = await Promise.all([
-        this.oracle.valueOf(this.strategy.asset, this.data.amountAsset),
-        this.oracle.valueOf(this.eth, this.data.amountETH),
-        this.oracle.valueOf(this.unic, this.data.rewardAmount.mul(bn(xunicrate)).div(ether)),
-        this.oracle.valueOf(this.eth, bn(r1).muln(2).mul(bn(poolInfo.totalLPTokens)).div(bn(totalSupply))),
+        this.oracle.valueOf(this.getNetwork().id, this.strategy.asset, this.data.amountAsset),
+        this.oracle.valueOf(this.getNetwork().id, this.eth, this.data.amountETH),
+        this.oracle.valueOf(this.getNetwork().id, this.unic, this.data.rewardAmount.mul(bn(xunicrate)).div(ether)),
+        this.oracle.valueOf(this.getNetwork().id, this.eth, bn(r1).muln(2).mul(bn(poolInfo.totalLPTokens)).div(bn(totalSupply))),
       ]);
     }
 

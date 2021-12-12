@@ -1,7 +1,7 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, getNetwork, networks, Token, web3, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s } from "./consts";
+import { account, bn, Token, web3, zero } from "@defi.org/web3-candies";
+import { contracts, erc20s, networks } from "./consts";
 import _ from "lodash";
 
 export namespace Revault {
@@ -46,8 +46,6 @@ export namespace Revault {
     ];
 
     async load() {
-      if ((await getNetwork()).id !== this.getNetwork().id) return;
-
       const vault = await this.findVault();
       this.data.vaultId = vault.id;
       this.data.amount = vault.principal;
@@ -61,9 +59,9 @@ export namespace Revault {
 
       let info;
       [this.data.value, this.data.pendingRevaValue, this.data.pendingValue, info] = await Promise.all([
-        this.oracle.valueOf(this.asset, this.data.amount),
-        this.oracle.valueOf(this.reva, this.data.pendingReva),
-        this.oracle.valueOf(this.asset, this.data.pending),
+        this.oracle.valueOf(this.getNetwork().id, this.asset, this.data.amount),
+        this.oracle.valueOf(this.getNetwork().id, this.reva, this.data.pendingReva),
+        this.oracle.valueOf(this.getNetwork().id, this.asset, this.data.pending),
         this.chef.methods.tokens(this.asset.address).call(),
       ]);
       const { tvlBusd } = info;
