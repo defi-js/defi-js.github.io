@@ -43,9 +43,9 @@ const columns: GridColDef[] = [
     sortable: true,
   },
   {
-    field: "pending",
-    headerName: "Pending",
-    width: 100,
+    field: "tvl",
+    headerName: "TVL",
+    width: 120,
     align: "right",
     type: "number",
     headerAlign: "center",

@@ -18,12 +18,6 @@ export const erc20s = _.merge({}, erc20sOrig, {
   bsc: {
     REVA: () => erc20("REVA", "0x4FdD92Bd67Acf0676bfc45ab7168b3996F7B4A3B"),
   },
-  arb: {
-    WETH: () => erc20("WETH", "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"),
-  },
-  avax: {
-    WAVAX: () => erc20("WAVAX", "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7"),
-  },
 });
 
 export const contracts = _.merge({}, contractsOrig, {
@@ -37,8 +31,7 @@ export const contracts = _.merge({}, contractsOrig, {
 });
 
 export const networks = _.merge({}, networksOrig, {
-  arb: { id: 42161, name: "Arbitrum", shortname: "arb" } as Network,
-  avax: { id: 43114, name: "Avalanche", shortname: "avax" } as Network,
+  //
 });
 
 export async function currentNetwork() {
