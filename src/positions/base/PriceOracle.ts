@@ -34,7 +34,23 @@ export class PriceOracle {
 
   async warmup(positions: Position[]) {
     const bynetwork = _.groupBy(positions, (p) => p.getNetwork().id);
+    console.log("warming up prices for", bynetwork);
 
+    const coingeckoFetches = _(bynetwork)
+      .keys()
+      .filter((id) => parseInt(id) > 0)
+      .map((id) =>
+        this.fetchPrices(
+          id,
+          _(bynetwork[id])
+            .map((p) => p.getAssets().concat(p.getRewardAssets()))
+            .flatten()
+            .map((a) => a.address)
+            .uniq()
+            .value()
+        )
+      )
+      .value();
     await Promise.all([
       this.fetchPricesElrond(
         _(bynetwork[ElrondMaiar.network.id])
@@ -44,21 +60,7 @@ export class PriceOracle {
           .uniq()
           .value()
       ),
-      ..._(bynetwork)
-        .keys()
-        .filter((id) => parseInt(id) > 0)
-        .map((id) =>
-          this.fetchPrices(
-            id,
-            _(bynetwork[id])
-              .map((p) => p.getAssets().concat(p.getRewardAssets()))
-              .flatten()
-              .map((a) => a.address)
-              .uniq()
-              .value()
-          )
-        )
-        .value(),
+      ...coingeckoFetches,
     ]);
   }
 
@@ -67,7 +69,7 @@ export class PriceOracle {
    */
   async fetchPrices(networkId: number | string, addresses: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(addresses)) return {};
-    console.log("fetch", addresses);
+    console.log("fetchPrices", addresses);
     const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
     const url = `https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`;
     const response = await fetch(url);
@@ -86,7 +88,7 @@ export class PriceOracle {
    */
   async fetchPricesElrond(tokenIds: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(tokenIds)) return {};
-    console.log("fetch elrond", tokenIds);
+    console.log("fetchPricesElrond", tokenIds);
     const body = {
       variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
       query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {

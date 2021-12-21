@@ -1,10 +1,24 @@
+import _ from "lodash";
+import BN from "bn.js";
 import { Position, PositionArgs, TokenAmount } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, erc20, ether, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
-import { Address, BigUIntValue, BytesValue, ContractFunction, ProxyProvider, SmartContract } from "@elrondnetwork/erdjs/out";
-import _ from "lodash";
+import { bn, erc20, ether, fmt18, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
+import {
+  Address,
+  BigUIntType,
+  BigUIntValue,
+  BinaryCodec,
+  BytesValue,
+  ContractFunction,
+  ProxyProvider,
+  SmartContract,
+  StructFieldDefinition,
+  StructType,
+  TokenIdentifierType,
+  U64Type,
+} from "@elrondnetwork/erdjs";
 import BigNumberExt from "bignumber.js";
-import BN from "bn.js";
+import { BooleanType, U8Type } from "@elrondnetwork/erdjs/out";
 
 export namespace ElrondMaiar {
   export const network = { id: -508, name: "Elrond", shortname: "egld" };
@@ -17,42 +31,46 @@ export namespace ElrondMaiar {
     EGLD: () => esdt("WEGLD", "WEGLD-bd4d79", 18),
     USDC: () => esdt("USDC", "USDC-c76f1f", 6),
     MEX: () => esdt("MEX", "MEX-455c57", 18),
+    RIDE: () => esdt("RIDE", "RIDE-7d18e9", 18),
     LKMEX: () => esdt("LKMEX", "LKMEX-aab910", 18),
+
+    LKFARM: () => esdt("LKFARM", "LKFARM-9d1ea8", 18),
+    EGLD_MEX_FARM: () => esdt("EGLDMEXF", "EGLDMEXF-5bcc57", 18),
+    MEX_POOL_NFT: () => esdt("MEX Pool NFT", "MEXFARM-e7af52", 18),
+    RIDE_POOL_NFT: () => esdt("RIDE Pool NFT", "MEXRIDEF-bf0320", 18),
   };
 
-  export async function balances(oracle: PriceOracle, address: string) {
-    const usdc = tokens.USDC();
-    const mex = tokens.MEX();
-    const lkmex = tokens.LKMEX();
-    const egld = tokens.EGLD();
+  export async function balances(oracle: PriceOracle, address: string): Promise<TokenAmount[]> {
+    const assets = _.map(tokens, (t) => t());
 
     const [esdts, balanceEGLD] = await Promise.all([
       provider.getAddressEsdtList(new Address(address)),
       provider.getAccount(new Address(address)).then((r) => bn(r.balance.toString())),
     ]);
-    const balanceUSDC = bn(_.find(esdts, (t) => t.tokenIdentifier === usdc.tokenId)?.balance);
-    const balanceMEX = bn(_.find(esdts, (t) => t.tokenIdentifier === mex.tokenId)?.balance);
-    const balanceLKMEX = bn(_.find(esdts, (t) => t.tokenIdentifier === lkmex.tokenId)?.balance);
-    const balanceWEGLD = bn(_.find(esdts, (t) => t.tokenIdentifier === egld.tokenId)?.balance);
 
-    const [vEGLD, vWEGLD, vUSDC, vMEX, vLKMEX] = await Promise.all([
-      oracle.valueOf(network.id, egld, balanceEGLD),
-      oracle.valueOf(network.id, egld, balanceWEGLD),
-      oracle.valueOf(network.id, usdc, balanceUSDC),
-      oracle.valueOf(network.id, mex, balanceMEX),
-      oracle.valueOf(network.id, mex, balanceLKMEX),
-    ]);
-    return [
-      { asset: esdt("EGLD", "", 18), amount: balanceEGLD, value: vEGLD },
-      { asset: egld, amount: balanceWEGLD, value: vWEGLD },
-      { asset: usdc, amount: balanceUSDC, value: vUSDC },
-      { asset: mex, amount: balanceMEX, value: vMEX },
-      { asset: lkmex, amount: balanceLKMEX, value: vLKMEX },
-    ] as TokenAmount[];
+    const balances = await Promise.all(
+      _(esdts)
+        .map((e) => ({ asset: _.find(assets, (asset) => e.tokenIdentifier === asset.tokenId), esdt: e }))
+        .filter((t) => !!t.asset)
+        .map(async (t) => {
+          const amount = to18(t.esdt.balance, t.asset!.dec);
+          return {
+            asset: t.asset!,
+            amount,
+            value: await oracle.valueOf(network.id, t.asset!, amount),
+          };
+        })
+        .value()
+    );
+
+    balances.push({ asset: esdt("EGLD", "", 18), amount: balanceEGLD, value: await oracle.valueOf(network.id, tokens.EGLD(), balanceEGLD) });
+
+    return balances;
   }
 
   export type Strategy = { assets: ESDT[]; pool: string; farm: string };
-  export const Strategies = {
+
+  export const FarmStrategies = {
     USDC_EGLD: () => ({
       assets: [tokens.USDC(), tokens.EGLD()],
       pool: "erd1qqqqqqqqqqqqqpgqeel2kumf0r8ffyhth7pqdujjat9nx0862jpsg2pqaq",
@@ -62,11 +80,6 @@ export namespace ElrondMaiar {
       assets: [tokens.MEX(), tokens.EGLD()],
       pool: "erd1qqqqqqqqqqqqqpgqa0fsfshnff4n76jhcye6k7uvd7qacsq42jpsp6shh2",
       farm: "erd1qqqqqqqqqqqqqpgqye633y7k0zd7nedfnp3m48h24qygm5jl2jpslxallh",
-    }),
-    MEX: () => ({
-      assets: [tokens.MEX()],
-      pool: "erd1qqqqqqqqqqqqqpgqv4ks4nzn2cw96mm06lt7s2l3xfrsznmp2jpsszdry5",
-      farm: "erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl",
     }),
   };
 
@@ -98,27 +111,18 @@ export namespace ElrondMaiar {
 
     getHealth = () => [];
 
-    getAmounts = () =>
-      this.strategy.assets.length === 2
-        ? [
-            {
-              asset: this.strategy.assets[0],
-              amount: this.data.amount0,
-              value: this.data.value0,
-            },
-            {
-              asset: this.strategy.assets[1],
-              amount: this.data.amount1,
-              value: this.data.value1,
-            },
-          ]
-        : [
-            {
-              asset: this.strategy.assets[0],
-              amount: this.data.amount0,
-              value: this.data.value0,
-            },
-          ];
+    getAmounts = () => [
+      {
+        asset: this.strategy.assets[0],
+        amount: this.data.amount0,
+        value: this.data.value0,
+      },
+      {
+        asset: this.strategy.assets[1],
+        amount: this.data.amount1,
+        value: this.data.value1,
+      },
+    ];
 
     getPendingRewards = () => [{ asset: this.mex, amount: this.data.rewardAmount, value: this.data.rewardValue }];
 
@@ -140,7 +144,7 @@ export namespace ElrondMaiar {
       const farmNfts = _.filter(esdts, (v) => v.creator === this.strategy.farm);
       if (!farmNfts.length) return;
 
-      this.data.lpBalanceStaked = farmNfts.map((nft) => parseAmountLpFromAttributes(nft.attributes)).reduce((sum, b) => sum.add(b), zero);
+      this.data.lpBalanceStaked = farmNfts.map((nft) => parseLPFromFarmTokenAttr(nft.attributes)).reduce((sum, b) => sum.add(b), zero);
 
       this.data.rewardAmount = await Promise.all(farmNfts.map((nft) => callAndParseGetPendingRewards(farm, nft.balance, nft.attributes))).then((r) =>
         r.reduce((sum, r) => sum.add(r), zero)
@@ -168,6 +172,51 @@ export namespace ElrondMaiar {
     async harvest(useLegacyTx: boolean) {}
   }
 
+  export type MexPoolStrategy = Strategy & { nft: ESDT; reward: ESDT };
+  export const MexFarmStrategies = {
+    MEX: () => ({
+      assets: [tokens.MEX()],
+      pool: "erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl",
+      farm: "erd1qqqqqqqqqqqqqpgqv4ks4nzn2cw96mm06lt7s2l3xfrsznmp2jpsszdry5",
+      nft: tokens.MEX_POOL_NFT(),
+      reward: tokens.MEX(),
+    }),
+    RIDE: () => ({
+      assets: [tokens.MEX()],
+      pool: "erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl",
+      farm: "erd1qqqqqqqqqqqqqpgq5e2m9df5yxxkmr86rusejc979arzayjk2jpsz2q43s",
+      nft: tokens.RIDE_POOL_NFT(),
+      reward: tokens.RIDE(),
+    }),
+  };
+
+  export class MexFarm extends Farm {
+    constructor(args: PositionArgs, oracle: PriceOracle, strategy: MexPoolStrategy) {
+      super(args, oracle, strategy);
+    }
+
+    getRewardAssets = () => [(this.strategy as MexPoolStrategy).reward];
+
+    getPendingRewards = () => [{ asset: this.mex, amount: this.data.rewardAmount, value: this.data.rewardValue }];
+
+    override async load() {
+      const account = new Address(this.args.address);
+      const proxy = new SmartContract({ address: new Address(this.strategy.pool) });
+      const farm = new SmartContract({ address: new Address(this.strategy.farm) });
+      const farmNft = (this.strategy as MexPoolStrategy).nft;
+      const asset = this.getAssets()[0];
+
+      const [esdts, farmEsdts] = await Promise.all([provider.getAddressEsdtList(account), provider.getAddressEsdtList(farm.getAddress())]);
+      const totalAssetStaked = bn(_.find(farmEsdts, (e) => e.tokenIdentifier === asset.tokenId)!.balance);
+      this.data.tvl = await this.oracle.valueOf(network.id, asset, totalAssetStaked);
+
+      const farmNftWrapper = _.find(esdts, (e) => e.creator === proxy.getAddress().toString() && e.tokenIdentifier.startsWith(tokens.LKFARM().tokenId));
+      if (!farmNftWrapper) return;
+      this.data.amount0 = parsePrincipalAmountFromWrappedFarmTokenAttr(farmNftWrapper.attributes, farmNft);
+      this.data.value0 = await this.oracle.valueOf(network.id, asset, this.data.amount0);
+    }
+  }
+
   function esdt(name: string, tokenId: string, decimals: number): ESDT {
     const result = erc20(name, zeroAddress) as ESDT;
     result.esdt = true;
@@ -184,39 +233,6 @@ export namespace ElrondMaiar {
     return contract.runQuery(provider, { func: new ContractFunction(fn) }).then((r) => r.returnData);
   }
 
-  //#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, TypeAbi, Clone)]
-  // pub struct FarmTokenAttributes<M: ManagedTypeApi> {
-  //     pub reward_per_share: BigUint<M>,
-  //     pub original_entering_epoch: u64,
-  //     pub entering_epoch: u64,
-  //     pub apr_multiplier: u8,
-  //     pub with_locked_rewards: bool,
-  //     pub initial_farming_amount: BigUint<M>,
-  //     pub compounded_reward: Bigu32,
-  //     pub current_farm_amount: BigUint<M>,
-  // }
-  //000000000000000008 08b17d48809d7fc0 00000000000001e9 00000000000001e9 0f 01 00000008 77a3ec302d1cd52c 00000000 00000009 07029ad6d2a4b07d94
-  function parseAmountLpFromAttributes(attributes: string) {
-    let hex = base64(attributes).toString("hex");
-    if (hex.length % 2 !== 0) {
-      hex = "0" + hex;
-    }
-
-    let bytes = [];
-    for (let i = 0; i < hex.length - 1; i += 2) bytes.push(hex[i] + hex[i + 1]);
-
-    const perShare_z = parseInt(bytes[0], 16);
-    const origEpoch_z = 8;
-    const enterEpoch_z = 8;
-    const apr_z = 1;
-    const locked_z = 1;
-    const lp_z_z = 4;
-    const lp_z_index = perShare_z + origEpoch_z + enterEpoch_z + apr_z + locked_z + lp_z_z;
-    const lp_z = parseInt(bytes[lp_z_index], 16);
-    const lp_index = lp_z_index + 1;
-    return bn(_.slice(bytes, lp_index, lp_index + lp_z).join(""), 16);
-  }
-
   async function callAndParseGetPendingRewards(farm: SmartContract, balanceFarmNFT: BN, attributes: string) {
     const result = await farm.runQuery(provider, {
       func: new ContractFunction("calculateRewardsForGivenPosition"),
@@ -225,6 +241,40 @@ export namespace ElrondMaiar {
     result.assertSuccess();
     return base64(result.returnData[0]);
   }
+
+  function parseLPFromFarmTokenAttr(attributes: string) {
+    const [struct] = codec.decodeNested(Buffer.from(attributes, "base64"), typeFarmTokenAttributes);
+    const data = struct.valueOf();
+    return bn((data.initial_farming_amount as BigNumberExt).toString(16), 16);
+  }
+
+  function parsePrincipalAmountFromWrappedFarmTokenAttr(attributes: string, asset: ESDT) {
+    const [struct] = codec.decodeNested(Buffer.from(attributes, "base64"), typeWrappedFarmTokenAttributes);
+    const data = struct.valueOf();
+    if ((data.farm_token_id as Buffer).toString() !== asset.tokenId) return zero;
+
+    return bn((data.farm_token_amount as BigNumberExt).toString(16), 16);
+  }
+
+  const codec = new BinaryCodec();
+  const typeWrappedFarmTokenAttributes = new StructType("WrappedFarmTokenAttributes", [
+    new StructFieldDefinition("farm_token_id", "", new TokenIdentifierType()),
+    new StructFieldDefinition("farm_token_nonce", "", new U64Type()),
+    new StructFieldDefinition("farm_token_amount", "", new BigUIntType()),
+    new StructFieldDefinition("farming_token_id", "", new TokenIdentifierType()),
+    new StructFieldDefinition("farming_token_nonce", "", new U64Type()),
+    new StructFieldDefinition("farming_token_amount", "", new BigUIntType()),
+  ]);
+  const typeFarmTokenAttributes = new StructType("FarmTokenAttributes", [
+    new StructFieldDefinition("reward_per_share", "", new BigUIntType()),
+    new StructFieldDefinition("original_entering_epoch", "", new U64Type()),
+    new StructFieldDefinition("entering_epoch", "", new U64Type()),
+    new StructFieldDefinition("apr_multiplier", "", new U8Type()),
+    new StructFieldDefinition("with_locked_rewards", "", new BooleanType()),
+    new StructFieldDefinition("initial_farming_amount", "", new BigUIntType()),
+    new StructFieldDefinition("compounded_reward", "", new BigUIntType()),
+    new StructFieldDefinition("current_farm_amount", "", new BigUIntType()),
+  ]);
 }
 
 // const ZERO_ADDRESS = "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";

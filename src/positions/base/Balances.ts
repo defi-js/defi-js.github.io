@@ -1,6 +1,6 @@
 import { ElrondMaiar } from "../ElrondMaiar";
 import { TokenAmount } from "./Position";
-import { bn, erc20, erc20abi, Network, sleep, web3, zero } from "@defi.org/web3-candies";
+import { bn, erc20, erc20abi, Network, sleep, throttle, web3, zero } from "@defi.org/web3-candies";
 import { ContractCallContext, Multicall } from "ethereum-multicall";
 import { PriceOracle } from "./PriceOracle";
 import _ from "lodash";
@@ -16,37 +16,18 @@ const nativeAssets = {
   avax: () => erc20("AVAX", erc20s.avax.WAVAX().address),
 };
 
-type TokenInfo = { chainId: number; address: string; decimals: number; logoURI: string; name: string; symbol: string; balance?: BN };
-
-let memAllTokenInfos: TokenInfo[] = [];
-
 export async function fetchBalances(oracle: PriceOracle, network: Network, wallet: string): Promise<Record<string, TokenAmount[]>> {
   if (network.id === ElrondMaiar.network.id || wallet.startsWith("erd1")) {
     return { Elrond: await ElrondMaiar.balances(oracle, wallet) };
   }
 
-  const [tokens, balance] = await Promise.all([getAllTokenInfos(network), web3().eth.getBalance(wallet)]);
-  await fetchMulticallBalances(wallet, tokens);
-  const withbalance = _.filter(tokens, (t) => !!t.balance && !bn(t.balance).isZero());
+  let result: TokenAmount[] = [];
 
-  await oracle.fetchPrices(
-    network.id,
-    _.map(withbalance, (t) => t.address)
-  );
+  if (network.id === networks.eth.id) {
+    result = await fetchBalancesETH(oracle, wallet);
+  }
 
-  const result = await Promise.all(
-    _.map(withbalance, (t) => {
-      const asset = erc20(t.name, Web3.utils.toChecksumAddress(t.address));
-      return asset.mantissa(t.balance || zero).then((amount) =>
-        oracle.valueOf(network.id, asset, amount).then((value) => ({
-          asset,
-          amount,
-          value,
-        }))
-      );
-    })
-  );
-
+  const balance = await web3().eth.getBalance(wallet);
   const asset = (nativeAssets as any)[network.shortname]();
   const amount = bn(balance);
   const value = await oracle.valueOf(network.id, asset, amount);
@@ -55,10 +36,33 @@ export async function fetchBalances(oracle: PriceOracle, network: Network, walle
   return { [network.name]: result };
 }
 
-async function getAllTokenInfos(network: Network) {
-  if (network.id !== networks.eth.id) return [];
-  if (memAllTokenInfos.length) return memAllTokenInfos;
+async function fetchBalancesETH(oracle: PriceOracle, wallet: string) {
+  const tokens = await getAllETHTokenInfos();
+  await fetchMulticallBalances(wallet, tokens);
+  const withbalance = _.filter(tokens, (t) => !!t.balance && !bn(t.balance).isZero());
 
+  await oracle.fetchPrices(
+    networks.eth.id,
+    _.map(withbalance, (t) => t.address)
+  );
+
+  return await Promise.all(
+    _.map(withbalance, (t) => {
+      const asset = erc20(t.name, Web3.utils.toChecksumAddress(t.address));
+      return asset.mantissa(t.balance || zero).then((amount) =>
+        oracle.valueOf(networks.eth.id, asset, amount).then((value) => ({
+          asset,
+          amount,
+          value,
+        }))
+      );
+    })
+  );
+}
+
+type TokenInfo = { chainId: number; address: string; decimals: number; logoURI: string; name: string; symbol: string; balance?: BN };
+
+const getAllETHTokenInfos = throttle(this, 60 * 60 * 24, async () => {
   const json = await fetch(`https://tokens.coingecko.com/uniswap/all.json`).then((it) => it.json());
   const result = _(json.tokens as TokenInfo[])
     .filter((t) => t.decimals >= 0 && t.decimals <= 18)
@@ -66,28 +70,21 @@ async function getAllTokenInfos(network: Network) {
     .reject((t) => _.includes(blacklist, t.address))
     .value();
 
-  console.log(
-    "non eth:",
-    _(json.tokens as TokenInfo[])
-      .filter((t) => t.chainId !== network.id)
-      .uniqBy((t) => t.address)
-      .reject((t) => _.includes(blacklist, t.address))
-      .value()
-  );
   delete json.tokens;
-  console.log("fetched total tokens:", result.length);
-  memAllTokenInfos = result;
+  console.log("fetched info for", result.length, "tokens on ETH");
   return result;
-}
+});
 
 async function fetchMulticallBalances(wallet: string, tokens: TokenInfo[]) {
+  if (!tokens.length) return;
+
   console.log("fetching balance for", tokens.length);
+
   let remaining = _.chunk(tokens, 400);
   for (let retries = 0; remaining.length && retries < 10; retries++) {
     remaining = await Promise.all(_.map(remaining, (tokens) => performMulticallBalanceOf(wallet, tokens)));
     const flattened = _.flatten(remaining);
-    if (flattened.length < 20) console.log("problematic:", flattened);
-    console.log("remaining", flattened.length);
+    if (flattened.length && flattened.length < 10) console.log("warning:", flattened);
     remaining = _(flattened)
       .shuffle()
       .chunk(flattened.length / 10)

@@ -27,8 +27,9 @@ export function registerAllPositions() {
     "eth:Loops:AaveLoop": (args, oracle) => new Loops.AaveLoop(args, oracle),
     "eth:Loops:CompoundLoop": (args, oracle) => new Loops.CompoundLoop(args, oracle),
 
-    "egld:Maiar:Farm:USDC/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.Strategies.USDC_EGLD()),
-    "egld:Maiar:Farm:MEX/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.Strategies.MEX_EGLD()),
-    // "egld:Maiar:Farm:MEX": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.Strategies.MEX()),
+    "egld:Maiar:Farm:USDC/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.FarmStrategies.USDC_EGLD()),
+    "egld:Maiar:Farm:MEX/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.FarmStrategies.MEX_EGLD()),
+    "egld:Maiar:MEXFarm:MEX": (args, oracle) => new ElrondMaiar.MexFarm(args, oracle, ElrondMaiar.MexFarmStrategies.MEX()),
+    "egld:Maiar:MEXFarm:RIDE": (args, oracle) => new ElrondMaiar.MexFarm(args, oracle, ElrondMaiar.MexFarmStrategies.RIDE()),
   });
 }

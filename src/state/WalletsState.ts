@@ -41,18 +41,18 @@ const WalletsState = createStore({
   },
 });
 
-async function load({ getState, setState }: StoreActionApi<typeof WalletsState.initialState>) {
+async function load(api: StoreActionApi<typeof WalletsState.initialState>) {
   console.log("LOAD wallets");
-  const wallets = _.merge(loadFromStorage(), getState().wallets);
-  setState({ wallets });
+  const wallets = _.merge(loadFromStorage(), api.getState().wallets);
+  api.setState({ wallets });
 
   const network = await currentNetwork();
   if (!network) return;
 
   for (const wallet of wallets) {
     const fetched = await fetchBalances(PositionFactory.oracle, network, wallet);
-    const balances = _.merge({}, getState().balances, { [wallet]: fetched });
-    setState({ balances });
+    const balances = _.merge({}, api.getState().balances, { [wallet]: fetched } as Record<string, WalletBalances>);
+    api.setState({ balances });
   }
 }
 

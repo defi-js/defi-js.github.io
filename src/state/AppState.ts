@@ -33,6 +33,7 @@ const AppState = createStore({
             alert("install metamask");
             return;
           }
+          await ethereum.request({ method: "eth_requestAccounts" });
           await _onConnect(setState, ethereum);
 
           ethereum.on("accountsChanged", () => {

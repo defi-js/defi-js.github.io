@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@defi.org/web3-candies": "2.x",
-    "@elrondnetwork/erdjs": "8.x",
+    "@elrondnetwork/erdjs": "^8.0.1-alpha.13",
     "@emotion/react": "11.x",
     "@emotion/styled": "11.x",
     "@mui/icons-material": "5.x",

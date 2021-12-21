@@ -104,7 +104,7 @@ export namespace Loops {
 
     async callContract(method: string, args: string[]) {
       const tx = (this.instance.methods as any)[method](...args);
-      return await tx.call();
+      return await tx.call({ from: await account() });
     }
 
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
@@ -219,7 +219,7 @@ export namespace Loops {
 
     async callContract(method: string, args: string[]) {
       const tx = (this.instance.methods as any)[method](...args);
-      return await tx.call();
+      return await tx.call({ from: await account() });
     }
 
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {

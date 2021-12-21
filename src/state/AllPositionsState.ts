@@ -60,7 +60,7 @@ const AllPositionsState = createStore({
 });
 
 async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) {
-  console.log("LOAD");
+  console.log("LOAD positions");
   const current = api.getState().positions;
   const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
 
