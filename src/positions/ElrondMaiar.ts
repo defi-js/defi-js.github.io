@@ -206,10 +206,16 @@ export namespace ElrondMaiar {
       const farmNft = (this.strategy as MexPoolStrategy).nft;
       const asset = this.getAssets()[0];
 
-      const [esdts, farmEsdts] = await Promise.all([provider.getAddressEsdtList(account), provider.getAddressEsdtList(farm.getAddress())]);
-      const totalAssetStaked = bn(_.find(farmEsdts, (e) => e.tokenIdentifier === asset.tokenId)!.balance);
+      let totalAssetStaked = await call(farm, "getFarmingTokenReserve")
+        .then((r) => base64(r[0]))
+        .catch(() => zero);
+      if (totalAssetStaked.isZero()) {
+        const farmEsdts = await provider.getAddressEsdtList(farm.getAddress());
+        totalAssetStaked = bn(_.find(farmEsdts, (e) => e.tokenIdentifier === asset.tokenId)!.balance);
+      }
       this.data.tvl = await this.oracle.valueOf(network.id, asset, totalAssetStaked);
 
+      const esdts = await provider.getAddressEsdtList(account);
       const farmNftWrapper = _.find(esdts, (e) => e.creator === proxy.getAddress().toString() && e.tokenIdentifier.startsWith(tokens.LKFARM().tokenId));
       if (!farmNftWrapper) return;
       this.data.amount0 = parsePrincipalAmountFromWrappedFarmTokenAttr(farmNftWrapper.attributes, farmNft);
