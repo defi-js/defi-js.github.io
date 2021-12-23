@@ -1,6 +1,6 @@
 import _ from "lodash";
 import BN from "bn.js";
-import { bn18, ether, Token, web3 } from "@defi.org/web3-candies";
+import { bn, bn18, ether, Token, web3, zero } from "@defi.org/web3-candies";
 import { Position } from "./Position";
 import { ElrondMaiar } from "../ElrondMaiar";
 import { networks } from "../consts";
@@ -26,7 +26,8 @@ export class PriceOracle {
     }
 
     if (!this.prices[id]) {
-      throw new Error(`no price for ${token.name} ${token.address} for amount ${amount.toString()} on ${networkId}`);
+      console.log(`no price for ${token.name} ${token.address} for amount ${amount.toString()} on ${networkId}`);
+      return zero;
     }
 
     return amount.mul(this.prices[id]).div(ether);
@@ -90,31 +91,35 @@ export class PriceOracle {
     if (_.isEmpty(tokenIds)) return {};
     console.log("fetchPricesElrond", tokenIds);
 
-    const body = {
-      variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
-      query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {
+    try {
+      const body = {
+        variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
+        query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {
               ${_.map(tokenIds, (id, i) => `token${i}: getTokenPriceUSD(tokenID: $token${i})`).join("\n")}
             }`,
-    };
+      };
 
-    const response = await fetch("https://graph.maiar.exchange/graphql", {
-      headers: {
-        accept: "*/*",
-        "cache-control": "no-cache",
-        "content-type": "application/json",
-        pragma: "no-cache",
-      },
-      body: JSON.stringify(body),
-      method: "POST",
-    });
-    const json = await response.json();
+      const response = await fetch("https://graph.maiar.exchange/graphql", {
+        headers: {
+          accept: "*/*",
+          "cache-control": "no-cache",
+          "content-type": "application/json",
+          pragma: "no-cache",
+        },
+        body: JSON.stringify(body),
+        method: "POST",
+      });
+      const json = await response.json();
 
-    const result = _(json.data)
-      .mapKeys((v, k) => body.variables[k])
-      .mapValues((v) => bn18(v))
-      .value();
+      const result = _(json.data)
+        .mapKeys((v, k) => body.variables[k])
+        .mapValues((v) => bn18(v))
+        .value();
 
-    return this.updateResults(tokenIds, result);
+      return this.updateResults(tokenIds, result);
+    } catch (e) {
+      return {};
+    }
   }
 
   updateResults(inputs: any, results: { [p: string]: BN }) {
