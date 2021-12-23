@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { Position, PositionArgs } from "./base/Position";
-import { account, bn, ether, Token, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s, networks } from "./consts";
+import { bn, ether, Token, zero } from "@defi.org/web3-candies";
+import { contracts, erc20s, networks, sendWithTxType } from "./consts";
 import { PriceOracle } from "./base/PriceOracle";
 import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
 
@@ -110,17 +110,17 @@ export namespace Unicly {
 
     async callContract(method: string, args: string[]) {
       const tx = (this.xfarm.methods as any)[method](...args);
-      return await tx.call();
+      return await tx.call({ from: this.args.address });
     }
 
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
       const tx = (this.xfarm.methods as any)[method](...args);
       alert(`target:\n${this.xfarm.options.address}\ndata:\n${tx.encodeABI()}`);
-      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(tx, useLegacyTx);
     }
 
     async harvest(useLegacyTx: boolean) {
-      await this.xfarm.methods.deposit(this.strategy.poolId, 0).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(this.xfarm.methods.deposit(this.strategy.poolId, 0), useLegacyTx);
     }
   }
 }

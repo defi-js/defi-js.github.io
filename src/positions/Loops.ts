@@ -4,7 +4,7 @@ import { account, bn, bn18, contract, erc20s, ether, to18, zero } from "@defi.or
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
 import _ from "lodash";
-import { networks } from "./consts";
+import { networks, sendWithTxType } from "./consts";
 
 export namespace Loops {
   /**
@@ -104,17 +104,17 @@ export namespace Loops {
 
     async callContract(method: string, args: string[]) {
       const tx = (this.instance.methods as any)[method](...args);
-      return await tx.call({ from: await account() });
+      return await tx.call({ from: await this.instance.methods.owner().call() });
     }
 
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
       const tx = (this.instance.methods as any)[method](...args);
       alert(`target:\n${this.instance.options.address}\ndata:\n${tx.encodeABI()}`);
-      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(tx, useLegacyTx);
     }
 
     async harvest(useLegacyTx: boolean) {
-      await this.instance.methods.claimRewardsToOwner().send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(this.instance.methods.claimRewardsToOwner(), useLegacyTx);
     }
   }
 
@@ -219,17 +219,17 @@ export namespace Loops {
 
     async callContract(method: string, args: string[]) {
       const tx = (this.instance.methods as any)[method](...args);
-      return await tx.call({ from: await account() });
+      return await tx.call({ from: await this.instance.methods.owner().call() });
     }
 
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
       const tx = (this.instance.methods as any)[method](...args);
       alert(`target:\n${this.instance.options.address}\ndata:\n${tx.encodeABI()}`);
-      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(tx, useLegacyTx);
     }
 
     async harvest(useLegacyTx: boolean) {
-      await this.instance.methods.claimAndTransferAllCompToOwner().send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(this.instance.methods.claimAndTransferAllCompToOwner(), useLegacyTx);
     }
   }
 }

@@ -1,7 +1,7 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { account, bn, Token, web3, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s, networks } from "./consts";
+import { bn, Token, web3, zero } from "@defi.org/web3-candies";
+import { contracts, erc20s, networks, sendWithTxType } from "./consts";
 import _ from "lodash";
 
 export namespace Revault {
@@ -84,20 +84,17 @@ export namespace Revault {
 
     async callContract(method: string, args: string[]) {
       const tx = (this.revault.methods as any)[method](...args);
-      return await tx.call();
+      return await tx.call({ from: this.args.address });
     }
 
-    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+    async sendTransaction(method: string, args: string[]) {
       const tx = (this.revault.methods as any)[method](...args);
       alert(`target:\n${this.revault.options.address}\ndata:\n${tx.encodeABI()}`);
-      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(tx);
     }
 
-    async harvest(useLegacyTx: boolean) {
-      await this.revault.methods.harvestVault(this.data.vaultId, this.data.vaultHarvestPayload).send({
-        from: await account(),
-        type: useLegacyTx ? "0x0" : "0x2",
-      } as any);
+    async harvest() {
+      await sendWithTxType(this.revault.methods.harvestVault(this.data.vaultId, this.data.vaultHarvestPayload));
     }
   }
 }

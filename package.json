@@ -27,7 +27,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "typechain": "typechain --target=web3-v1 --out-dir=typechain-abi './src/abi/**/*.json'",
+    "typechain": "typechain --target=web3-v1 --out-dir=typechain-abi './src/**/*Abi.json'",
     "build": "rm -rf build docs typechain-abi && npm run typechain && react-scripts build && mv build docs",
     "test": "react-scripts test"
   },

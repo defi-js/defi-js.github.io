@@ -1,9 +1,9 @@
 import { Position, PositionArgs } from "./base/Position";
-import { account, bn, contracts, erc20s, Token, zero } from "@defi.org/web3-candies";
+import { bn, contracts, erc20s, Token, zero } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
 import _ from "lodash";
-import { networks } from "./consts";
+import { networks, sendWithTxType } from "./consts";
 
 export namespace Pancakeswap {
   // const POOL_ID_MAPPING_URL = "https://raw.githubusercontent.com/pancakeswap/pancake-frontend/master/src/config/constants/farms.ts";
@@ -96,17 +96,17 @@ export namespace Pancakeswap {
 
     async callContract(method: string, args: string[]) {
       const tx = (this.masterchef.methods as any)[method](...args);
-      return await tx.call();
+      return await tx.call({ from: this.args.address });
     }
 
-    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+    async sendTransaction(method: string, args: string[]) {
       const tx = (this.masterchef.methods as any)[method](...args);
       alert(`target:\n${this.masterchef.options.address}\ndata:\n${tx.encodeABI()}`);
-      await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+      await sendWithTxType(tx);
     }
 
-    async harvest(useLegacyTx: boolean) {
-      await this.masterchef.methods.deposit(this.poolId, 0).send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" } as any);
+    async harvest() {
+      await sendWithTxType(this.masterchef.methods.deposit(this.poolId, 0));
     }
   }
 }

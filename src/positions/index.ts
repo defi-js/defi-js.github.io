@@ -5,6 +5,7 @@ import { Loops } from "./Loops";
 import { ElrondMaiar } from "./ElrondMaiar";
 import { Revault } from "./Revault";
 import { Unicly } from "./Unicly";
+import { Fodl } from "./Fodl";
 
 export function registerAllPositions() {
   PositionFactory.register({
@@ -20,6 +21,8 @@ export function registerAllPositions() {
     "bsc:Revault:SingleVault:CAKE": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.CAKE()),
     "bsc:Revault:SingleVault:BUSD": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.BUSD()),
     "bsc:Revault:SingleVault:BNB": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.WBNB()),
+
+    "eth:Fodl:XFodlStake": (args, oracle) => new Fodl.XFodlStake(args, oracle),
 
     "eth:Unicly:XUnicFarm:uPunks": (args, oracle) => new Unicly.XUnicFarm(args, oracle, Unicly.Strategies.uPunks()),
     "eth:Unicly:XUnicFarm:uJenny": (args, oracle) => new Unicly.XUnicFarm(args, oracle, Unicly.Strategies.uJenny()),

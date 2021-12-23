@@ -2,7 +2,7 @@ import _ from "lodash";
 import BN from "bn.js";
 import { Position, PositionArgs, TokenAmount } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, erc20, ether, fmt18, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
+import { bn, erc20, ether, to18, Token, zero, zeroAddress } from "@defi.org/web3-candies";
 import {
   Address,
   BigUIntType,
@@ -220,6 +220,9 @@ export namespace ElrondMaiar {
       if (!farmNftWrapper) return;
       this.data.amount0 = parsePrincipalAmountFromWrappedFarmTokenAttr(farmNftWrapper.attributes, farmNft);
       this.data.value0 = await this.oracle.valueOf(network.id, asset, this.data.amount0);
+
+      this.data.rewardAmount = await callAndParseGetPendingRewards(farm, farmNftWrapper.balance, farmNftWrapper.attributes);
+      this.data.rewardValue = await this.oracle.valueOf(network.id, this.getRewardAssets()[0], this.data.rewardAmount);
     }
   }
 
@@ -244,8 +247,9 @@ export namespace ElrondMaiar {
       func: new ContractFunction("calculateRewardsForGivenPosition"),
       args: [new BigUIntValue(BigNumberExt.max(balanceFarmNFT.toString())), new BytesValue(Buffer.from(attributes, "base64"))],
     });
-    result.assertSuccess();
-    return base64(result.returnData[0]);
+    if (result.returnData.length) return base64(result.returnData[0]);
+
+    return zero;
   }
 
   function parseLPFromFarmTokenAttr(attributes: string) {

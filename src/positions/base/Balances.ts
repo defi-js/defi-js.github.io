@@ -40,6 +40,7 @@ async function fetchBalancesETH(oracle: PriceOracle, wallet: string) {
   const tokens = await getAllETHTokenInfos();
   await fetchMulticallBalances(wallet, tokens);
   const withbalance = _.filter(tokens, (t) => !!t.balance && !bn(t.balance).isZero());
+  _.forEach(withbalance, (t) => (t.address = Web3.utils.toChecksumAddress(t.address)));
 
   await oracle.fetchPrices(
     networks.eth.id,
@@ -48,7 +49,7 @@ async function fetchBalancesETH(oracle: PriceOracle, wallet: string) {
 
   return await Promise.all(
     _.map(withbalance, (t) => {
-      const asset = erc20(t.name, Web3.utils.toChecksumAddress(t.address));
+      const asset = erc20(t.name, t.address);
       return asset.mantissa(t.balance || zero).then((amount) =>
         oracle.valueOf(networks.eth.id, asset, amount).then((value) => ({
           asset,

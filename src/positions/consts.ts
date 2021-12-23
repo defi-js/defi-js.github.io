@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { erc20s as erc20sOrig, contracts as contractsOrig, networks as networksOrig, erc20, contract, Network, web3 } from "@defi.org/web3-candies";
+import { account, contract, contracts as contractsOrig, erc20, erc20s as erc20sOrig, networks as networksOrig, web3 } from "@defi.org/web3-candies";
 import type { RevaultFarmAbi } from "../../typechain-abi/RevaultFarmAbi";
 import type { UniclyXUnicAbi } from "../../typechain-abi/UniclyXUnicAbi";
 import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
@@ -14,6 +14,9 @@ export const erc20s = _.merge({}, erc20sOrig, {
     Unicly_UJENNY: () => erc20("Unicly: uJenny", "0xa499648fD0e80FD911972BbEb069e4c20e68bF22"),
     Unicly_LP_UPUNK_ETH: () => erc20<UniclyLpAbi>("Unicly: LP uPUNK/ETH", "0xc809Af9E3490bCB2B3bA2BF15E002f0A6a1F6835", require("../abi/UniclyLpAbi.json")),
     Unicly_LP_UJENNY_ETH: () => erc20<UniclyLpAbi>("Unicly: LP uJenny/ETH", "0xEC5100AD159F660986E47AFa0CDa1081101b471d", require("../abi/UniclyLpAbi.json")),
+
+    FODL: () => erc20("FODL", "0x4C2e59D098DF7b6cBaE0848d66DE2f8A4889b9C3"),
+    FODL_XFODL: () => erc20("FODL: xFODL", "0x7e05540A61b531793742fde0514e6c136b5fbAfE"),
   },
   bsc: {
     REVA: () => erc20("REVA", "0x4FdD92Bd67Acf0676bfc45ab7168b3996F7B4A3B"),
@@ -37,4 +40,8 @@ export const networks = _.merge({}, networksOrig, {
 export async function currentNetwork() {
   const netId = await web3().eth.net.getId();
   return _.find(networks, (n) => n.id === netId);
+}
+
+export async function sendWithTxType(tx: any, useLegacyTx: boolean = false) {
+  await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" });
 }

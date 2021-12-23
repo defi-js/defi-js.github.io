@@ -89,12 +89,14 @@ export class PriceOracle {
   async fetchPricesElrond(tokenIds: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(tokenIds)) return {};
     console.log("fetchPricesElrond", tokenIds);
+
     const body = {
       variables: _.mapKeys(tokenIds, (id, i) => `token${i}`),
       query: `query (${_.map(tokenIds, (id, i) => `$token${i}: String!`).join(", ")}) {
               ${_.map(tokenIds, (id, i) => `token${i}: getTokenPriceUSD(tokenID: $token${i})`).join("\n")}
             }`,
     };
+
     const response = await fetch("https://graph.maiar.exchange/graphql", {
       headers: {
         accept: "*/*",
