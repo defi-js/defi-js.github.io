@@ -1,47 +1,20 @@
 import React from "react";
-import { AddPositionBtn } from "./AddPositionDialog";
-import { useAppState, useIsAppConnected } from "../state/AppState";
-import { Button } from "@mui/material";
-import { fmt18 } from "@defi.org/web3-candies";
-import { AddWalletBtn } from "./AddWalletDialog";
+import { isNetworkDisabled, SUPPORTED_NETWORKS, useAppState } from "../state/AppState";
+import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import _ from "lodash";
 
-export const AppHeader = () => (
-  <div style={{ fontSize: "medium", minWidth: "42em" }}>
-    <br />
-    <br />
-
-    <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-around" }}>
-      <ConnectBtn />
-      <AddWalletBtn />
-      <AddPositionBtn />
-    </div>
-
-    <div />
-    <WalletInfo />
-    <div />
-
-    <br />
-  </div>
-);
-
-const ConnectBtn = () => {
-  const [isConnected, actions] = useIsAppConnected();
+export const AppHeader = () => {
+  const [state, actions] = useAppState();
 
   return (
-    <Button variant={"contained"} size={"large"} onClick={actions.connect}>
-      {isConnected ? "Refresh" : "Connect"}
-    </Button>
-  );
-};
-
-const WalletInfo = () => {
-  const [state] = useAppState();
-  return (
-    <div>
-      <br />
-      <div>Network 🌐 {state.network?.name}</div>
-      <div>Wallet 🔑 {state.wallet}</div>
-      <div>Balance 💰 {fmt18(state.balance)}</div>
+    <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-around", margin: 24 }}>
+      <ToggleButtonGroup value={state.network?.id} exclusive onChange={(p: any) => actions.clickNetwork(parseInt(p.target.value))}>
+        {_.map(SUPPORTED_NETWORKS, (network) => (
+          <ToggleButton value={network.id} key={network.shortname} style={{ textTransform: "none" }} disabled={isNetworkDisabled(network)}>
+            {network.name}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
     </div>
   );
 };

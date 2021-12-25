@@ -191,10 +191,6 @@ export namespace ElrondMaiar {
   };
 
   export class MexFarm extends Farm {
-    constructor(args: PositionArgs, oracle: PriceOracle, strategy: MexPoolStrategy) {
-      super(args, oracle, strategy);
-    }
-
     getRewardAssets = () => [(this.strategy as MexPoolStrategy).reward];
 
     getPendingRewards = () => [{ asset: this.mex, amount: this.data.rewardAmount, value: this.data.rewardValue }];

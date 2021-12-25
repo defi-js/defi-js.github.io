@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, List, ListItem, ListItemButton, ListItemText, TextField } from "@mui/material";
-import { useAppState, useIsAppConnected } from "../state/AppState";
+import { useAppActions, useIsAppConnected } from "../state/AppState";
 import { useAddWalletDialog } from "../state/AddWalletDialogState";
 import _ from "lodash";
 import { useWalletsRows } from "../state/WalletsState";
@@ -9,20 +9,20 @@ export const AddWalletBtn = () => {
   const [isConnected] = useIsAppConnected();
   const [, actions] = useAddWalletDialog();
   return (
-    <Button variant={"contained"} size={"large"} disabled={!isConnected} onClick={() => actions.show()}>
-      Add Wallet
+    <Button disabled={!isConnected} onClick={() => actions.show()}>
+      + Wallet
     </Button>
   );
 };
 
 export const AddWalletDialog = () => {
-  const [, appStateActions] = useAppState();
+  const [, appActions] = useAppActions();
   const [state, actions] = useAddWalletDialog();
   const [wallets, walletsActions] = useWalletsRows();
 
   const close = () => actions.closeDialog();
 
-  const add = () => appStateActions.withLoading(() => walletsActions.add(state.address)).then(close);
+  const add = () => appActions.withLoading(() => walletsActions.add(state.address)).then(close);
 
   return (
     <div>
@@ -41,7 +41,7 @@ export const AddWalletDialog = () => {
             {_.map(wallets, (w) => (
               <ListItem key={w} disablePadding>
                 <ListItemButton>
-                  <ListItemText primary={w} onClick={() => appStateActions.withLoading(() => walletsActions.delete(w))} />
+                  <ListItemText primary={w} onClick={() => appActions.withLoading(() => walletsActions.delete(w))} />
                 </ListItemButton>
               </ListItem>
             ))}

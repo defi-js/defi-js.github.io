@@ -7,6 +7,7 @@ import { commafy } from "@defi.org/web3-candies";
 import { Threat } from "../positions/base/Position";
 import _ from "lodash";
 import { ListItem, ListItemText } from "@mui/material";
+import { AddPositionBtn } from "./AddPositionDialog";
 
 const columns: GridColDef[] = [
   { field: "type", headerName: "Position", width: 300, align: "left" },
@@ -62,7 +63,7 @@ export const AllPositionsTable = () => {
   const [, positionDialogActions] = usePositionDialogActions();
 
   useEffect(() => {
-    if (appState.network.id) appActions.withLoading(actions.load).then();
+    if (appState.network?.id) appActions.withLoading(actions.load).then();
   }, [appState.network, appActions, actions]);
 
   const click = (p: any) => positionDialogActions.showPosition(positions[p.id.toString()]);
@@ -76,6 +77,8 @@ export const AllPositionsTable = () => {
       <ListItem>
         <ListItemText>Total Positions Market Value: $ {total}</ListItemText>
       </ListItem>
+
+      <AddPositionBtn />
     </div>
   );
 };
