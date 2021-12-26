@@ -71,7 +71,7 @@ export const AllPositionsTable = () => {
   const total = useMemo(() => commafy(_.reduce(rows, (sum, row) => sum + row.value, 0).toFixed(0)), [rows]);
 
   return (
-    <div hidden={!rows.length} style={{ height: "100%", width: "90%" }}>
+    <div style={{ height: "100%", width: "90%" }}>
       <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
 
       <ListItem>

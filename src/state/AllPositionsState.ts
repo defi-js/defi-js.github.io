@@ -9,8 +9,8 @@ import { currentNetwork } from "../positions/consts";
 registerAllPositions();
 
 const STORAGE_KEY = "PositionArgs:v1";
-const loadFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as Record<string, PositionArgs>;
-const saveToStorage = (data: Record<string, PositionArgs>) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+export const loadPositionsFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as Record<string, PositionArgs>;
+export const savePositionsToStorage = (data: Record<string, PositionArgs>) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 
 const AllPositionsState = createStore({
   name: "AllPositionsState",
@@ -34,14 +34,14 @@ const AllPositionsState = createStore({
 
       const data = _.mapValues(api.getState().positions, (p) => p.getArgs());
       data[position.getArgs().id] = position.getArgs();
-      saveToStorage(data);
+      savePositionsToStorage(data);
       await load(api);
     },
 
     delete: (posId: string) => async (api) => {
       const data = _.mapValues(api.getState().positions, (p) => p.getArgs());
       delete data[posId];
-      saveToStorage(data);
+      savePositionsToStorage(data);
       await load(api);
     },
 
@@ -62,7 +62,7 @@ const AllPositionsState = createStore({
 async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) {
   console.log("LOAD positions");
   const current = api.getState().positions;
-  const positions = _.mapValues(loadFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
+  const positions = _.mapValues(loadPositionsFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
 
   for (const id in positions) if (!positions[id]) delete positions[id];
 

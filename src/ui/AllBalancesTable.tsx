@@ -49,12 +49,14 @@ export const AllBalancesTable = () => {
   const total = useMemo(() => commafy(_.reduce(rows, (sum, row) => sum + row.value, 0).toFixed(0)), [rows]);
 
   return (
-    <div hidden={!rows.length || !positionsReady} style={{ height: "100%", width: "90%" }}>
-      <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
+    <div hidden={!positionsReady} style={{ height: "100%", width: "90%" }}>
+      <div hidden={!rows.length}>
+        <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
 
-      <ListItem>
-        <ListItemText>Total Wallets Market Value: $ {total}</ListItemText>
-      </ListItem>
+        <ListItem>
+          <ListItemText>Total Wallets Market Value: $ {total}</ListItemText>
+        </ListItem>
+      </div>
 
       <AddWalletBtn />
     </div>
