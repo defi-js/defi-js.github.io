@@ -33,6 +33,8 @@ export const App = () => {
 
         <ImportExport />
 
+        <br />
+
         <div>
           <AddPositionDialog />
           <AddWalletDialog />

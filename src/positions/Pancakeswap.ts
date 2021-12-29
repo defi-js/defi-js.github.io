@@ -102,11 +102,11 @@ export namespace Pancakeswap {
     async sendTransaction(method: string, args: string[]) {
       const tx = (this.masterchef.methods as any)[method](...args);
       alert(`target:\n${this.masterchef.options.address}\ndata:\n${tx.encodeABI()}`);
-      await sendWithTxType(tx);
+      await sendWithTxType(tx, true);
     }
 
     async harvest() {
-      await sendWithTxType(this.masterchef.methods.deposit(this.poolId, 0));
+      await sendWithTxType(this.masterchef.methods.deposit(this.poolId, 0), true);
     }
   }
 }

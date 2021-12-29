@@ -293,6 +293,7 @@ export namespace ElrondMaiar {
 // const USDCEGLD_FARM_ADDRESS = "erd1qqqqqqqqqqqqqpgqsw9pssy8rchjeyfh8jfafvl3ynum0p9k2jps6lwewp";
 // const MEX_FARM_ADDRESS = "erd1qqqqqqqqqqqqqpgqv4ks4nzn2cw96mm06lt7s2l3xfrsznmp2jpsszdry5";
 // const PROXY_ADDRESS = "erd1qqqqqqqqqqqqqpgqrc4pg2xarca9z34njcxeur622qmfjp8w2jps89fxnl";
+// const RIDE_EGLD_POOL = "erd1qqqqqqqqqqqqqpgqav09xenkuqsdyeyy5evqyhuusvu4gl3t2jpss57g8x";
 // const MEX_TOKEN = "MEX-455c57";
 // const LKMEX_TOKEN = "LKMEX-aab910";
 // const WEGLD_TOKEN = "WEGLD-bd4d79";

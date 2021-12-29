@@ -47,6 +47,7 @@ const importPositionsJson = (e: any) => {
       console.log("parsed", data);
       savePositionsToStorage(data);
       a.remove();
+      window.location.reload();
     };
     reader.readAsText(file, "utf8");
   });
@@ -55,13 +56,9 @@ const importPositionsJson = (e: any) => {
 export const ImportExport = () => {
   return (
     <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-around" }}>
-      {/*<input hidden type={"file"} accept={"application/json"} id={"jsonUpload"} />*/}
       <ButtonGroup variant="outlined" aria-label="outlined button group">
-        {/*<label htmlFor="jsonUpload">*/}
         <Button onClick={importPositionsJson}>Import JSON</Button>
-        {/*</label>*/}
         <Button onClick={exportPositionsJson}>Export JSON</Button>
-        {/*<Button onClick={}>Export CSV</Button>*/}
       </ButtonGroup>
     </div>
   );

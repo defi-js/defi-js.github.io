@@ -42,6 +42,6 @@ export async function currentNetwork() {
   return _.find(networks, (n) => n.id === netId);
 }
 
-export async function sendWithTxType(tx: any, useLegacyTx: boolean = false) {
+export async function sendWithTxType(tx: any, useLegacyTx: boolean) {
   await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" });
 }
