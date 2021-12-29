@@ -97,4 +97,67 @@ export namespace Revault {
       await sendWithTxType(this.revault.methods.harvestVault(this.data.vaultId, this.data.vaultHarvestPayload), true);
     }
   }
+
+  export class RevaStake implements Position {
+    staking = contracts.bsc.Revault_RevaStaking();
+    reva = erc20s.bsc.REVA();
+
+    data = {
+      amount: zero,
+      value: zero,
+      pendingAmount: zero,
+      pendingValue: zero,
+      tvl: zero,
+    };
+
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public poolId: number) {}
+
+    getNetwork = () => networks.bsc;
+
+    getArgs = () => this.args;
+
+    getData = () => this.data;
+
+    getAssets = () => [this.reva];
+
+    getRewardAssets = () => [this.reva];
+
+    getHealth = () => [];
+
+    getTVL = () => this.data.tvl;
+
+    getAmounts = () => [{ asset: this.reva, amount: this.data.amount, value: this.data.value }];
+
+    getPendingRewards = () => [{ asset: this.reva, amount: this.data.pendingAmount, value: this.data.pendingValue }];
+
+    async load() {
+      const [userInfo, pending, poolInfo] = await Promise.all([
+        this.staking.methods.userPoolInfo(this.poolId, this.args.address).call(),
+        this.staking.methods.pendingReva(this.poolId, this.args.address).call(),
+        this.staking.methods.poolInfo(this.poolId).call(),
+      ]);
+      this.data.amount = bn(userInfo.amount);
+      this.data.pendingAmount = bn(pending);
+      [this.data.value, this.data.pendingValue, this.data.tvl] = await Promise.all([
+        this.oracle.valueOf(this.getNetwork().id, this.reva, this.data.amount),
+        this.oracle.valueOf(this.getNetwork().id, this.reva, this.data.pendingAmount),
+        this.oracle.valueOf(this.getNetwork().id, this.reva, bn(poolInfo.totalSupply)),
+      ]);
+    }
+
+    getContractMethods = () => _.functions(this.staking.methods);
+
+    async callContract(method: string, args: string[]) {
+      const tx = (this.staking.methods as any)[method](...args);
+      return await tx.call({ from: this.args.address });
+    }
+
+    async sendTransaction(method: string, args: string[]) {
+      const tx = (this.staking.methods as any)[method](...args);
+      alert(`target:\n${this.staking.options.address}\ndata:\n${tx.encodeABI()}`);
+      await sendWithTxType(tx, true);
+    }
+
+    async harvest() {}
+  }
 }

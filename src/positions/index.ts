@@ -21,6 +21,10 @@ export function registerAllPositions() {
     "bsc:Revault:SingleVault:CAKE": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.CAKE()),
     "bsc:Revault:SingleVault:BUSD": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.BUSD()),
     "bsc:Revault:SingleVault:BNB": (args, oracle) => new Revault.SingleVault(args, oracle, erc20s.bsc.WBNB()),
+    "bsc:Revault:RevaStaking:x1": (args, oracle) => new Revault.RevaStake(args, oracle, 0),
+    "bsc:Revault:RevaStaking:x2": (args, oracle) => new Revault.RevaStake(args, oracle, 1),
+    "bsc:Revault:RevaStaking:x3": (args, oracle) => new Revault.RevaStake(args, oracle, 2),
+    "bsc:Revault:RevaStaking:x4": (args, oracle) => new Revault.RevaStake(args, oracle, 3),
 
     "eth:Fodl:XFodlStake": (args, oracle) => new Fodl.XFodlStake(args, oracle),
 
