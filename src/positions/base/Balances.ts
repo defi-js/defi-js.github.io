@@ -6,7 +6,7 @@ import { PriceOracle } from "./PriceOracle";
 import _ from "lodash";
 import BN from "bn.js";
 import Web3 from "web3";
-import { erc20s, networks } from "../consts";
+import { erc20s, networks } from "./consts";
 
 const nativeAssets = {
   eth: () => erc20("ETH", erc20s.eth.WETH().address),

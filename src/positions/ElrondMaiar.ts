@@ -12,13 +12,12 @@ import {
   ContractFunction,
   ProxyProvider,
   SmartContract,
-  StructFieldDefinition,
   StructType,
   TokenIdentifierType,
   U64Type,
 } from "@elrondnetwork/erdjs";
 import BigNumberExt from "bignumber.js";
-import { BooleanType, U8Type } from "@elrondnetwork/erdjs/out";
+import { BooleanType, StructFieldDefinition, U8Type } from "@elrondnetwork/erdjs/out";
 
 export namespace ElrondMaiar {
   export const network = { id: -508, name: "Elrond", shortname: "egld" };

@@ -1,7 +1,7 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, zero } from "@defi.org/web3-candies";
-import { erc20s, networks, sendWithTxType } from "./consts";
+import { erc20s, networks, sendWithTxType } from "./base/consts";
 import _ from "lodash";
 
 export namespace Fodl {

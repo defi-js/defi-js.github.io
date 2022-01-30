@@ -1,5 +1,5 @@
 import { PositionFactory } from "./base/PositionFactory";
-import { erc20s } from "./consts";
+import { erc20s } from "./base/consts";
 import { Pancakeswap } from "./Pancakeswap";
 import { Loops } from "./Loops";
 import { ElrondMaiar } from "./ElrondMaiar";

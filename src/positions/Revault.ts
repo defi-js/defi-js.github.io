@@ -1,7 +1,7 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, Token, web3, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s, networks, sendWithTxType } from "./consts";
+import { contracts, erc20s, networks, sendWithTxType } from "./base/consts";
 import _ from "lodash";
 
 export namespace Revault {

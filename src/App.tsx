@@ -7,8 +7,6 @@ import { AllPositionsTable } from "./ui/AllPositionsTable";
 import { AddPositionDialog } from "./ui/AddPositionDialog";
 import { PositionDialog } from "./ui/PositionDialog";
 import { AlertDialog } from "./ui/AlertDialog";
-import { AllBalancesTable } from "./ui/AllBalancesTable";
-import { AddWalletDialog } from "./ui/AddWalletDialog";
 import { ImportExport } from "./ui/ImportExport";
 
 const darkTheme = createTheme({
@@ -27,9 +25,6 @@ export const App = () => {
 
         <br />
         <br />
-        <AllBalancesTable />
-
-        <br />
 
         <ImportExport />
 
@@ -37,7 +32,6 @@ export const App = () => {
 
         <div>
           <AddPositionDialog />
-          <AddWalletDialog />
           <PositionDialog />
           <AlertDialog />
         </div>

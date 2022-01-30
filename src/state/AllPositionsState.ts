@@ -4,7 +4,7 @@ import { Position, PositionArgs } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
 import { registerAllPositions } from "../positions";
 import { to3, zero } from "@defi.org/web3-candies";
-import { currentNetwork } from "../positions/consts";
+import { currentNetwork } from "../positions/base/consts";
 
 registerAllPositions();
 

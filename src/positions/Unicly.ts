@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { Position, PositionArgs } from "./base/Position";
 import { bn, ether, Token, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s, networks, sendWithTxType } from "./consts";
+import { contracts, erc20s, networks, sendWithTxType } from "./base/consts";
 import { PriceOracle } from "./base/PriceOracle";
 import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
 

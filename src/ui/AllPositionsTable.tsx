@@ -75,7 +75,7 @@ export const AllPositionsTable = () => {
       <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
 
       <ListItem>
-        <ListItemText>Total Positions Market Value: $ {total}</ListItemText>
+        <ListItemText>Total Market Value: $ {total}</ListItemText>
       </ListItem>
 
       <AddPositionBtn />

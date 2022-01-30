@@ -4,7 +4,7 @@ import { bn, bn18, contract, erc20s, ether, to18, zero } from "@defi.org/web3-ca
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
 import _ from "lodash";
-import { networks, sendWithTxType } from "./consts";
+import { networks, sendWithTxType } from "./base/consts";
 
 export namespace Loops {
   /**

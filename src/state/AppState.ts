@@ -1,9 +1,7 @@
 import Web3 from "web3";
 import { createHook, createStore } from "react-sweet-state";
 import { account, Network, setWeb3Instance } from "@defi.org/web3-candies";
-import { currentNetwork, networks } from "../positions/consts";
-import _ from "lodash";
-import { ElrondMaiar } from "../positions/ElrondMaiar";
+import { currentNetwork, networks } from "../positions/base/consts";
 
 // defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
 //   const result = next(arg);
@@ -11,20 +9,18 @@ import { ElrondMaiar } from "../positions/ElrondMaiar";
 //   return result;
 // });
 
-export const SUPPORTED_NETWORKS = _.values(networks).concat(ElrondMaiar.network);
-
 export function isNetworkDisabled(network?: Network) {
-  return !network || network === networks.avax || network === ElrondMaiar.network;
+  return !network || network.id < 0;
 }
 
 const AppState = createStore({
   name: "AppState",
 
   initialState: {
+    allNetworks: networks,
     loading: false,
     wallet: "",
     network: null as Network | null,
-
     alertDialog: "",
   },
 

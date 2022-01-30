@@ -4,7 +4,7 @@ import { fetchBalances } from "../positions/base/Balances";
 import { TokenAmount } from "../positions/base/Position";
 import { to3 } from "@defi.org/web3-candies";
 import { PositionFactory } from "../positions/base/PositionFactory";
-import { currentNetwork } from "../positions/consts";
+import { currentNetwork } from "../positions/base/consts";
 
 const STORAGE_KEY = "Wallets:v1";
 const loadFromStorage = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as string[];

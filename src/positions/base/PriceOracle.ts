@@ -3,7 +3,7 @@ import BN from "bn.js";
 import { bn18, ether, Token, web3, zero } from "@defi.org/web3-candies";
 import { Position } from "./Position";
 import { ElrondMaiar } from "../ElrondMaiar";
-import { networks } from "../consts";
+import { networks } from "./consts";
 
 const coingeckoIds = {
   [networks.eth.id]: "ethereum",
