@@ -1,11 +1,12 @@
 import _ from "lodash";
-import { account, bn, contract, contracts as contractsOrig, erc20, erc20s as erc20sOrig, networks as networksOrig } from "@defi.org/web3-candies";
+import { account, bn, contract, contracts as contractsOrig, erc20, erc20abi, erc20s as erc20sOrig, networks as networksOrig, web3 } from "@defi.org/web3-candies";
 import { ElrondMaiar } from "../ElrondMaiar";
 import type { RevaultFarmAbi } from "../../../typechain-abi/RevaultFarmAbi";
 import type { UniclyXUnicAbi } from "../../../typechain-abi/UniclyXUnicAbi";
 import type { UniclyLpAbi } from "../../../typechain-abi/UniclyLpAbi";
 import type { RevaultChefAbi } from "../../../typechain-abi/RevaultChefAbi";
 import type { RevaultStakingAbi } from "../../../typechain-abi/RevaultStakingAbi";
+import { ContractCallContext, Multicall } from "ethereum-multicall";
 
 export const erc20s = _.merge({}, erc20sOrig, {
   eth: {
@@ -50,4 +51,29 @@ export async function currentNetwork() {
 
 export async function sendWithTxType(tx: any, useLegacyTx: boolean) {
   await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" });
+}
+
+async function performMulticallBalanceOf(wallet: string, tokens: string[]) {
+  if (!tokens.length) return [];
+  try {
+    const multicall = new Multicall({ web3Instance: web3(), tryAggregate: true });
+    const calls = _.map(
+      tokens,
+      (t) =>
+        ({
+          reference: t,
+          contractAddress: t,
+          abi: erc20abi,
+          calls: [{ reference: t, methodName: "balanceOf", methodParameters: [wallet] }],
+        } as ContractCallContext)
+    );
+    const result = await multicall.call(calls);
+
+    return _.map(result.results, (v) => {
+      const t = _.find(tokens, (t) => t === v.callsReturnContext[0].reference)!;
+      return { address: t, balance: bn(v.callsReturnContext[0].returnValues[0].hex || "", 16) };
+    });
+  } catch (e) {
+    return tokens;
+  }
 }

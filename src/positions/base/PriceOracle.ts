@@ -52,17 +52,17 @@ export class PriceOracle {
         )
       )
       .value();
-    await Promise.all([
-      this.fetchPricesElrond(
-        _(bynetwork[ElrondMaiar.network.id])
-          .map((p) => p.getAssets().concat(p.getRewardAssets()))
-          .flatten()
-          .map((a) => (a as any).tokenId)
-          .uniq()
-          .value()
-      ),
-      ...coingeckoFetches,
-    ]);
+
+    const elrondFetch = this.fetchPricesElrond(
+      _(bynetwork[ElrondMaiar.network.id])
+        .map((p) => p.getAssets().concat(p.getRewardAssets()))
+        .flatten()
+        .map((a) => (a as any).tokenId)
+        .uniq()
+        .value()
+    );
+
+    await Promise.all([...coingeckoFetches, elrondFetch]);
   }
 
   /**
