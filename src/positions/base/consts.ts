@@ -53,7 +53,7 @@ export async function sendWithTxType(tx: any, useLegacyTx: boolean) {
   await tx.send({ from: await account(), type: useLegacyTx ? "0x0" : "0x2" });
 }
 
-async function performMulticallBalanceOf(wallet: string, tokens: string[]) {
+export async function performMulticallBalanceOf(wallet: string, tokens: string[]) {
   if (!tokens.length) return [];
   try {
     const multicall = new Multicall({ web3Instance: web3(), tryAggregate: true });
