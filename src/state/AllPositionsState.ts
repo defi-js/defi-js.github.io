@@ -91,6 +91,7 @@ export const useAllPositionRows = createHook(AllPositionsState, {
       _.map(positions, (p) => ({
         id: p.getArgs().id,
         type: p.getArgs().type,
+        chain: p.getNetwork().name,
         health: p.getHealth(),
         value:
           to3(
