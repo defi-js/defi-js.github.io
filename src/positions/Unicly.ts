@@ -1,9 +1,10 @@
 import _ from "lodash";
 import { Position, PositionArgs } from "./base/Position";
-import { bn, ether, Token, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s, networks, sendWithTxType } from "./base/consts";
+import { bn, contract, erc20, ether, Token, zero } from "@defi.org/web3-candies";
+import { erc20s, networks, sendWithTxType } from "./base/consts";
 import { PriceOracle } from "./base/PriceOracle";
 import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
+import type { UniclyXUnicAbi } from "../../typechain-abi/UniclyXUnicAbi";
 
 export namespace Unicly {
   interface Strategy {
@@ -14,21 +15,21 @@ export namespace Unicly {
 
   export const Strategies = {
     uPunks: () => ({
-      asset: erc20s.eth.Unicly_UPUNK(),
-      lp: erc20s.eth.Unicly_LP_UPUNK_ETH(),
+      asset: erc20("Unicly: uPUNK", "0x8d2BFfCbB19Ff14A698C424FbcDcFd17aab9b905"),
+      lp: erc20<UniclyLpAbi>("Unicly: LP uPUNK/ETH", "0xc809Af9E3490bCB2B3bA2BF15E002f0A6a1F6835", require("../abi/UniclyLpAbi.json")),
       poolId: 3,
     }),
     uJenny: () => ({
-      asset: erc20s.eth.Unicly_UJENNY(),
-      lp: erc20s.eth.Unicly_LP_UJENNY_ETH(),
+      asset: erc20("Unicly: uJenny", "0xa499648fD0e80FD911972BbEb069e4c20e68bF22"),
+      lp: erc20<UniclyLpAbi>("Unicly: LP uJenny/ETH", "0xEC5100AD159F660986E47AFa0CDa1081101b471d", require("../abi/UniclyLpAbi.json")),
       poolId: 18,
     }),
   };
 
   export class XUnicFarm implements Position {
-    xfarm = contracts.eth.Unicly_XUnicVault();
-    unic = erc20s.eth.UNIC();
-    xunic = erc20s.eth.XUNIC();
+    xfarm = contract<UniclyXUnicAbi>(require("../abi/UniclyXUnicAbi.json"), "0x07306aCcCB482C8619e7ed119dAA2BDF2b4389D0");
+    unic = erc20("UNIC", "0x94E0BAb2F6Ab1F19F4750E42d7349f2740513aD5");
+    xunic = erc20("xUNIC", "0xA62fB0c2Fb3C7b27797dC04e1fEA06C0a2Db919a");
     eth = erc20s.eth.WETH();
 
     data = {

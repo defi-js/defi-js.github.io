@@ -1,14 +1,22 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, Token, web3, zero } from "@defi.org/web3-candies";
-import { contracts, erc20s, networks, sendWithTxType } from "./base/consts";
+import { bn, contract, erc20, Token, web3, zero } from "@defi.org/web3-candies";
+import { erc20s, networks, sendWithTxType } from "./base/consts";
 import _ from "lodash";
+import type { RevaultFarmAbi } from "../../typechain-abi/RevaultFarmAbi";
+import type { RevaultChefAbi } from "../../typechain-abi/RevaultChefAbi";
+import type { RevaultStakingAbi } from "../../typechain-abi/RevaultStakingAbi";
 
 export namespace Revault {
+  const REVA = () => erc20("REVA", "0x4FdD92Bd67Acf0676bfc45ab7168b3996F7B4A3B");
+  const revaultFarm = () => contract<RevaultFarmAbi>(require("../abi/RevaultFarmAbi.json"), "0x2642fa04bd1f7250be6539c5bDa36335333d9Ccd");
+  const revaultChef = () => contract<RevaultChefAbi>(require("../abi/RevaultChefAbi.json"), "0xd7550285532f1642511b16Df858546F2593d638B");
+  const revaStaking = () => contract<RevaultStakingAbi>(require("../abi/RevaultStakingAbi.json"), "0x8B7b2a115201ACd7F95d874D6A9432FcEB9C466A");
+
   export class SingleVault implements Position {
-    revault = contracts.bsc.Revault_Farm();
-    chef = contracts.bsc.Revault_Chef();
-    reva = erc20s.bsc.REVA();
+    revault = revaultFarm();
+    chef = revaultChef();
+    reva = REVA();
 
     data = {
       amount: zero,
@@ -99,8 +107,8 @@ export namespace Revault {
   }
 
   export class RevaStake implements Position {
-    staking = contracts.bsc.Revault_RevaStaking();
-    reva = erc20s.bsc.REVA();
+    staking = revaStaking();
+    reva = REVA();
 
     data = {
       amount: zero,

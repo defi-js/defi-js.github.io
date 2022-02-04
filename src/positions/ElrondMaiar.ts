@@ -258,7 +258,7 @@ export namespace ElrondMaiar {
     const data = struct.valueOf();
     if ((data.farm_token_id as Buffer).toString() !== asset.tokenId) return zero;
 
-    return bn((data.farm_token_amount as BigNumberExt).toString(16), 16);
+    return bn((data.farming_token_amount as BigNumberExt).toString(16), 16);
   }
 
   const codec = new BinaryCodec();

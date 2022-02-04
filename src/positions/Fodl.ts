@@ -1,13 +1,13 @@
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, zero } from "@defi.org/web3-candies";
-import { erc20s, networks, sendWithTxType } from "./base/consts";
+import { bn, erc20, zero } from "@defi.org/web3-candies";
+import { networks, sendWithTxType } from "./base/consts";
 import _ from "lodash";
 
 export namespace Fodl {
   export class XFodlStake implements Position {
-    fodl = erc20s.eth.FODL();
-    xfodl = erc20s.eth.FODL_XFODL();
+    fodl = erc20("FODL", "0x4C2e59D098DF7b6cBaE0848d66DE2f8A4889b9C3");
+    xfodl = erc20("FODL: xFODL", "0x7e05540A61b531793742fde0514e6c136b5fbAfE");
 
     data = {
       amount: zero,
