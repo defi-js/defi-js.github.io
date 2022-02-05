@@ -25,8 +25,8 @@ const AllPositionsState = createStore({
       await load(api);
     },
 
-    addPosition: (type: string, address: string) => async (api) => {
-      const position = PositionFactory.create({ type, address, id: "" });
+    addPosition: (type: string, address: string, input: string, name: string) => async (api) => {
+      const position = PositionFactory.create({ type, address, input, name, id: "" });
       if (!position) {
         alert(`unknown type ${type} at ${address}`);
         return;
@@ -34,6 +34,13 @@ const AllPositionsState = createStore({
 
       const data = _.mapValues(api.getState().positions, (p) => p.getArgs());
       data[position.getArgs().id] = position.getArgs();
+      savePositionsToStorage(data);
+      await load(api);
+    },
+
+    update: (position: Position, newArgs: PositionArgs) => async (api) => {
+      const data = _.mapValues(api.getState().positions, (p) => p.getArgs());
+      data[position.getArgs().id] = newArgs;
       savePositionsToStorage(data);
       await load(api);
     },
@@ -91,6 +98,7 @@ export const useAllPositionRows = createHook(AllPositionsState, {
       _.map(positions, (p) => ({
         id: p.getArgs().id,
         type: p.getArgs().type,
+        name: p.getArgs().name || p.getName() || p.getArgs().type,
         chain: p.getNetwork().name,
         health: p.getHealth(),
         value:

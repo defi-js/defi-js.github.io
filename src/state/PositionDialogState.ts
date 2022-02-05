@@ -94,7 +94,7 @@ export const usePositionDialogSelector = createHook(PositionDialogState, {
       selectedMethod: state.selectedMethod,
       selectedMethodArgTypes,
       useLegacy: state.useLegacy,
-      positionData: JSON.stringify({ assets, rewardAssets, data }, null, 4),
+      rawData: JSON.stringify({ assets, rewardAssets, data }, null, 4),
     })
   ),
 });

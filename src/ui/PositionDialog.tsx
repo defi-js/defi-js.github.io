@@ -28,7 +28,9 @@ export const PositionDialog = () => {
 
   const deletePos = () => appStateActions.withLoading(() => allPositionsActions.delete(selector.position!.getArgs().id)).then(close);
 
-  const showData = () => appStateActions.showAlert(selector.positionData);
+  // const updatePos = () => appStateActions.withLoading(() => allPositionsActions.update(selector.position!, selector.position!.getArgs())).then(close);
+
+  const showData = () => appStateActions.showAlert(selector.rawData);
 
   const harvest = () => appStateActions.withLoading(() => actions.harvest()).then(close);
 
@@ -39,10 +41,11 @@ export const PositionDialog = () => {
   return (
     <div>
       <Dialog open={!!selector.position} onClose={close}>
-        <DialogTitle>Position: {selector.position?.getArgs()?.type}</DialogTitle>
+        <DialogTitle>Position: {selector.position?.getArgs()?.name || selector.position?.getArgs()?.type}</DialogTitle>
         <DialogContent>
           <DialogContentText>Network: {selector.position?.getNetwork()?.name}</DialogContentText>
           <DialogContentText>Address: {selector.position?.getArgs()?.address}</DialogContentText>
+          {selector.position?.getArgs()?.input && <DialogContentText>Input: {selector.position?.getArgs()?.input}</DialogContentText>}
 
           <br />
           <FormControl fullWidth>

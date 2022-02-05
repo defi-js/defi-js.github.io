@@ -21,7 +21,7 @@ export const AddPositionDialog = () => {
 
   const close = () => actions.closeDialog();
 
-  const add = () => appActions.withLoading(() => allPositionActions.addPosition(state.type, state.address)).then(close);
+  const add = () => appActions.withLoading(() => allPositionActions.addPosition(state.type, state.address, state.input, state.name)).then(close);
 
   return (
     <div>
@@ -45,6 +45,14 @@ export const AddPositionDialog = () => {
           <br />
           <br />
           <TextField fullWidth id="outlined-basic" variant="outlined" label="Target Address" onChange={(e) => actions.setAddress(e.target.value)} />
+
+          <br />
+          <br />
+          {<TextField fullWidth id="outlined-basic" variant="outlined" label="Name?" onChange={(e) => actions.setName(e.target.value)} />}
+
+          <br />
+          <br />
+          {<TextField fullWidth id="outlined-basic" variant="outlined" label="Input?" onChange={(e) => actions.setInput(e.target.value)} />}
 
           <br />
           <br />

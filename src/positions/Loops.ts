@@ -32,6 +32,8 @@ export namespace Loops {
 
     constructor(public args: PositionArgs, public oracle: PriceOracle) {}
 
+    getName = () => ``;
+
     getArgs() {
       return this.args;
     }
@@ -65,13 +67,8 @@ export namespace Loops {
     getAmounts = () => [
       {
         asset: this.asset,
-        amount: this.data.totalCollateralETH,
-        value: this.data.totalCollateralValue,
-      },
-      {
-        asset: this.asset,
-        amount: this.data.totalDebtETH,
-        value: this.data.totalDebtValue,
+        amount: this.data.totalCollateralETH.sub(this.data.totalDebtETH),
+        value: this.data.totalCollateralValue.sub(this.data.totalDebtValue),
       },
     ];
 
@@ -122,7 +119,7 @@ export namespace Loops {
    * Compound on ethereum
    */
   export class CompoundLoop implements Position {
-    WARN_LIQUIDITY_PERCENT_OF_SUPPLY = 0.25; // percent of total supply 0.25% => ex. $10M principal, $40M supply, $100k min liquidity
+    WARN_LIQUIDITY_PERCENT_OF_PRINCIPAL = 0.005; // percent of total supply 0.25% => ex. $10M principal, $40M supply, $100k min liquidity
 
     instance = contract<CompoundLoopAbi>(require("../abi/CompoundLoopAbi.json"), this.args.address);
     asset = erc20s.eth.USDC();
@@ -139,6 +136,8 @@ export namespace Loops {
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle) {}
+
+    getName = () => ``;
 
     getArgs() {
       return this.args;
@@ -161,13 +160,8 @@ export namespace Loops {
     getAmounts = () => [
       {
         asset: this.asset,
-        amount: this.data.supplyBalance,
-        value: this.data.supplyBalance,
-      },
-      {
-        asset: this.asset,
-        amount: this.data.borrowBalance,
-        value: this.data.borrowBalance,
+        amount: this.data.supplyBalance.sub(this.data.borrowBalance),
+        value: this.data.supplyBalance.sub(this.data.borrowBalance),
       },
     ];
 
@@ -182,7 +176,7 @@ export namespace Loops {
     ];
 
     getHealth() {
-      const minLiquidity = this.data.supplyBalance.muln(this.WARN_LIQUIDITY_PERCENT_OF_SUPPLY).divn(100);
+      const minLiquidity = this.data.supplyBalance.muln(this.WARN_LIQUIDITY_PERCENT_OF_PRINCIPAL).divn(100);
       if (!this.data.accountShortfall.isZero() || bn(this.data.accountLiquidity).lt(minLiquidity)) {
         return [
           {

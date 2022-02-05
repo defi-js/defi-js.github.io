@@ -22,7 +22,7 @@ export namespace PositionFactory {
   export function create(args: PositionArgs): Position | null {
     if (!registry[args.type]) return null;
 
-    if (!args.id) args.id = args.type + ":" + args.address;
+    if (!args.id) args.id = _.uniqueId(args.type + ":" + args.address + "-" + args.name + "-");
 
     return registry[args.type](args, oracle);
   }

@@ -17,6 +17,8 @@ export namespace Fodl {
 
     constructor(public args: PositionArgs, public oracle: PriceOracle) {}
 
+    getName = () => ``;
+
     getNetwork = () => networks.eth;
 
     getArgs = () => this.args;

@@ -4,11 +4,25 @@ import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/Panc
 import { PriceOracle } from "./base/PriceOracle";
 import _ from "lodash";
 import { networks, sendWithTxType } from "./base/consts";
+import { PositionFactory } from "./base/PositionFactory";
 
 export namespace Pancakeswap {
   // const POOL_ID_MAPPING_URL = "https://raw.githubusercontent.com/pancakeswap/pancake-frontend/master/src/config/constants/farms.ts";
 
-  export class Farm implements Position {
+  export function register() {
+    PositionFactory.register({
+      "bsc:Pancakeswap:Farm:BUSD/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.BUSD(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_BUSD_BNB(), 252),
+      "bsc:Pancakeswap:Farm:CAKE/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.CAKE(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_CAKE_BNB(), 251),
+      "bsc:Pancakeswap:Farm:ORBS/BUSD": (args, oracle) => new Farm(args, oracle, erc20s.bsc.ORBS(), erc20s.bsc.BUSD(), erc20s.bsc.Pancakeswap_LP_ORBS_BUSD(), 416),
+      "bsc:Pancakeswap:Farm:BTCB/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.BTCB(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_BTCB_BNB(), 262),
+      "bsc:Pancakeswap:Farm:DOT/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.DOT(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_DOT_BNB(), 255),
+      "bsc:Pancakeswap:Farm:ADA/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.ADA(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_ADA_BNB(), 253),
+      "bsc:Pancakeswap:Farm:LINK/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.LINK(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_LINK_BNB(), 257),
+      "bsc:Pancakeswap:Farm:DOGE/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.DOGE(), erc20s.bsc.WBNB(), erc20s.bsc.Pancakeswap_LP_DOGE_BNB(), 376),
+    });
+  }
+
+  class Farm implements Position {
     masterchef = contracts.bsc.Pancakeswap_Masterchef();
     cake = erc20s.bsc.CAKE();
 
@@ -30,6 +44,8 @@ export namespace Pancakeswap {
       public lpToken: Token & PancakeswapLPAbi,
       public poolId: number
     ) {}
+
+    getName = () => ``;
 
     getArgs = () => this.args;
 

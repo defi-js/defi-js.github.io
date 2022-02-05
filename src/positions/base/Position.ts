@@ -3,11 +3,14 @@ import { Network, Token } from "@defi.org/web3-candies";
 
 export type PositionArgs = {
   type: string;
-  id: string;
   address: string;
+  id: string;
+  input?: string;
+  name?: string;
 };
 
 export interface Position {
+  getName(): string;
   getArgs(): PositionArgs;
   getNetwork(): Network;
   getAssets(): Token[];

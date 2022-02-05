@@ -1,5 +1,6 @@
 import { createHook, createStore } from "react-sweet-state";
 import { PositionFactory } from "../positions/base/PositionFactory";
+import _ from "lodash";
 
 const AddPositionDialogState = createStore({
   name: "AddPositionDialogState",
@@ -8,6 +9,8 @@ const AddPositionDialogState = createStore({
     show: false,
     type: "",
     address: "",
+    input: "",
+    name: "",
     valid: false,
     allTypes: PositionFactory.allTypes().sort(),
   },
@@ -16,7 +19,7 @@ const AddPositionDialogState = createStore({
     show:
       () =>
       async ({ setState }) => {
-        setState({ show: true, type: "", address: "", valid: false });
+        setState({ show: true, type: "", address: "", input: "", name: "", valid: false });
       },
 
     closeDialog:
@@ -35,8 +38,23 @@ const AddPositionDialogState = createStore({
     setAddress:
       (address: string) =>
       async ({ setState, getState }) => {
+        address = _.trim(address);
         const valid = PositionFactory.isValidArgs(getState().type, address);
         setState({ address, valid });
+      },
+
+    setInput:
+      (input: string) =>
+      async ({ setState }) => {
+        input = _.trim(input);
+        setState({ input });
+      },
+
+    setName:
+      (name: string) =>
+      async ({ setState }) => {
+        name = _.trim(name);
+        setState({ name });
       },
   },
 });

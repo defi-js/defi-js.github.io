@@ -98,6 +98,8 @@ export namespace ElrondMaiar {
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public strategy: Strategy) {}
 
+    getName = () => ``;
+
     getArgs = () => this.args;
 
     getNetwork = () => network;

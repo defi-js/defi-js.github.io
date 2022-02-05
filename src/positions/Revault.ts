@@ -6,14 +6,28 @@ import _ from "lodash";
 import type { RevaultFarmAbi } from "../../typechain-abi/RevaultFarmAbi";
 import type { RevaultChefAbi } from "../../typechain-abi/RevaultChefAbi";
 import type { RevaultStakingAbi } from "../../typechain-abi/RevaultStakingAbi";
+import { PositionFactory } from "./base/PositionFactory";
 
 export namespace Revault {
+  export function register() {
+    PositionFactory.register({
+      "bsc:Revault:SingleVault:CAKE": (args, oracle) => new SingleVault(args, oracle, erc20s.bsc.CAKE()),
+      "bsc:Revault:SingleVault:BUSD": (args, oracle) => new SingleVault(args, oracle, erc20s.bsc.BUSD()),
+      "bsc:Revault:SingleVault:BNB": (args, oracle) => new SingleVault(args, oracle, erc20s.bsc.WBNB()),
+    });
+    for (let i = 0; i < 4; i++) {
+      PositionFactory.register({
+        [`bsc:Revault:RevaStaking:x${i + 1}`]: (args, oracle) => new RevaStake(args, oracle, i),
+      });
+    }
+  }
+
   const REVA = () => erc20("REVA", "0x4FdD92Bd67Acf0676bfc45ab7168b3996F7B4A3B");
   const revaultFarm = () => contract<RevaultFarmAbi>(require("../abi/RevaultFarmAbi.json"), "0x2642fa04bd1f7250be6539c5bDa36335333d9Ccd");
   const revaultChef = () => contract<RevaultChefAbi>(require("../abi/RevaultChefAbi.json"), "0xd7550285532f1642511b16Df858546F2593d638B");
   const revaStaking = () => contract<RevaultStakingAbi>(require("../abi/RevaultStakingAbi.json"), "0x8B7b2a115201ACd7F95d874D6A9432FcEB9C466A");
 
-  export class SingleVault implements Position {
+  class SingleVault implements Position {
     revault = revaultFarm();
     chef = revaultChef();
     reva = REVA();
@@ -31,6 +45,8 @@ export namespace Revault {
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public asset: Token) {}
+
+    getName = () => ``;
 
     getNetwork = () => networks.bsc;
 
@@ -106,7 +122,7 @@ export namespace Revault {
     }
   }
 
-  export class RevaStake implements Position {
+  class RevaStake implements Position {
     staking = revaStaking();
     reva = REVA();
 
@@ -119,6 +135,8 @@ export namespace Revault {
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public poolId: number) {}
+
+    getName = () => ``;
 
     getNetwork = () => networks.bsc;
 

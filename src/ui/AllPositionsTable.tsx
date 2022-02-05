@@ -11,7 +11,7 @@ import { AddPositionBtn } from "./AddPositionDialog";
 
 const columns: GridColDef[] = [
   { field: "chain", headerName: "Chain", width: 120, align: "left" },
-  { field: "type", headerName: "Position", width: 300, align: "left" },
+  { field: "name", headerName: "Position", width: 300, align: "left" },
   {
     field: "health",
     headerName: "Health",
