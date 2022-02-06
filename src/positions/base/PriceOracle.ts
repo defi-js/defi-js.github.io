@@ -101,10 +101,7 @@ export class PriceOracle {
 
       const response = await fetch("https://graph.maiar.exchange/graphql", {
         headers: {
-          accept: "*/*",
-          "cache-control": "no-cache",
           "content-type": "application/json",
-          pragma: "no-cache",
         },
         body: JSON.stringify(body),
         method: "POST",
