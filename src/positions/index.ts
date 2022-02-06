@@ -6,10 +6,12 @@ import { Revault } from "./Revault";
 import { Unicly } from "./Unicly";
 import { Fodl } from "./Fodl";
 import { TokenBalances } from "./TokenBalances";
+import { Uniswap } from "./Uniswap";
 
 export function registerAllPositions() {
   TokenBalances.register();
 
+  Uniswap.register();
   Pancakeswap.register();
   Revault.register();
 
