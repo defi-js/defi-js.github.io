@@ -71,17 +71,22 @@ export class PriceOracle {
   async fetchPrices(networkId: number | string, addresses: string[]): Promise<{ [address: string]: BN }> {
     if (_.isEmpty(addresses)) return {};
     console.log("fetchPrices", addresses);
-    const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
-    const url = `https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`;
-    const response = await fetch(url);
-    const json = (await response.json()) as Record<string, any>;
 
-    const result = _(json)
-      .mapKeys((v, k) => web3().utils.toChecksumAddress(k))
-      .mapValues((v) => bn18(v.usd))
-      .value();
+    try {
+      const coingeckoId = _.find(coingeckoIds, (v, k) => k === networkId.toString())!;
+      const url = `https://api.coingecko.com/api/v3/simple/token_price/${coingeckoId}?contract_addresses=${addresses.join(",")}&vs_currencies=usd`;
+      const response = await fetch(url);
+      const json = (await response.json()) as Record<string, any>;
 
-    return this.updateResults(addresses, result);
+      const result = _(json)
+        .mapKeys((v, k) => web3().utils.toChecksumAddress(k))
+        .mapValues((v) => bn18(v.usd))
+        .value();
+
+      return this.updateResults(addresses, result);
+    } catch (e) {
+      return {};
+    }
   }
 
   /**
