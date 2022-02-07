@@ -4,6 +4,7 @@ import { bn18, ether, Token, web3, zero } from "@defi.org/web3-candies";
 import { Position } from "./Position";
 import { ElrondMaiar } from "../ElrondMaiar";
 import { networks } from "./consts";
+import { OffChain } from "../OffChain";
 
 const coingeckoIds = {
   [networks.eth.id]: "ethereum",
@@ -14,14 +15,25 @@ const coingeckoIds = {
 };
 
 export class PriceOracle {
-  prices: Record<string, BN> = {};
+  prices: Record<string, BN> = {
+    USD: ether,
+  };
+
+  getId(networkId: number, token: Token) {
+    if (networkId === networks.egld.id) return (token as ElrondMaiar.ESDT).tokenId;
+    if (networkId === networks.off.id) return (token as OffChain.Asset).symbol;
+    return token.address;
+  }
+
+  overridePrice(networkId: number, token: Token, price: BN) {
+    this.prices[this.getId(networkId, token)] = price;
+  }
 
   async valueOf(networkId: number, token: Token, amount: BN): Promise<BN> {
-    const isElrond = networkId === ElrondMaiar.network.id || !!(token as any).tokenId;
-    const id = isElrond ? (token as ElrondMaiar.ESDT).tokenId : token.address;
+    const id = this.getId(networkId, token);
 
     if (!this.prices[id] || this.prices[id].isZero()) {
-      if (isElrond) await this.fetchPricesElrond([id]);
+      if (networkId === ElrondMaiar.network.id) await this.fetchPricesElrond([id]);
       else await this.fetchPrices(networkId, [id]);
     }
 

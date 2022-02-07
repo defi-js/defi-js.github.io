@@ -49,11 +49,8 @@ export namespace TokenBalances {
     getTVL = () => this.data.mcap;
 
     getContractMethods = () => [];
-
     async callContract(method: string, args: string[]) {}
-
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {}
-
     async harvest(useLegacyTx: boolean) {}
   }
 
@@ -79,7 +76,7 @@ export namespace TokenBalances {
     _.forEach(networks, (n) => {
       if (n.id < 0) return;
       PositionFactory.register({
-        [`${n.shortname}:Token:*`]: (args, oracle) => new TokenBalance(args, oracle, n, erc20("", Web3.utils.toChecksumAddress(args.input!))),
+        [`${n.shortname}:Token`]: (args, oracle) => new TokenBalance(args, oracle, n, erc20("", Web3.utils.toChecksumAddress(args.input!))),
       });
 
       const t = (nativeTokens as any)[n.shortname];

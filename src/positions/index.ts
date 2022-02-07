@@ -7,8 +7,10 @@ import { Unicly } from "./Unicly";
 import { Fodl } from "./Fodl";
 import { TokenBalances } from "./TokenBalances";
 import { Uniswap } from "./Uniswap";
+import { OffChain } from "./OffChain";
 
 export function registerAllPositions() {
+  OffChain.register();
   TokenBalances.register();
 
   Uniswap.register();

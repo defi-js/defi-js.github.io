@@ -36,12 +36,20 @@ export namespace PositionFactory {
   }
 
   export function isValidArgs(type: string, address: string) {
-    return !!type && (web3()?.utils?.isAddress(address) || isElrondAddress(type, address));
+    return !!type && (web3()?.utils?.isAddress(address) || isElrondAddress(type, address) || isOffChainSymbol(type, address));
   }
 
   function isElrondAddress(type: string, address: string) {
     try {
       return type.startsWith("egld:") && address.startsWith("erd1") && !Address.fromString(address).isEmpty();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function isOffChainSymbol(type: string, address: string) {
+    try {
+      return type.startsWith("x:OffChain:Asset") && _.trim(address).length > 0;
     } catch (e) {
       return false;
     }
