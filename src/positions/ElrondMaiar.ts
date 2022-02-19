@@ -116,7 +116,7 @@ export namespace ElrondMaiar {
       {
         asset: this.strategy.assets[0],
         amount: this.data.amount0,
-        value: this.data.value0,
+        value: this.data.value0.muln(1000),
       },
       {
         asset: this.strategy.assets[1],

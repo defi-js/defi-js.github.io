@@ -1,9 +1,12 @@
-import { Position, PositionArgs } from "./base/Position";
+import { Position, PositionArgs, Severity } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn18, contract, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
+import { bn, bn18, contract, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
-import { erc20s, networks } from "./base/consts";
+import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { UniswapNftManagerAbi } from "../../typechain-abi/UniswapNftManagerAbi";
+import _ from "lodash";
+
+const maxUint128 = bn(2).pow(bn(128)).subn(1).toString();
 
 export namespace Uniswap {
   export function register() {
@@ -28,6 +31,11 @@ export namespace Uniswap {
       valueNow: zero,
       ilValue: zero,
       il: zero,
+      pending0: zero,
+      pending1: zero,
+      pendingValue0: zero,
+      pendingValue1: zero,
+      totalFeesValue: zero,
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public token0: Token, public token1: Token) {
@@ -45,9 +53,21 @@ export namespace Uniswap {
       { asset: this.token0, amount: this.data.amount0, value: this.data.value0 },
       { asset: this.token1, amount: this.data.amount1, value: this.data.value1 },
     ];
-    getRewardAssets = () => [];
-    getPendingRewards = () => []; // TODO pending fees
-    getHealth = () => [];
+    getRewardAssets = () => [this.token0, this.token1];
+    getPendingRewards = () => [
+      { asset: this.token0, amount: this.data.pending0, value: this.data.pendingValue0 },
+      { asset: this.token1, amount: this.data.pending1, value: this.data.pendingValue1 },
+    ];
+    getHealth = () => {
+      if (this.data.ilValue.gt(this.data.totalFeesValue) || this.data.il.gt(bn18(0.01)))
+        return [
+          {
+            severity: Severity.High,
+            message: "IL!",
+          },
+        ];
+      return [];
+    };
 
     async load() {
       const pos = await this.nftPositionManager.methods.positions(this.data.id).call();
@@ -74,13 +94,33 @@ export namespace Uniswap {
       this.data.valueIfHodl = principalValue0.add(principalValue1);
       this.data.valueNow = this.data.value0.add(this.data.value1);
       this.data.ilValue = this.data.valueIfHodl.sub(this.data.valueNow);
-      this.data.il = this.data.valueIfHodl.mul(ether).div(this.data.valueNow).sub(ether);
+      this.data.il = ether.sub(this.data.valueNow.mul(ether).div(this.data.valueIfHodl));
+      const pending = await this.nftPositionManager.methods.collect([this.data.id, this.args.address, maxUint128, maxUint128]).call({ from: this.args.address });
+      this.data.pending0 = await this.token0.mantissa(pending.amount0);
+      this.data.pending1 = await this.token1.mantissa(pending.amount1);
+      this.data.pendingValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, this.data.pending0);
+      this.data.pendingValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, this.data.pending1);
+
+      this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(graph.collectedFees0).add(graph.collectedFees1);
+      // console.log(pos.tickUpper, pos.tickLower, graph.tick);
     }
 
-    getContractMethods = () => []; // TODO
-    async callContract(method: string, args: string[]) {}
-    async harvest(useLegacyTx: boolean) {} // TODO claim fees
-    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {}
+    getContractMethods = () => _.functions(this.nftPositionManager.methods);
+
+    async callContract(method: string, args: string[]) {
+      const tx = (this.nftPositionManager.methods as any)[method](...args);
+      return await tx.call({ from: this.args.address });
+    }
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.nftPositionManager.methods as any)[method](...args);
+      alert(`target:\n${this.nftPositionManager.options.address}\ndata:\n${tx.encodeABI()}`);
+      await sendWithTxType(tx, useLegacyTx);
+    }
+
+    async harvest(useLegacyTx: boolean) {
+      await sendWithTxType(this.nftPositionManager.methods.collect([this.data.id, this.args.address, maxUint128, maxUint128]), useLegacyTx);
+    }
   }
 }
 
@@ -99,6 +139,7 @@ async function positionGraph(posId: number) {
           collectedFeesToken1
           pool {
             totalValueLockedUSD
+            tick
           }
         }
       }`,
@@ -112,5 +153,6 @@ async function positionGraph(posId: number) {
     principal1: bn18(json.data.position.depositedToken1).sub(bn18(json.data.position.withdrawnToken1)),
     collectedFees0: bn18(json.data.position.collectedFeesToken0),
     collectedFees1: bn18(json.data.position.collectedFeesToken1),
+    tick: json.data.position.pool.tick,
   };
 }

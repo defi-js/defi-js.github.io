@@ -5,6 +5,7 @@ import { PositionFactory } from "../positions/base/PositionFactory";
 import { registerAllPositions } from "../positions";
 import { to3, zero } from "@defi.org/web3-candies";
 import { currentNetwork } from "../positions/base/consts";
+import BN from "bn.js";
 
 registerAllPositions();
 
@@ -87,6 +88,7 @@ async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) 
 }
 
 export const useAllPositionsActions = createHook(AllPositionsState, { selector: null });
+
 export const useAllPositionRows = createHook(AllPositionsState, {
   selector: createSelector(
     (state) =>
@@ -101,17 +103,9 @@ export const useAllPositionRows = createHook(AllPositionsState, {
         name: p.getArgs().name || p.getName() || p.getArgs().type,
         chain: p.getNetwork().name,
         health: p.getHealth(),
-        value:
-          to3(
-            p.getAmounts().reduce((sum, v) => sum.add(v.value), zero),
-            18
-          ).toNumber() / 1000,
-        pending:
-          to3(
-            p.getPendingRewards().reduce((sum, v) => sum.add(v.value), zero),
-            18
-          ).toNumber() / 1000,
-        tvl: to3(p.getTVL(), 18).toNumber() / 1000,
+        value: num(marketValue(p)),
+        pending: num(p.getPendingRewards().reduce((sum, v) => sum.add(v.value), zero)),
+        tvl: num(p.getTVL()),
         position: p,
         address: p.getArgs().address,
       }))
@@ -123,3 +117,21 @@ export const useAllPositions = createHook(AllPositionsState, {
 export const useAllPositionsReady = createHook(AllPositionsState, {
   selector: (state) => state.ready,
 });
+export const useAllPositionsTotals = createHook(AllPositionsState, {
+  selector: createSelector(
+    (state) => _.groupBy(state.positions, (p) => p.getNetwork().name),
+    (grouped) => ({
+      labels: _.keys(grouped),
+      totals: _.map(grouped, (positions) => num(_.reduce(positions, (sum, pos) => sum.add(marketValue(pos)), zero))),
+      total: num(_.reduce(grouped, (s, positions) => _.reduce(positions, (sum, p) => sum.add(marketValue(p)), zero).add(s), zero)),
+    })
+  ),
+});
+
+function num(bn: BN) {
+  return to3(bn, 18).toNumber() / 1000;
+}
+
+function marketValue(p: Position) {
+  return _.reduce(p.getAmounts(), (sum, v) => sum.add(v.value), zero);
+}

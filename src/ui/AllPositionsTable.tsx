@@ -1,13 +1,16 @@
-import React, { useEffect, useMemo } from "react";
-import { useAllPositionRows, useAllPositions } from "../state/AllPositionsState";
+import React, { useEffect } from "react";
+import { useAllPositionRows, useAllPositions, useAllPositionsTotals } from "../state/AllPositionsState";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
 import { commafy } from "@defi.org/web3-candies";
 import { Threat } from "../positions/base/Position";
-import _ from "lodash";
-import { ListItem, ListItemText } from "@mui/material";
+import { ListItemText } from "@mui/material";
 import { AddPositionBtn } from "./AddPositionDialog";
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from "chart.js";
+import { Pie } from "react-chartjs-2";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const columns: GridColDef[] = [
   { field: "chain", headerName: "Chain", width: 120, align: "left" },
@@ -62,6 +65,7 @@ export const AllPositionsTable = () => {
   const [rows, actions] = useAllPositionRows(null);
   const [positions] = useAllPositions();
   const [, positionDialogActions] = usePositionDialogActions();
+  const [totals] = useAllPositionsTotals(null);
 
   useEffect(() => {
     if (appState.network?.id) appActions.withLoading(actions.load).then();
@@ -69,17 +73,34 @@ export const AllPositionsTable = () => {
 
   const click = (p: any) => positionDialogActions.showPosition(positions[p.id.toString()]);
 
-  const total = useMemo(() => commafy(_.reduce(rows, (sum, row) => sum + row.value, 0).toFixed(0)), [rows]);
-
   return (
     <div style={{ height: "100%", width: "90%" }}>
       <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
 
-      <ListItem>
-        <ListItemText>Total Market Value: $ {total}</ListItemText>
-      </ListItem>
+      <ListItemText>Total Market Value: $ {commafy(totals.total)}</ListItemText>
 
       <AddPositionBtn />
+
+      <Pie
+        data={{
+          labels: totals.labels,
+          datasets: [
+            {
+              borderWidth: 2,
+              data: totals.totals,
+              backgroundColor: totals.totals.map((t) => colorOf(t, totals.total)),
+            },
+          ],
+        }}
+        options={{ responsive: false, plugins: { legend: { display: false } } }}
+        height="400"
+      />
     </div>
   );
 };
+
+function colorOf(num: number, total: number) {
+  return bgColors[Math.round((num / total) * (bgColors.length - 1))];
+}
+
+const bgColors = ["#F1E0AC", "#98B4AA", "#74959A", "#495371"];
