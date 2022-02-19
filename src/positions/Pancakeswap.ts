@@ -1,5 +1,5 @@
 import { Position, PositionArgs } from "./base/Position";
-import { bn, contracts, erc20s, ether, Token, zero } from "@defi.org/web3-candies";
+import { bn, contracts, erc20s, Token, zero } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
 import _ from "lodash";

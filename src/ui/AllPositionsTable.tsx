@@ -77,18 +77,20 @@ export const AllPositionsTable = () => {
     <div style={{ height: "100%", width: "90%" }}>
       <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
 
-      <ListItemText>Total Market Value: $ {commafy(totals.total)}</ListItemText>
-
+      <br />
       <AddPositionBtn />
 
+      <br />
+      <ListItemText>Total Market Value: $ {commafy(totals.grandtotal)}</ListItemText>
+      <ListItemText>Value Per Chain:</ListItemText>
       <Pie
         data={{
           labels: totals.labels,
           datasets: [
             {
               borderWidth: 2,
-              data: totals.totals,
-              backgroundColor: totals.totals.map((t) => colorOf(t, totals.total)),
+              data: totals.totalPerChain,
+              backgroundColor: totals.totalPerChain.map((t) => colorOf(t, totals.grandtotal)),
             },
           ],
         }}

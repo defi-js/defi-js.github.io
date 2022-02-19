@@ -100,7 +100,7 @@ export namespace AlphaHomora {
 &sort=asc&apikey=${apiKey}`);
       const alltxs = await alltxsResponse.json();
       const relevantTxs = _.filter(alltxs.result, (tx) => eqIgnoreCase(tx.to, this.alphaHomoraBank.options.address) && tx.input.startsWith(depositSig));
-      if (relevantTxs.length != 1) {
+      if (relevantTxs.length !== 1) {
         console.error("no / too many deposits");
         return;
       }

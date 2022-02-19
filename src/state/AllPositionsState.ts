@@ -117,14 +117,18 @@ export const useAllPositions = createHook(AllPositionsState, {
 export const useAllPositionsReady = createHook(AllPositionsState, {
   selector: (state) => state.ready,
 });
+
 export const useAllPositionsTotals = createHook(AllPositionsState, {
   selector: createSelector(
     (state) => _.groupBy(state.positions, (p) => p.getNetwork().name),
-    (grouped) => ({
-      labels: _.keys(grouped),
-      totals: _.map(grouped, (positions) => num(_.reduce(positions, (sum, pos) => sum.add(marketValue(pos)), zero))),
-      total: num(_.reduce(grouped, (s, positions) => _.reduce(positions, (sum, p) => sum.add(marketValue(p)), zero).add(s), zero)),
-    })
+    (grouped) => {
+      const totalPerChain = _.map(grouped, (positions) => Math.round(num(totalMarketValue(positions))));
+      return {
+        labels: _.keys(grouped),
+        totalPerChain,
+        grandtotal: _.reduce(totalPerChain, (sum, t) => sum + t, 0),
+      };
+    }
   ),
 });
 
@@ -134,4 +138,8 @@ function num(bn: BN) {
 
 function marketValue(p: Position) {
   return _.reduce(p.getAmounts(), (sum, v) => sum.add(v.value), zero);
+}
+
+function totalMarketValue(positions: Position[]) {
+  return _.reduce(positions, (sum, pos) => sum.add(marketValue(pos)), zero);
 }
