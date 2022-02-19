@@ -89,8 +89,8 @@ export const AllPositionsTable = () => {
           datasets: [
             {
               borderWidth: 2,
-              data: totals.totalPerChain,
-              backgroundColor: totals.totalPerChain.map((t) => colorOf(t, totals.grandtotal)),
+              data: totals.values,
+              backgroundColor: totals.values.map((t) => colorOf(t, totals.grandtotal)),
             },
           ],
         }}

@@ -122,11 +122,17 @@ export const useAllPositionsTotals = createHook(AllPositionsState, {
   selector: createSelector(
     (state) => _.groupBy(state.positions, (p) => p.getNetwork().name),
     (grouped) => {
-      const totalPerChain = _.map(grouped, (positions) => Math.round(num(totalMarketValue(positions))));
+      const totalPerChain = _(grouped)
+        .map((positions, chain) => ({
+          chain,
+          value: Math.round(num(totalMarketValue(positions))),
+        }))
+        .sortBy((t) => -t.value)
+        .value();
       return {
-        labels: _.keys(grouped),
-        totalPerChain,
-        grandtotal: _.reduce(totalPerChain, (sum, t) => sum + t, 0),
+        labels: _.map(totalPerChain, (t) => t.chain),
+        values: _.map(totalPerChain, (t) => t.value),
+        grandtotal: _.reduce(totalPerChain, (sum, t) => sum + t.value, 0),
       };
     }
   ),
