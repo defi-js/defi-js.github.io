@@ -63,7 +63,7 @@ export namespace Pancakeswap {
       {
         asset: this.asset0,
         amount: this.data.amount0,
-        value: this.data.value0.add(ether),
+        value: this.data.value0,
       },
       {
         asset: this.asset1,
