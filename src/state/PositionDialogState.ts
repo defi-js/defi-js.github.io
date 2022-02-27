@@ -87,7 +87,7 @@ export const usePositionDialogSelector = createHook(PositionDialogState, {
         .mapKeys((a) => a.name)
         .mapValues((v) => v.address)
         .value(),
-    (state) => _.mapValues(state.position?.getData(), (v) => (v instanceof BN ? fmt18(v) : v)),
+    (state) => _.mapValues(state.position?.getData(), fmtData),
     (state, positionMethods, selectedMethodArgTypes, assets, rewardAssets, data) => ({
       position: state.position,
       positionMethods,
@@ -98,3 +98,8 @@ export const usePositionDialogSelector = createHook(PositionDialogState, {
     })
   ),
 });
+
+function fmtData(data: any): any {
+  if (_.isArray(data)) return _.map(data, fmtData);
+  return data instanceof BN ? fmt18(data) : data;
+}

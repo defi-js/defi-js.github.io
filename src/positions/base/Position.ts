@@ -18,7 +18,7 @@ export interface Position {
 
   // TODO getGovernance
   load(): Promise<void>;
-  getData(): { [key: string]: BN | string | number };
+  getData(): { [key: string]: BN | string | number | BN[] };
 
   getHealth(): Threat[];
   getAmounts(): TokenAmount[];

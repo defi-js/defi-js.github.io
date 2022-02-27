@@ -102,7 +102,6 @@ export namespace Uniswap {
       this.data.pendingValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, this.data.pending1);
 
       this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(graph.collectedFees0).add(graph.collectedFees1);
-      // console.log(pos.tickUpper, pos.tickLower, graph.tick);
     }
 
     getContractMethods = () => _.functions(this.nftPositionManager.methods);

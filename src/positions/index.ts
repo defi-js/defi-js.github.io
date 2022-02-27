@@ -9,6 +9,7 @@ import { TokenBalances } from "./TokenBalances";
 import { Uniswap } from "./Uniswap";
 import { OffChain } from "./OffChain";
 import { AlphaHomora } from "./AlphaHomora";
+import { Balancer } from "./Balancer";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -18,6 +19,7 @@ export function registerAllPositions() {
   Pancakeswap.register();
   Revault.register();
   AlphaHomora.register();
+  Balancer.register();
 
   PositionFactory.register({
     "eth:Fodl:XFodlStake": (args, oracle) => new Fodl.XFodlStake(args, oracle),
