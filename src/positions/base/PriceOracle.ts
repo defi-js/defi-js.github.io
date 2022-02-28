@@ -33,7 +33,7 @@ export class PriceOracle {
     const id = this.getId(networkId, token);
 
     if (!this.prices[id] || this.prices[id].isZero()) {
-      if (networkId === ElrondMaiar.network.id) await this.fetchPricesElrond([id]);
+      if (networkId === networks.egld.id) await this.fetchPricesElrond([id]);
       else await this.fetchPrices(networkId, [id]);
     }
 
@@ -66,7 +66,7 @@ export class PriceOracle {
       .value();
 
     const elrondFetch = this.fetchPricesElrond(
-      _(bynetwork[ElrondMaiar.network.id])
+      _(bynetwork[networks.egld.id])
         .map((p) => p.getAssets().concat(p.getRewardAssets()))
         .flatten()
         .map((a) => (a as any).tokenId)

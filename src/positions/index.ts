@@ -1,7 +1,6 @@
 import { PositionFactory } from "./base/PositionFactory";
 import { Pancakeswap } from "./Pancakeswap";
 import { Loops } from "./Loops";
-import { ElrondMaiar } from "./ElrondMaiar";
 import { Revault } from "./Revault";
 import { Unicly } from "./Unicly";
 import { Fodl } from "./Fodl";
@@ -10,6 +9,7 @@ import { Uniswap } from "./Uniswap";
 import { OffChain } from "./OffChain";
 import { AlphaHomora } from "./AlphaHomora";
 import { Balancer } from "./Balancer";
+import { ElrondMaiar } from "./ElrondMaiar";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -20,6 +20,7 @@ export function registerAllPositions() {
   Revault.register();
   AlphaHomora.register();
   Balancer.register();
+  ElrondMaiar.register();
 
   PositionFactory.register({
     "eth:Fodl:XFodlStake": (args, oracle) => new Fodl.XFodlStake(args, oracle),
@@ -29,10 +30,5 @@ export function registerAllPositions() {
 
     "eth:Loops:AaveLoop": (args, oracle) => new Loops.AaveLoop(args, oracle),
     "eth:Loops:CompoundLoop": (args, oracle) => new Loops.CompoundLoop(args, oracle),
-
-    "egld:Maiar:Farm:USDC/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.FarmStrategies.USDC_EGLD()),
-    "egld:Maiar:Farm:MEX/EGLD": (args, oracle) => new ElrondMaiar.Farm(args, oracle, ElrondMaiar.FarmStrategies.MEX_EGLD()),
-    "egld:Maiar:MEXFarm:MEX": (args, oracle) => new ElrondMaiar.MexFarm(args, oracle, ElrondMaiar.MexFarmStrategies.MEX()),
-    "egld:Maiar:MEXFarm:RIDE": (args, oracle) => new ElrondMaiar.MexFarm(args, oracle, ElrondMaiar.MexFarmStrategies.RIDE()),
   });
 }

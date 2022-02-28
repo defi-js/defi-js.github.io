@@ -2,7 +2,6 @@ import _ from "lodash";
 import { Position, PositionArgs } from "./Position";
 import { PriceOracle } from "./PriceOracle";
 import { Network, web3 } from "@defi.org/web3-candies";
-import { Address } from "@elrondnetwork/erdjs/out";
 
 type Factory = (args: PositionArgs, oracle: PriceOracle) => Position;
 
@@ -41,7 +40,7 @@ export namespace PositionFactory {
 
   function isElrondAddress(type: string, address: string) {
     try {
-      return type.startsWith("egld:") && address.startsWith("erd1") && !Address.fromString(address).isEmpty();
+      return type.startsWith("egld:") && address.startsWith("erd1");
     } catch (e) {
       return false;
     }

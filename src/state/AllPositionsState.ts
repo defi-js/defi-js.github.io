@@ -68,7 +68,7 @@ const AllPositionsState = createStore({
 });
 
 async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) {
-  console.log("LOAD positions");
+  console.log("LOAD positions...");
   const current = api.getState().positions;
   const positions = _.mapValues(loadPositionsFromStorage(), (args) => current[args.id] || PositionFactory.create(args));
 
@@ -85,6 +85,7 @@ async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) 
     })
   );
   api.setState({ positions, ready: true });
+  console.log("...done");
 }
 
 export const useAllPositionsActions = createHook(AllPositionsState, { selector: null });
