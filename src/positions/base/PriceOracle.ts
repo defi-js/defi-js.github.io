@@ -15,6 +15,7 @@ const coingeckoIds = {
 };
 
 export class PriceOracle {
+  warm = false;
   prices: Record<string, BN> = {
     USD: ether,
   };
@@ -46,6 +47,8 @@ export class PriceOracle {
   }
 
   async warmup(positions: Position[]) {
+    if (this.warm) return;
+    this.warm = true;
     const bynetwork = _.groupBy(positions, (p) => p.getNetwork().id);
     console.log("warming up prices for", bynetwork);
 

@@ -13,6 +13,7 @@ import { Pie } from "react-chartjs-2";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const columns: GridColDef[] = [
+  { field: "loaded", headerName: "🌐", width: 20, align: "center", valueFormatter: (v) => (v.value ? "✅" : "❔") },
   { field: "chain", headerName: "Chain", width: 120, align: "left" },
   { field: "name", headerName: "Position", width: 300, align: "left" },
   {

@@ -18,7 +18,6 @@ const AllPositionsState = createStore({
 
   initialState: {
     positions: {} as Record<string, Position>,
-    ready: false,
   },
 
   actions: {
@@ -74,18 +73,24 @@ async function load(api: StoreActionApi<typeof AllPositionsState.initialState>) 
 
   for (const id in positions) if (!positions[id]) delete positions[id];
 
-  if (!api.getState().ready) await PositionFactory.oracle.warmup(_.values(positions));
+  await PositionFactory.oracle.warmup(_.values(positions));
 
   const network = await currentNetwork();
 
   await Promise.all(
     _.map(positions, (p) => {
       if (!p || !network || !PositionFactory.shouldLoad(p, network)) return;
-      return p.load().catch((e) => console.log(p.getArgs().type, e));
+      return p
+        .load()
+        .then(() => ((p as any).loaded = true))
+        .catch((e) => {
+          (p as any).loaded = false;
+          console.log(p.getArgs().type, e);
+        });
     })
   );
-  api.setState({ positions, ready: true });
-  console.log("...done");
+  api.setState({ positions });
+  console.log(`...done loading ${network?.name}`);
 }
 
 export const useAllPositionsActions = createHook(AllPositionsState, { selector: null });
@@ -109,14 +114,12 @@ export const useAllPositionRows = createHook(AllPositionsState, {
         tvl: num(p.getTVL()),
         position: p,
         address: p.getArgs().address,
+        loaded: (p as any).loaded,
       }))
   ),
 });
 export const useAllPositions = createHook(AllPositionsState, {
   selector: (state) => state.positions,
-});
-export const useAllPositionsReady = createHook(AllPositionsState, {
-  selector: (state) => state.ready,
 });
 
 export const useAllPositionsTotals = createHook(AllPositionsState, {
