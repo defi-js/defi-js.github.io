@@ -16,6 +16,8 @@ export namespace Uniswap {
   }
 
   class V3LP implements Position {
+    IL_WARN = bn18(1 / 100);
+
     nftPositionManager = contract<UniswapNftManagerAbi>(require("../abi/UniswapNftManagerAbi.json"), "0xC36442b4a4522E871399CD717aBDD847Ab11FE88");
 
     data = {
@@ -59,7 +61,7 @@ export namespace Uniswap {
       { asset: this.token1, amount: this.data.pending1, value: this.data.pendingValue1 },
     ];
     getHealth = () => {
-      if (this.data.ilValue.gt(this.data.totalFeesValue) || this.data.il.gt(bn18(0.01)))
+      if (this.data.ilValue.gt(this.data.totalFeesValue) || this.data.il.gt(this.IL_WARN))
         return [
           {
             severity: Severity.High,
