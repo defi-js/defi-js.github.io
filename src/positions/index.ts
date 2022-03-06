@@ -11,6 +11,7 @@ import { AlphaHomora } from "./AlphaHomora";
 import { Balancer } from "./Balancer";
 import { ElrondMaiar } from "./ElrondMaiar";
 import { TraderJoe } from "./TraderJoe";
+import { Ribbon } from "./Ribbon";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -23,6 +24,7 @@ export function registerAllPositions() {
   Balancer.register();
   ElrondMaiar.register();
   TraderJoe.register();
+  Ribbon.register();
 
   PositionFactory.register({
     "eth:Fodl:XFodlStake": (args, oracle) => new Fodl.XFodlStake(args, oracle),

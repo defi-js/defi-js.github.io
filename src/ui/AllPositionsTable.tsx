@@ -96,7 +96,7 @@ export const AllPositionsTable = () => {
           ],
         }}
         options={{ responsive: false, plugins: { legend: { display: false } } }}
-        height="400"
+        height="300"
       />
     </div>
   );

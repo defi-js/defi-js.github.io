@@ -41,7 +41,7 @@ export namespace Uniswap {
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public token0: Token, public token1: Token) {
-      this.data.id = parseInt(args.input!);
+      this.data.id = parseInt(args.input!) || 0;
       if (this.data.id <= 0) throw new Error("unknown positionId");
     }
 
@@ -102,8 +102,10 @@ export namespace Uniswap {
       this.data.pending1 = await this.token1.mantissa(pending.amount1);
       this.data.pendingValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, this.data.pending0);
       this.data.pendingValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, this.data.pending1);
+      const collectedValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, graph.collectedFees0);
+      const collectedValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, graph.collectedFees1);
 
-      this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(graph.collectedFees0).add(graph.collectedFees1);
+      this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(collectedValue0).add(collectedValue1);
     }
 
     getContractMethods = () => _.functions(this.nftPositionManager.methods);
