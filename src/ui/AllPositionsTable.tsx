@@ -76,12 +76,6 @@ export const AllPositionsTable = () => {
 
   return (
     <div style={{ height: "100%", width: "90%" }}>
-      <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
-
-      <br />
-      <AddPositionBtn />
-
-      <br />
       <ListItemText>Total Market Value: $ {commafy(totals.grandtotal)}</ListItemText>
       <ListItemText>Value Per Chain:</ListItemText>
       <Pie
@@ -96,8 +90,14 @@ export const AllPositionsTable = () => {
           ],
         }}
         options={{ responsive: false, plugins: { legend: { display: false } } }}
-        height="300"
+        height="200"
       />
+      <br />
+
+      <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
+
+      <br />
+      <AddPositionBtn />
     </div>
   );
 };

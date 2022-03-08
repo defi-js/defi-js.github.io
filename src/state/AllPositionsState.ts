@@ -114,7 +114,7 @@ export const useAllPositionRows = createHook(AllPositionsState, {
         tvl: num(p.getTVL()),
         position: p,
         address: p.getArgs().address,
-        loaded: (p as any).loaded,
+        loaded: !!(p as any).loaded,
       }))
   ),
 });

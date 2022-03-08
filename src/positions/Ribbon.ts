@@ -5,6 +5,7 @@ import { bn, bn9, contract, Network, Token, zero } from "@defi.org/web3-candies"
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { RibbonThetaVaultAbi } from "../../typechain-abi/RibbonThetaVaultAbi";
+import type { RibbonGaugeAbi } from "../../typechain-abi/RibbonGaugeAbi";
 
 export namespace Ribbon {
   export function register() {
@@ -42,7 +43,18 @@ export namespace Ribbon {
     async load() {
       const { amount, unredeemedShares } = await this.vault.methods.depositReceipts(this.args.address).call();
       this.data.amount = await this.asset.mantissa(bn(amount).add(bn(unredeemedShares)));
+
+      const farm = contract<RibbonGaugeAbi>(require("../abi/RibbonGaugeAbi.json"), await this.vault.methods.liquidityGauge().call());
+      const [fbalance, ftotal, fstaked] = await Promise.all([
+        farm.methods.balanceOf(this.args.address).call().then(bn),
+        farm.methods.totalSupply().call().then(bn),
+        this.vault.methods.balanceOf(farm.options.address).call().then(bn),
+      ]);
+      const staked = await this.asset.mantissa(fstaked.mul(fbalance).div(ftotal));
+      this.data.amount = this.data.amount.add(staked);
+
       this.data.value = await this.oracle.valueOf(this.network.id, this.asset, this.data.amount);
+
       const total = await this.asset.mantissa(await this.vault.methods.totalBalance().call());
       this.data.tvl = await this.oracle.valueOf(this.network.id, this.asset, total);
 
