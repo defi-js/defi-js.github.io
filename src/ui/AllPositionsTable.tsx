@@ -131,4 +131,4 @@ function colorOf(num: number, total: number) {
   return bgColors[Math.round((num / total) * (bgColors.length - 1))];
 }
 
-const bgColors = ["#F1E0AC", "#98B4AA", "#74959A", "#495371"];
+const bgColors = ["#F1E0AC", "#98B4AA", "#87a2a5", "#638c93", "#495371", "#494c71", "#413d5e"];
