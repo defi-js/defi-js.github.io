@@ -122,7 +122,20 @@ export const useAllPositions = createHook(AllPositionsState, {
   selector: (state) => state.positions,
 });
 
-export const useAllPositionsTotals = createHook(AllPositionsState, {
+export const useAllPositionsValuePerPosition = createHook(AllPositionsState, {
+  selector: createSelector(
+    (state) => _.map(state.positions, (position) => ({ position, value: Math.round(num(marketValue(position))) })),
+    (rows) => {
+      const sorted = _.sortBy(rows, (r) => -r.value);
+      return {
+        labels: sorted.map((p) => p.position.getName() || p.position.getArgs().type),
+        values: sorted.map((p) => p.value),
+      };
+    }
+  ),
+});
+
+export const useAllPositionsValuePerChain = createHook(AllPositionsState, {
   selector: createSelector(
     (state) => _.groupBy(state.positions, (p) => p.getNetwork().name),
     (grouped) => {

@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn9, contract, Network, Token, zero } from "@defi.org/web3-candies";
+import { bn, bn9, contract, ether, Network, Token, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { RibbonThetaVaultAbi } from "../../typechain-abi/RibbonThetaVaultAbi";
@@ -45,12 +45,8 @@ export namespace Ribbon {
       this.data.amount = await this.asset.mantissa(bn(amount).add(bn(unredeemedShares)));
 
       const farm = contract<RibbonGaugeAbi>(require("../abi/RibbonGaugeAbi.json"), await this.vault.methods.liquidityGauge().call());
-      const [fbalance, ftotal, fstaked] = await Promise.all([
-        farm.methods.balanceOf(this.args.address).call().then(bn),
-        farm.methods.totalSupply().call().then(bn),
-        this.vault.methods.balanceOf(farm.options.address).call().then(bn),
-      ]);
-      const staked = await this.asset.mantissa(fstaked.mul(fbalance).div(ftotal));
+      const [fbalance, fratio] = await Promise.all([farm.methods.balanceOf(this.args.address).call().then(bn), this.vault.methods.pricePerShare().call().then(bn)]);
+      const staked = await this.asset.mantissa(fbalance.mul(fratio).div(ether));
       this.data.amount = this.data.amount.add(staked);
 
       this.data.value = await this.oracle.valueOf(this.network.id, this.asset, this.data.amount);
@@ -58,13 +54,7 @@ export namespace Ribbon {
       const total = await this.asset.mantissa(await this.vault.methods.totalBalance().call());
       this.data.tvl = await this.oracle.valueOf(this.network.id, this.asset, total);
 
-      const currentOption = contract(
-        [
-          { inputs: [], name: "expiryTimestamp", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], stateMutability: "view", type: "function" },
-          { inputs: [], name: "strikePrice", outputs: [{ internalType: "uint256", name: "", type: "uint256" }], stateMutability: "view", type: "function" },
-        ],
-        await this.vault.methods.currentOption().call()
-      );
+      const currentOption = contract(require("../abi/RibbonOptionAbi.json"), await this.vault.methods.currentOption().call());
       this.data.strike = bn9(await currentOption.methods["strikePrice()"]().call()).muln(10);
     }
 

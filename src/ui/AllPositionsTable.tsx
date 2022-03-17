@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useAllPositionRows, useAllPositions, useAllPositionsTotals } from "../state/AllPositionsState";
+import { useAllPositionRows, useAllPositions, useAllPositionsValuePerChain, useAllPositionsValuePerPosition } from "../state/AllPositionsState";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
@@ -66,7 +66,8 @@ export const AllPositionsTable = () => {
   const [rows, actions] = useAllPositionRows(null);
   const [positions] = useAllPositions();
   const [, positionDialogActions] = usePositionDialogActions();
-  const [totals] = useAllPositionsTotals(null);
+  const [totalValuesPerChain] = useAllPositionsValuePerChain(null);
+  const [valuesPerPosition] = useAllPositionsValuePerPosition(null);
 
   useEffect(() => {
     if (appState.network?.id) appActions.withLoading(actions.load).then();
@@ -76,22 +77,46 @@ export const AllPositionsTable = () => {
 
   return (
     <div style={{ height: "100%", width: "90%" }}>
-      <ListItemText>Total Market Value: $ {commafy(totals.grandtotal)}</ListItemText>
-      <ListItemText>Value Per Chain:</ListItemText>
-      <Pie
-        data={{
-          labels: totals.labels,
-          datasets: [
-            {
-              borderWidth: 2,
-              data: totals.values,
-              backgroundColor: totals.values.map((t) => colorOf(t, totals.grandtotal)),
-            },
-          ],
-        }}
-        options={{ responsive: false, plugins: { legend: { display: false } } }}
-        height="200"
-      />
+      <ListItemText>Total Market Value: $ {commafy(totalValuesPerChain.grandtotal)}</ListItemText>
+
+      <div style={{ display: "flex" }}>
+        <div>
+          <ListItemText>Value Per Chain:</ListItemText>
+          <Pie
+            data={{
+              labels: totalValuesPerChain.labels,
+              datasets: [
+                {
+                  borderWidth: 2,
+                  data: totalValuesPerChain.values,
+                  backgroundColor: totalValuesPerChain.values.map((t) => colorOf(t, totalValuesPerChain.grandtotal)),
+                },
+              ],
+            }}
+            options={{ responsive: false, plugins: { legend: { display: false } } }}
+            height="200"
+          />
+        </div>
+
+        <div>
+          <ListItemText>Value Per Position:</ListItemText>
+          <Pie
+            data={{
+              labels: valuesPerPosition.labels,
+              datasets: [
+                {
+                  borderWidth: 2,
+                  data: valuesPerPosition.values,
+                  backgroundColor: valuesPerPosition.values.map((r) => colorOf(r, totalValuesPerChain.grandtotal)),
+                },
+              ],
+            }}
+            options={{ responsive: false, plugins: { legend: { display: false } } }}
+            height="200"
+          />
+        </div>
+      </div>
+
       <br />
 
       <DataGrid rows={rows} columns={columns} onCellClick={click} autoHeight hideFooter />
