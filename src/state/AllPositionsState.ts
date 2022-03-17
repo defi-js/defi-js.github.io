@@ -128,7 +128,7 @@ export const useAllPositionsValuePerPosition = createHook(AllPositionsState, {
     (rows) => {
       const sorted = _.sortBy(rows, (r) => -r.value);
       return {
-        labels: sorted.map((p) => p.position.getName() || p.position.getArgs().type),
+        labels: sorted.map((p) => p.position.getArgs().name || p.position.getName() || p.position.getArgs().type),
         values: sorted.map((p) => p.value),
       };
     }
