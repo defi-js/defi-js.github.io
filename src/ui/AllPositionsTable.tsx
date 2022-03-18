@@ -13,52 +13,51 @@ import { Pie } from "react-chartjs-2";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const columns: GridColDef[] = [
-  { field: "loaded", headerName: "🌐", width: 20, align: "center", valueFormatter: (v) => (v.value ? "✅" : "❔") },
-  { field: "chain", headerName: "Chain", width: 120, align: "left" },
-  { field: "name", headerName: "Position", width: 300, align: "left" },
+  { field: "loaded", headerName: "🌐", headerAlign: "center", width: 20, align: "center", valueFormatter: (v) => (v.value ? "✅" : "❔") },
+  { field: "chain", headerName: "Chain", headerAlign: "center", width: 120, align: "left" },
+  { field: "name", headerName: "Position", headerAlign: "center", width: 300, align: "left" },
   {
     field: "health",
     headerName: "Health",
+    headerAlign: "center",
     width: 100,
     align: "center",
-    headerAlign: "center",
     valueFormatter: (v) => {
-      const value = v.value as Threat[];
-      if (!value.length) return "🟢";
-      return value.map((t) => t.message).join("⚠️");
+      if (!v.value || !(v.value as Threat[]).length) return "🟢";
+      return (v.value as Threat[]).map((t) => t.message).join("⚠️");
     },
   },
   {
-    field: "value",
+    field: "marketValue",
     headerName: "Market Value",
+    headerAlign: "center",
     width: 100,
     align: "right",
     type: "number",
-    headerAlign: "center",
     valueFormatter: (v) => "$  " + commafy((v.value as number).toFixed(0)),
     sortable: true,
   },
   {
     field: "pending",
     headerName: "Pending",
+    headerAlign: "center",
     width: 100,
     align: "right",
     type: "number",
-    headerAlign: "center",
     valueFormatter: (v) => "$  " + commafy((v.value as number).toFixed(0)),
     sortable: true,
   },
   {
     field: "tvl",
     headerName: "TVL",
+    headerAlign: "center",
     width: 120,
     align: "right",
     type: "number",
-    headerAlign: "center",
     valueFormatter: (v) => "$  " + commafy((v.value as number).toFixed(0)),
     sortable: true,
   },
-  { field: "address", headerName: "Address", width: 450, align: "left", headerAlign: "center" },
+  { field: "address", headerName: "Address", headerAlign: "center", width: 450, align: "left" },
 ];
 
 export const AllPositionsTable = () => {
@@ -131,4 +130,12 @@ function colorOf(num: number, total: number) {
   return bgColors[Math.round((num / total) * (bgColors.length - 1))];
 }
 
-const bgColors = ["#F1E0AC", "#98B4AA", "#87a2a5", "#638c93", "#495371", "#494c71", "#413d5e"];
+const bgColors = [
+  "#F1E0AC", //
+  "#98B4AA",
+  "#87a2a5",
+  "#638c93",
+  "#495371",
+  "#494c71",
+  "#413d5e",
+];

@@ -109,7 +109,7 @@ export const useAllPositionRows = createHook(AllPositionsState, {
         name: p.getArgs().name || p.getName() || p.getArgs().type,
         chain: p.getNetwork().name,
         health: p.getHealth(),
-        value: num(marketValue(p)),
+        marketValue: num(marketValue(p)),
         pending: num(p.getPendingRewards().reduce((sum, v) => sum.add(v.value), zero)),
         tvl: num(p.getTVL()),
         position: p,
@@ -124,12 +124,12 @@ export const useAllPositions = createHook(AllPositionsState, {
 
 export const useAllPositionsValuePerPosition = createHook(AllPositionsState, {
   selector: createSelector(
-    (state) => _.map(state.positions, (position) => ({ position, value: Math.round(num(marketValue(position))) })),
+    (state) => _.map(state.positions, (position) => ({ position, marketValue: Math.round(num(marketValue(position))) })),
     (rows) => {
-      const sorted = _.sortBy(rows, (r) => -r.value);
+      const sorted = _.sortBy(rows, (r) => -r.marketValue);
       return {
         labels: sorted.map((p) => p.position.getArgs().name || p.position.getName() || p.position.getArgs().type),
-        values: sorted.map((p) => p.value),
+        values: sorted.map((p) => p.marketValue),
       };
     }
   ),
@@ -142,14 +142,14 @@ export const useAllPositionsValuePerChain = createHook(AllPositionsState, {
       const totalPerChain = _(grouped)
         .map((positions, chain) => ({
           chain,
-          value: Math.round(num(totalMarketValue(positions))),
+          marketValue: Math.round(num(totalMarketValue(positions))),
         }))
-        .sortBy((t) => -t.value)
+        .sortBy((t) => -t.marketValue)
         .value();
       return {
         labels: _.map(totalPerChain, (t) => t.chain),
-        values: _.map(totalPerChain, (t) => t.value),
-        grandtotal: _.reduce(totalPerChain, (sum, t) => sum + t.value, 0),
+        values: _.map(totalPerChain, (t) => t.marketValue),
+        grandtotal: _.reduce(totalPerChain, (sum, t) => sum + t.marketValue, 0),
       };
     }
   ),

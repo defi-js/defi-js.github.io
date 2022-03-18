@@ -12,6 +12,7 @@ import { Balancer } from "./Balancer";
 import { ElrondMaiar } from "./ElrondMaiar";
 import { TraderJoe } from "./TraderJoe";
 import { Ribbon } from "./Ribbon";
+import { LooksRare } from "./LooksRare";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -25,6 +26,7 @@ export function registerAllPositions() {
   ElrondMaiar.register();
   TraderJoe.register();
   Ribbon.register();
+  LooksRare.register();
 
   PositionFactory.register({
     "eth:Fodl:XFodlStake": (args, oracle) => new Fodl.XFodlStake(args, oracle),
