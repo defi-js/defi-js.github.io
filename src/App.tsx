@@ -21,24 +21,26 @@ export const App = () => {
       <div className="App">
         <AppHeader />
 
-        <AllPositionsTable />
+        <p>Hello World</p>
 
-        <br />
-        <br />
+        {/*<AllPositionsTable />*/}
 
-        <ImportExport />
+        {/*<br />*/}
+        {/*<br />*/}
 
-        <br />
+        {/*<ImportExport />*/}
 
-        <div>
-          <AddPositionDialog />
-          <PositionDialog />
-          <AlertDialog />
-        </div>
+        {/*<br />*/}
 
-        <div>
-          <Loading />
-        </div>
+        {/*<div>*/}
+        {/*  <AddPositionDialog />*/}
+        {/*  <PositionDialog />*/}
+        {/*  <AlertDialog />*/}
+        {/*</div>*/}
+
+        {/*<div>*/}
+        {/*  <Loading />*/}
+        {/*</div>*/}
       </div>
     </ThemeProvider>
   );
