@@ -2,7 +2,7 @@ import _ from "lodash";
 import BN from "bn.js";
 import { PositionFactory } from "./base/PositionFactory";
 import { Position, PositionArgs } from "./base/Position";
-import { bn, contract, eqIgnoreCase, erc20, Network, Token, zero } from "@defi.org/web3-candies";
+import { bn, contract, eqIgnoreCase, erc20, ether, Network, Token, zero } from "@defi.org/web3-candies";
 import { PriceOracle } from "./base/PriceOracle";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import { BalancerV2VaultAbi } from "../../typechain-abi/BalancerV2VaultAbi";
@@ -18,19 +18,32 @@ export namespace Balancer {
           [erc20s.poly.USDC(), erc20s.poly.DAI(), erc20("MAI", "0xa3Fa99A148fA48D14Ed51d610c367C61876997F1"), erc20s.poly.USDT()],
           "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000012"
         ),
+      "arb:Balancer:MAI/USDT/USDC": (args, oracle) => {
+        oracle.overridePrice(networks.arb.id, erc20("MAI", "0x3F56e0c36d275367b8C502090EDF38289b3dEa0d"), ether);
+        return new Farm(
+          args,
+          oracle,
+          networks.arb,
+          [
+            erc20("MAI", "0x3F56e0c36d275367b8C502090EDF38289b3dEa0d"),
+            erc20("USDT", "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"),
+            erc20("USDC", "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"),
+          ],
+          "0x0510ccf9eb3ab03c1508d3b9769e8ee2cfd6fdcf00000000000000000000005d"
+        );
+      },
     });
   }
 
   const balToken = {
     [networks.poly.id]: () => erc20("BAL", "0x9a71012B13CA4d3D0Cdc72A177DF3ef03b0E76A3"),
+    [networks.arb.id]: () => erc20("BAL", "0x040d1EdC9569d4Bab2D15287Dc5A4F10F56a56B8"),
   };
 
-  const balV2 = {
-    [networks.poly.id]: () => contract<BalancerV2VaultAbi>(require("../abi/BalancerV2VaultAbi.json"), "0xBA12222222228d8Ba445958a75a0704d566BF2C8"),
-  };
+  const balV2 = () => contract<BalancerV2VaultAbi>(require("../abi/BalancerV2VaultAbi.json"), "0xBA12222222228d8Ba445958a75a0704d566BF2C8");
 
   class Farm implements Position {
-    vault = balV2[this.network.id]();
+    vault = balV2();
     bal = balToken[this.network.id]();
 
     data = {
