@@ -16,7 +16,9 @@ export namespace TokenBalances {
       mcap: zero,
     };
 
-    constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public token: Token) {}
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public token: Token) {
+      token.name = args.name || token.name;
+    }
 
     getName = () => this.data.name;
 

@@ -3,7 +3,7 @@ import { createHook, createSelector, createStore, StoreActionApi } from "react-s
 import { Position, PositionArgs } from "../positions/base/Position";
 import { PositionFactory } from "../positions/base/PositionFactory";
 import { registerAllPositions } from "../positions";
-import { to3, zero } from "@defi.org/web3-candies";
+import { to3, Token, zero } from "@defi.org/web3-candies";
 import { currentNetwork } from "../positions/base/consts";
 import BN from "bn.js";
 
@@ -135,6 +135,27 @@ export const useAllPositionsValuePerPosition = createHook(AllPositionsState, {
   ),
 });
 
+export const useAllPositionsValuePerAssetClass = createHook(AllPositionsState, {
+  selector: createSelector(
+    (state) =>
+      _(state.positions)
+        .map((position) => position.getAmounts())
+        .flatten()
+        .value(),
+    (amounts) => {
+      const reduced = _(amounts)
+        .groupBy((a) => assetClass(a.asset))
+        .map((values, key) => ({ assetClass: key, value: _.reduce(values, (sum, a) => sum + num(a.value), 0) }))
+        .sortBy((v) => -v.value)
+        .value();
+      return {
+        labels: _.map(reduced, (ac) => ac.assetClass),
+        values: _.map(reduced, (ac) => Math.round(ac.value)),
+      };
+    }
+  ),
+});
+
 export const useAllPositionsValuePerChain = createHook(AllPositionsState, {
   selector: createSelector(
     (state) => _.groupBy(state.positions, (p) => p.getNetwork().name),
@@ -165,4 +186,14 @@ function marketValue(p: Position) {
 
 function totalMarketValue(positions: Position[]) {
   return _.reduce(positions, (sum, pos) => sum.add(marketValue(pos)), zero);
+}
+
+function assetClass(a: Token): string {
+  const ext = (a as any).symbol || (a as any).tokenId;
+  if (ext) return ext;
+  if (a.name.toLowerCase().includes("usd")) return "USD";
+  if (a.name.toLowerCase().includes("btc")) return "BTC";
+  if (a.name.toLowerCase().includes("eth")) return "ETH";
+  if (a.name.toLowerCase().includes("bnb")) return "BNB";
+  return a.name || a.address;
 }

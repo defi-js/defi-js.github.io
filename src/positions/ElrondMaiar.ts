@@ -80,18 +80,27 @@ export namespace ElrondMaiar {
 
     getHealth = () => [];
 
-    getAmounts = () => [
-      {
-        asset: this.strategy.assets[0],
-        amount: this.data.amount0,
-        value: this.data.value0,
-      },
-      {
-        asset: this.strategy.assets[1],
-        amount: this.data.amount1,
-        value: this.data.value1,
-      },
-    ];
+    getAmounts = () =>
+      this.getAssets().length > 1
+        ? [
+            {
+              asset: this.getAssets()[0],
+              amount: this.data.amount0,
+              value: this.data.value0,
+            },
+            {
+              asset: this.getAssets()[1],
+              amount: this.data.amount1,
+              value: this.data.value1,
+            },
+          ]
+        : [
+            {
+              asset: this.getAssets()[0],
+              amount: this.data.amount0,
+              value: this.data.value0,
+            },
+          ];
 
     getPendingRewards = () => [{ asset: this.mex, amount: this.data.rewardAmount, value: this.data.rewardValue }];
 

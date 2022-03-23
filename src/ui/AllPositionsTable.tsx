@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useAllPositionRows, useAllPositions, useAllPositionsValuePerChain, useAllPositionsValuePerPosition } from "../state/AllPositionsState";
+import { useAllPositionRows, useAllPositions, useAllPositionsValuePerAssetClass, useAllPositionsValuePerChain, useAllPositionsValuePerPosition } from "../state/AllPositionsState";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
@@ -67,6 +67,7 @@ export const AllPositionsTable = () => {
   const [, positionDialogActions] = usePositionDialogActions();
   const [totalValuesPerChain] = useAllPositionsValuePerChain(null);
   const [valuesPerPosition] = useAllPositionsValuePerPosition(null);
+  const [valuesPerAssetClass] = useAllPositionsValuePerAssetClass(null);
 
   useEffect(() => {
     if (appState.network?.id) appActions.withLoading(actions.load).then();
@@ -86,9 +87,8 @@ export const AllPositionsTable = () => {
               labels: totalValuesPerChain.labels,
               datasets: [
                 {
-                  borderWidth: 2,
                   data: totalValuesPerChain.values,
-                  backgroundColor: totalValuesPerChain.values.map((t) => colorOf(t, totalValuesPerChain.grandtotal)),
+                  backgroundColor: totalValuesPerChain.values.map((v, i) => colorOf(i)),
                 },
               ],
             }}
@@ -104,9 +104,25 @@ export const AllPositionsTable = () => {
               labels: valuesPerPosition.labels,
               datasets: [
                 {
-                  borderWidth: 2,
                   data: valuesPerPosition.values,
-                  backgroundColor: valuesPerPosition.values.map((r) => colorOf(r, totalValuesPerChain.grandtotal)),
+                  backgroundColor: valuesPerPosition.values.map((v, i) => colorOf(i)),
+                },
+              ],
+            }}
+            options={{ responsive: false, plugins: { legend: { display: false } } }}
+            height="200"
+          />
+        </div>
+
+        <div>
+          <ListItemText>Value Per Asset Class:</ListItemText>
+          <Pie
+            data={{
+              labels: valuesPerAssetClass.labels,
+              datasets: [
+                {
+                  data: valuesPerAssetClass.values,
+                  backgroundColor: valuesPerAssetClass.values.map((v, i) => colorOf(i)),
                 },
               ],
             }}
@@ -126,16 +142,14 @@ export const AllPositionsTable = () => {
   );
 };
 
-function colorOf(num: number, total: number) {
-  return bgColors[Math.round((num / total) * (bgColors.length - 1))];
+function colorOf(num: number) {
+  return bgColors[num % bgColors.length];
 }
 
 const bgColors = [
-  "#F1E0AC", //
-  "#98B4AA",
-  "#87a2a5",
-  "#638c93",
-  "#495371",
-  "#494c71",
   "#413d5e",
+  "#495371",
+  "#638c93",
+  "#98B4AA",
+  "#F1E0AC", //
 ];
