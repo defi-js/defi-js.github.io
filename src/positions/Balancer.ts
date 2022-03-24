@@ -10,6 +10,8 @@ import { BalancerV2VaultAbi } from "../../typechain-abi/BalancerV2VaultAbi";
 export namespace Balancer {
   export function register() {
     PositionFactory.register({
+      "eth:Balancer:WBTC/ETH": (args, oracle) =>
+        new Farm(args, oracle, networks.eth, [erc20s.eth.WBTC(), erc20s.eth.WETH()], "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e"),
       "poly:Balancer:USDC/DAI/MAI/USDT": (args, oracle) =>
         new Farm(
           args,
@@ -36,6 +38,7 @@ export namespace Balancer {
   }
 
   const balToken = {
+    [networks.eth.id]: () => erc20("BAL", "0xba100000625a3754423978a60c9317c58a424e3D"),
     [networks.poly.id]: () => erc20("BAL", "0x9a71012B13CA4d3D0Cdc72A177DF3ef03b0E76A3"),
     [networks.arb.id]: () => erc20("BAL", "0x040d1EdC9569d4Bab2D15287Dc5A4F10F56a56B8"),
   };

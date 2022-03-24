@@ -13,12 +13,14 @@ import { ElrondMaiar } from "./ElrondMaiar";
 import { TraderJoe } from "./TraderJoe";
 import { Ribbon } from "./Ribbon";
 import { LooksRare } from "./LooksRare";
+import { SushiSwap } from "./SushiSwap";
 
 export function registerAllPositions() {
   OffChain.register();
   TokenBalances.register();
 
   Uniswap.register();
+  SushiSwap.register();
   Pancakeswap.register();
   Revault.register();
   AlphaHomora.register();
