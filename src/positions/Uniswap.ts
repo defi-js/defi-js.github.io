@@ -12,6 +12,7 @@ export namespace Uniswap {
   export function register() {
     PositionFactory.register({
       "eth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.WBTC(), erc20s.eth.WETH()),
+      "eth:Uniswap:V3LP:USDC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH()),
     });
   }
 
