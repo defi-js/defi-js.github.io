@@ -113,7 +113,8 @@ export namespace SushiSwap {
     }
 
     async harvest(useLegacyTx: boolean) {
-      await sendWithTxType(this.masterchef.methods.deposit(this.poolId, 0), useLegacyTx);
+      const tx = this.network.id === networks.poly.id ? this.masterchef.methods.deposit(this.poolId, 0, this.args.address) : this.masterchef.methods.deposit(this.poolId, 0);
+      await sendWithTxType(tx, useLegacyTx);
     }
   }
 
