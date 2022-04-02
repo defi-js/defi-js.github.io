@@ -142,8 +142,8 @@ async function positionGraph(posId: number) {
           collectedFeesToken0
           collectedFeesToken1
           pool {
+            id
             totalValueLockedUSD
-            tick
           }
         }
       }`,
@@ -152,11 +152,11 @@ async function positionGraph(posId: number) {
   });
   const json = await response.json();
   return {
+    poolId: json.data.position.pool.id,
     tvl: bn18(json.data.position.pool.totalValueLockedUSD),
     principal0: bn18(json.data.position.depositedToken0).sub(bn18(json.data.position.withdrawnToken0)),
     principal1: bn18(json.data.position.depositedToken1).sub(bn18(json.data.position.withdrawnToken1)),
     collectedFees0: bn18(json.data.position.collectedFeesToken0),
     collectedFees1: bn18(json.data.position.collectedFeesToken1),
-    tick: json.data.position.pool.tick,
   };
 }

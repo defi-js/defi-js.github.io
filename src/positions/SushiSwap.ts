@@ -1,20 +1,22 @@
 import _ from "lodash";
-import { bn, erc20, erc20s, Token, zero } from "@defi.org/web3-candies";
+import { bn, Contract, contract, erc20, erc20s, Network, Token, zero } from "@defi.org/web3-candies";
 import { Position, PositionArgs } from "./base/Position";
 import { PriceOracle } from "./base/PriceOracle";
 import { contracts, networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
+import { SushiswapMinichefAbi } from "../../typechain-abi/SushiswapMinichefAbi";
 
 export namespace SushiSwap {
   export function register() {
     PositionFactory.register({
-      "eth:SushiSwap:Farm:USDC/ETH": (args, oracle) => new Farm(args, oracle, erc20s.eth.USDC(), erc20s.eth.WETH(), 1),
+      "eth:SushiSwap:Farm:USDC/ETH": (args, oracle) => new Farm(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH(), 1),
+      "poly:SushiSwap:Farm:ETH/MATIC": (args, oracle) => new Farm(args, oracle, networks.poly, erc20s.poly.WETH(), erc20s.poly.WMATIC(), 0),
     });
   }
 
   class Farm implements Position {
-    masterchef = contracts.eth.Sushiswap_Masterchef();
-    reward = erc20("SUSHI", "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2");
+    masterchef = getFarmContract(this.network);
+    reward = getRewardContract(this.network);
 
     data = {
       amount0: zero,
@@ -26,13 +28,13 @@ export namespace SushiSwap {
       tvl: zero,
     };
 
-    constructor(public args: PositionArgs, public oracle: PriceOracle, public asset0: Token, public asset1: Token, public poolId: number) {}
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public asset0: Token, public asset1: Token, public poolId: number) {}
 
     getName = () => ``;
 
     getArgs = () => this.args;
 
-    getNetwork = () => networks.eth;
+    getNetwork = () => this.network;
 
     getAssets = () => [this.asset0, this.asset1];
 
@@ -71,7 +73,7 @@ export namespace SushiSwap {
         this.masterchef.methods.userInfo(this.poolId, this.args.address).call(),
         this.masterchef.methods.pendingSushi(this.poolId, this.args.address).call(),
       ]);
-      const lpToken = erc20("LP", poolInfo.lpToken);
+      const lpToken = erc20("LP", poolInfo.lpToken || (await this.masterchef.methods.lpToken(this.poolId).call()));
       const lpTotalSupply = await lpToken.methods.totalSupply().call().then(bn);
       const lpAmount = bn(userInfo.amount);
       const [total0, total1, lpStaked] = await Promise.all([
@@ -112,6 +114,26 @@ export namespace SushiSwap {
 
     async harvest(useLegacyTx: boolean) {
       await sendWithTxType(this.masterchef.methods.deposit(this.poolId, 0), useLegacyTx);
+    }
+  }
+
+  function getFarmContract(network: Network): Contract {
+    switch (network.shortname) {
+      case "poly":
+        return contract<SushiswapMinichefAbi>(require("../abi/SushiswapMinichefAbi.json"), "0x0769fd68dFb93167989C6f7254cd0D766Fb2841F");
+      case "eth":
+      default:
+        return contracts.eth.Sushiswap_Masterchef();
+    }
+  }
+
+  function getRewardContract(network: Network) {
+    switch (network.shortname) {
+      case "poly":
+        return erc20("SUSHI", "0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a");
+      case "eth":
+      default:
+        return erc20("SUSHI", "0x6B3595068778DD592e39A122f4f5a5cF09C90fE2");
     }
   }
 }
