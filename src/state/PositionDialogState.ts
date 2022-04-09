@@ -1,5 +1,5 @@
 import { createHook, createSelector, createStore } from "react-sweet-state";
-import { Position } from "../positions/base/Position";
+import { PositionV1 } from "../positionsv1/base/PositionV1";
 import _ from "lodash";
 import BN from "bn.js";
 import { fmt18 } from "@defi.org/web3-candies";
@@ -8,7 +8,7 @@ const PositionDialogState = createStore({
   name: "PositionDialogState",
 
   initialState: {
-    position: null as Position | null,
+    position: null as PositionV1 | null,
     useLegacy: false,
     selectedMethod: "",
     selectedMethodArgs: {},
@@ -16,7 +16,7 @@ const PositionDialogState = createStore({
 
   actions: {
     showPosition:
-      (position: Position) =>
+      (position: PositionV1) =>
       async ({ setState, getState }) => {
         if (getState().position !== position) {
           setState({ position, selectedMethod: "", selectedMethodArgs: {}, useLegacy: false });

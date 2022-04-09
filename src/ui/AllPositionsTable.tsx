@@ -4,7 +4,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
 import { commafy } from "@defi.org/web3-candies";
-import { Threat } from "../positions/base/Position";
+import { Threat } from "../positionsv1/base/PositionV1";
 import { ListItemText } from "@mui/material";
 import { AddPositionBtn } from "./AddPositionDialog";
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from "chart.js";

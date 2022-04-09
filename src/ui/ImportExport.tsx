@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, ButtonGroup } from "@mui/material";
 import { loadPositionsFromStorage, savePositionsToStorage } from "../state/AllPositionsState";
-import { PositionArgs } from "../positions/base/Position";
+import { PositionArgs } from "../positionsv1/base/PositionV1";
 
 const downloadFile = (data: string, fileName: string, fileType: "text/json" | "text/csv") => {
   const blob = new Blob([data], { type: fileType });

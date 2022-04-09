@@ -1,5 +1,5 @@
 import { createHook, createStore } from "react-sweet-state";
-import { PositionFactory } from "../positions/base/PositionFactory";
+import { PositionFactory } from "../positionsv1/base/PositionFactory";
 import _ from "lodash";
 
 const AddPositionDialogState = createStore({

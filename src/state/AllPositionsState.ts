@@ -1,10 +1,10 @@
 import _ from "lodash";
 import { createHook, createSelector, createStore, StoreActionApi } from "react-sweet-state";
-import { Position, PositionArgs } from "../positions/base/Position";
-import { PositionFactory } from "../positions/base/PositionFactory";
-import { registerAllPositions } from "../positions";
+import { PositionV1, PositionArgs } from "../positionsv1/base/PositionV1";
+import { PositionFactory } from "../positionsv1/base/PositionFactory";
+import { registerAllPositions } from "../positionsv1";
 import { to3, Token, zero } from "@defi.org/web3-candies";
-import { currentNetwork } from "../positions/base/consts";
+import { currentNetwork } from "../positionsv1/base/consts";
 import BN from "bn.js";
 
 registerAllPositions();
@@ -17,7 +17,7 @@ const AllPositionsState = createStore({
   name: "AllPositionsState",
 
   initialState: {
-    positions: {} as Record<string, Position>,
+    positions: {} as Record<string, PositionV1>,
   },
 
   actions: {
@@ -38,7 +38,7 @@ const AllPositionsState = createStore({
       await load(api);
     },
 
-    update: (position: Position, newArgs: PositionArgs) => async (api) => {
+    update: (position: PositionV1, newArgs: PositionArgs) => async (api) => {
       const data = _.mapValues(api.getState().positions, (p) => p.getArgs());
       data[position.getArgs().id] = newArgs;
       savePositionsToStorage(data);
@@ -180,11 +180,11 @@ function num(bn: BN) {
   return to3(bn, 18).toNumber() / 1000;
 }
 
-function marketValue(p: Position) {
+function marketValue(p: PositionV1) {
   return _.reduce(p.getAmounts(), (sum, v) => sum.add(v.value), zero);
 }
 
-function totalMarketValue(positions: Position[]) {
+function totalMarketValue(positions: PositionV1[]) {
   return _.reduce(positions, (sum, pos) => sum.add(marketValue(pos)), zero);
 }
 

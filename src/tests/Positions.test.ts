@@ -1,8 +1,8 @@
 import { fmt18, networks, setWeb3Instance, useChaiBN } from "@defi.org/web3-candies";
-import { TokenAmount } from "../positions/base/Position";
+import { TokenAmount } from "../positionsv1/base/PositionV1";
 import Web3 from "web3";
 import _ from "lodash";
-import { PositionFactory } from "../positions/base/PositionFactory";
+import { PositionFactory } from "../positionsv1/base/PositionFactory";
 import {
   BigUIntType,
   BigUIntValue,
@@ -30,7 +30,7 @@ describe("Positions", () => {
     describe(network.name, () => {
       beforeAll(async () => {
         setWeb3Instance(new Web3(network.id == networks.eth.id ? config().ethUrl : config().bscUrl));
-        require("../positions");
+        require("../positionsv1");
       });
 
       xit("positions", async () => {
