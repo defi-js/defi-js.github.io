@@ -1,10 +1,10 @@
-import { PositionV1, PositionArgs } from "./base/PositionV1";
-import { bn, contracts, erc20s, Token, zero } from "@defi.org/web3-candies";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
+import { bn, contract, erc20s, Token, zero } from "@defi.org/web3-candies";
 import type { PancakeswapLPAbi } from "@defi.org/web3-candies/typechain-abi/PancakeswapLPAbi";
 import { PriceOracle } from "./base/PriceOracle";
-import _ from "lodash";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
+import _ from "lodash";
 
 export namespace Pancakeswap {
   // https://docs.pancakeswap.finance/code/migration/masterchef-v2/list-of-farms
@@ -23,7 +23,7 @@ export namespace Pancakeswap {
   }
 
   class Farm implements PositionV1 {
-    masterchef = contracts.bsc.Pancakeswap_Masterchef();
+    masterchef = contract(require("../abi/PancakeswapMasterchefV2Abi.json"), "0xa5f8C5Dbd5F286960b9d90548680aE5ebFf07652");
     cake = erc20s.bsc.CAKE();
 
     data = {
