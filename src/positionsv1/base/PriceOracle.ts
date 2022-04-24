@@ -12,6 +12,7 @@ const coingeckoIds = {
   [networks.poly.id]: "polygon-pos",
   [networks.arb.id]: "arbitrum-one",
   [networks.avax.id]: "avalanche",
+  [networks.oeth.id]: "optimistic-ethereum",
 };
 
 export class PriceOracle {

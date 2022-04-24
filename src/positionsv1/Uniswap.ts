@@ -1,10 +1,11 @@
 import { PositionV1, PositionArgs, Severity } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn18, contract, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
+import { bn, bn18, contract, eqIgnoreCase, ether, maxUint256, Network, Token, web3, zero, zeroAddress } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { UniswapNftManagerAbi } from "../../typechain-abi/UniswapNftManagerAbi";
 import _ from "lodash";
+import { UniswapV3FactoryAbi } from "../../typechain-abi/UniswapV3FactoryAbi";
 
 const maxUint128 = bn(2).pow(bn(128)).subn(1).toString();
 
@@ -13,6 +14,8 @@ export namespace Uniswap {
     PositionFactory.register({
       "eth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.WBTC(), erc20s.eth.WETH()),
       "eth:Uniswap:V3LP:USDC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH()),
+
+      "oeth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.oeth, erc20s.oeth.WETH(), erc20s.oeth.WBTC()),
     });
   }
 
@@ -74,7 +77,7 @@ export namespace Uniswap {
 
     async load() {
       const pos = await this.nftPositionManager.methods.positions(this.data.id).call();
-      if (web3().utils.toChecksumAddress(pos.token0) !== web3().utils.toChecksumAddress(this.token0.address)) throw new Error(`invalid tokens for pos, ${pos}`);
+      if (web3().utils.toChecksumAddress(pos.token0) !== web3().utils.toChecksumAddress(this.token0.address)) throw new Error(`invalid tokens for pos, ${JSON.stringify(pos)}`);
 
       const res = await this.nftPositionManager.methods.decreaseLiquidity([this.data.id, pos.liquidity, 0, 0, maxUint256]).call({ from: this.args.address });
       this.data.amount0 = await this.token0.mantissa(res.amount0);
@@ -85,28 +88,9 @@ export namespace Uniswap {
         this.oracle.valueOf(this.network.id, this.token1, this.data.amount1),
       ]);
 
-      const graph = await positionGraph(this.data.id);
-      this.data.tvl = graph.tvl;
-      this.data.principal0 = graph.principal0;
-      this.data.principal1 = graph.principal1;
+      if (this.getNetwork().id === networks.eth.id) await this.loadFromPositionGraph();
 
-      const [principalValue0, principalValue1] = await Promise.all([
-        this.oracle.valueOf(this.network.id, this.token0, this.data.principal0),
-        this.oracle.valueOf(this.network.id, this.token1, this.data.principal1),
-      ]);
-      this.data.valueIfHodl = principalValue0.add(principalValue1);
-      this.data.valueNow = this.data.value0.add(this.data.value1);
-      this.data.ilValue = this.data.valueIfHodl.sub(this.data.valueNow);
-      this.data.il = ether.sub(this.data.valueNow.mul(ether).div(this.data.valueIfHodl));
-      const pending = await this.nftPositionManager.methods.collect([this.data.id, this.args.address, maxUint128, maxUint128]).call({ from: this.args.address });
-      this.data.pending0 = await this.token0.mantissa(pending.amount0);
-      this.data.pending1 = await this.token1.mantissa(pending.amount1);
-      this.data.pendingValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, this.data.pending0);
-      this.data.pendingValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, this.data.pending1);
-      const collectedValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, graph.collectedFees0);
-      const collectedValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, graph.collectedFees1);
-
-      this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(collectedValue0).add(collectedValue1);
+      if (this.data.tvl.isZero()) await this.loadTVL();
     }
 
     getContractMethods = () => _.functions(this.nftPositionManager.methods);
@@ -125,16 +109,14 @@ export namespace Uniswap {
     async harvest(useLegacyTx: boolean) {
       await sendWithTxType(this.nftPositionManager.methods.collect([this.data.id, this.args.address, maxUint128, maxUint128]), useLegacyTx);
     }
-  }
-}
 
-async function positionGraph(posId: number) {
-  const response = await fetch("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3", {
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      query: `{position(id:${posId}) {
+    async loadFromPositionGraph() {
+      const response = await fetch("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3", {
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          query: `{position(id:${this.data.id}) {
           depositedToken0
           depositedToken1
           withdrawnToken0
@@ -147,16 +129,44 @@ async function positionGraph(posId: number) {
           }
         }
       }`,
-    }),
-    method: "POST",
-  });
-  const json = await response.json();
-  return {
-    poolId: json.data.position.pool.id,
-    tvl: bn18(json.data.position.pool.totalValueLockedUSD),
-    principal0: bn18(json.data.position.depositedToken0).sub(bn18(json.data.position.withdrawnToken0)),
-    principal1: bn18(json.data.position.depositedToken1).sub(bn18(json.data.position.withdrawnToken1)),
-    collectedFees0: bn18(json.data.position.collectedFeesToken0),
-    collectedFees1: bn18(json.data.position.collectedFeesToken1),
-  };
+        }),
+        method: "POST",
+      });
+      const json = await response.json();
+
+      this.data.tvl = bn18(json.data.position.pool.totalValueLockedUSD);
+      this.data.principal0 = bn18(json.data.position.depositedToken0).sub(bn18(json.data.position.withdrawnToken0));
+      this.data.principal1 = bn18(json.data.position.depositedToken1).sub(bn18(json.data.position.withdrawnToken1));
+
+      const [principalValue0, principalValue1] = await Promise.all([
+        this.oracle.valueOf(this.network.id, this.token0, this.data.principal0),
+        this.oracle.valueOf(this.network.id, this.token1, this.data.principal1),
+      ]);
+      this.data.valueIfHodl = principalValue0.add(principalValue1);
+      this.data.valueNow = this.data.value0.add(this.data.value1);
+      this.data.ilValue = this.data.valueIfHodl.sub(this.data.valueNow);
+      this.data.il = ether.sub(this.data.valueNow.mul(ether).div(this.data.valueIfHodl));
+      const pending = await this.nftPositionManager.methods.collect([this.data.id, this.args.address, maxUint128, maxUint128]).call({ from: this.args.address });
+      this.data.pending0 = await this.token0.mantissa(pending.amount0);
+      this.data.pending1 = await this.token1.mantissa(pending.amount1);
+      this.data.pendingValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, this.data.pending0);
+      this.data.pendingValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, this.data.pending1);
+      const collectedValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, bn18(json.data.position.collectedFeesToken0));
+      const collectedValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, bn18(json.data.position.collectedFeesToken1));
+
+      this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(collectedValue0).add(collectedValue1);
+    }
+
+    async loadTVL() {
+      const factory = contract<UniswapV3FactoryAbi>(require("../abi/UniswapV3FactoryAbi.json"), await this.nftPositionManager.methods.factory().call());
+      let pool = await factory.methods.getPool(this.token0.address, this.token1.address, 500).call();
+      if (eqIgnoreCase(pool, zeroAddress)) pool = await factory.methods.getPool(this.token0.address, this.token1.address, 3000).call();
+      const [a0, a1] = await Promise.all([
+        this.token0.methods.balanceOf(pool).call().then(this.token0.mantissa),
+        this.token1.methods.balanceOf(pool).call().then(this.token1.mantissa),
+      ]);
+      const [v0, v1] = await Promise.all([this.oracle.valueOf(this.network.id, this.token0, a0), this.oracle.valueOf(this.network.id, this.token1, a1)]);
+      this.data.tvl = v0.add(v1);
+    }
+  }
 }

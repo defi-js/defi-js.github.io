@@ -1,9 +1,8 @@
 import _ from "lodash";
-import { account, bn, contracts as contractsOrig, erc20abi, erc20s as erc20sOrig, networks as networksOrig, web3 } from "@defi.org/web3-candies";
+import { account, bn, erc20abi, erc20s as erc20sOrig, networks as networksOrig, web3 } from "@defi.org/web3-candies";
 import { ContractCallContext, Multicall } from "ethereum-multicall";
 
 export const erc20s = _.merge({}, erc20sOrig, {});
-export const contracts = _.merge({}, contractsOrig, {});
 
 export const networks = _.merge({}, networksOrig, {
   egld: { id: -508, name: "Elrond", shortname: "egld" },

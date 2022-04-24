@@ -2,7 +2,7 @@ import _ from "lodash";
 import { bn, Contract, contract, erc20, erc20s, Network, Token, zero } from "@defi.org/web3-candies";
 import { PositionV1, PositionArgs } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { contracts, networks, sendWithTxType } from "./base/consts";
+import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
 import { SushiswapMinichefAbi } from "../../typechain-abi/SushiswapMinichefAbi";
 
@@ -124,7 +124,7 @@ export namespace SushiSwap {
         return contract<SushiswapMinichefAbi>(require("../abi/SushiswapMinichefAbi.json"), "0x0769fd68dFb93167989C6f7254cd0D766Fb2841F");
       case "eth":
       default:
-        return contracts.eth.Sushiswap_Masterchef();
+        return contract(require("../abi/SushiswapMasterchefAbi.json"), "");
     }
   }
 
