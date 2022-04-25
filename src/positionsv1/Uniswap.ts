@@ -1,6 +1,6 @@
-import { PositionV1, PositionArgs, Severity } from "./base/PositionV1";
+import { PositionArgs, PositionV1, Severity } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn18, contract, eqIgnoreCase, ether, maxUint256, Network, Token, web3, zero, zeroAddress } from "@defi.org/web3-candies";
+import { bn, bn18, contract, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { UniswapNftManagerAbi } from "../../typechain-abi/UniswapNftManagerAbi";
@@ -90,7 +90,7 @@ export namespace Uniswap {
 
       if (this.getNetwork().id === networks.eth.id) await this.loadFromPositionGraph();
 
-      if (this.data.tvl.isZero()) await this.loadTVL();
+      if (this.data.tvl.isZero()) await this.loadTVL(parseInt(pos.fee));
     }
 
     getContractMethods = () => _.functions(this.nftPositionManager.methods);
@@ -157,10 +157,9 @@ export namespace Uniswap {
       this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(collectedValue0).add(collectedValue1);
     }
 
-    async loadTVL() {
+    async loadTVL(fee: number) {
       const factory = contract<UniswapV3FactoryAbi>(require("../abi/UniswapV3FactoryAbi.json"), await this.nftPositionManager.methods.factory().call());
-      let pool = await factory.methods.getPool(this.token0.address, this.token1.address, 500).call();
-      if (eqIgnoreCase(pool, zeroAddress)) pool = await factory.methods.getPool(this.token0.address, this.token1.address, 3000).call();
+      const pool = await factory.methods.getPool(this.token0.address, this.token1.address, fee).call();
       const [a0, a1] = await Promise.all([
         this.token0.methods.balanceOf(pool).call().then(this.token0.mantissa),
         this.token1.methods.balanceOf(pool).call().then(this.token1.mantissa),
