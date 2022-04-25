@@ -15,6 +15,8 @@ export namespace Uniswap {
       "eth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.WBTC(), erc20s.eth.WETH()),
       "eth:Uniswap:V3LP:USDC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH()),
 
+      "poly:Uniswap:V3LP:MATIC/ETH": (args, oracle) => new V3LP(args, oracle, networks.poly, erc20s.poly.WMATIC(), erc20s.poly.WETH()),
+
       "oeth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.oeth, erc20s.oeth.WETH(), erc20s.oeth.WBTC()),
     });
   }
