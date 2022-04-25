@@ -62,6 +62,7 @@ export namespace TokenBalances {
     poly: () => _.merge(erc20s.poly.WMATIC(), { name: "MATIC" }),
     avax: () => _.merge(erc20s.avax.WAVAX(), { name: "AVAX" }),
     arb: () => _.merge(erc20s.arb.WETH(), { name: "AETH" }),
+    oeth: () => _.merge(erc20s.oeth.WETH(), { name: "ETH" }),
   };
 
   class NativeTokenBalance extends TokenBalance {
