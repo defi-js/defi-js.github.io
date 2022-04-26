@@ -1,8 +1,10 @@
 import { PositionV1, PositionArgs, Severity } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn18, contract, erc20s, ether, to18, zero } from "@defi.org/web3-candies";
+import { bn, bn18, contract, erc20, erc20s, ether, to18, zero } from "@defi.org/web3-candies";
 import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
 import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
+import type { AaveSAAVEAbi } from "../../typechain-abi/AaveSAAVEAbi";
+import type { CompoundCTokenAbi } from "../../typechain-abi/CompoundCTokenAbi";
 import _ from "lodash";
 import { networks, sendWithTxType } from "./base/consts";
 
@@ -15,8 +17,8 @@ export namespace Loops {
 
     instance = contract<AaveLoopAbi>(require("../abi/AaveLoopAbi.json"), this.args.address);
     asset = erc20s.eth.USDC();
-    rewardAsset = erc20s.eth.Aave_stkAAVE();
-    aave = erc20s.eth.AAVE();
+    rewardAsset = erc20<AaveSAAVEAbi>("stkAAVE", "0x4da27a545c0c5B758a6BA100e3a049001de870f5", require("../abi/AaveSAAVEAbi.json"));
+    aave = erc20("AAVE", "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9");
     weth = erc20s.eth.WETH();
 
     data = {
@@ -93,7 +95,7 @@ export namespace Loops {
       this.data.rewardAmount = bn(await this.instance.methods.getBalanceReward().call());
       this.data.rewardValue = await this.oracle.valueOf(this.getNetwork().id, this.aave, this.data.rewardAmount);
 
-      const atoken = erc20s.eth.Aave_aUSDC();
+      const atoken = erc20("Aave: aUSDC", "0xBcca60bB61934080951369a648Fb03DF4F96263C");
       this.data.tvl = await this.oracle.valueOf(this.getNetwork().id, this.asset, await atoken.mantissa(await atoken.methods.totalSupply().call()));
     }
 
@@ -123,7 +125,7 @@ export namespace Loops {
 
     instance = contract<CompoundLoopAbi>(require("../abi/CompoundLoopAbi.json"), this.args.address);
     asset = erc20s.eth.USDC();
-    rewardAsset = erc20s.eth.COMP();
+    rewardAsset = erc20("COMP", "0xc00e94Cb662C3520282E6f5717214004A7f26888");
 
     data = {
       borrowBalance: zero,
@@ -189,7 +191,7 @@ export namespace Loops {
     }
 
     async load() {
-      const ctoken = erc20s.eth.Compound_cUSDC();
+      const ctoken = erc20<CompoundCTokenAbi>("Compound: cUSDC", "0x39AA39c021dfbaE8faC545936693aC917d5E7563", require("../abi/CompoundCTokenAbi.json"));
       const [totalSupply, exchangeRate, underlyingBalance, borrowBalance, pending, liquidity] = await Promise.all([
         ctoken.methods.totalSupply().call(),
         ctoken.methods.exchangeRateCurrent().call(),
