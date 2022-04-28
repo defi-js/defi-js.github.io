@@ -124,7 +124,7 @@ export namespace SushiSwap {
         return contract<SushiswapMinichefAbi>(require("../abi/SushiswapMinichefAbi.json"), "0x0769fd68dFb93167989C6f7254cd0D766Fb2841F");
       case "eth":
       default:
-        return contract(require("../abi/SushiswapMasterchefAbi.json"), "");
+        return contract(require("../abi/SushiswapMasterchefAbi.json"), "0xc2EdaD668740f1aA35E4D8f227fB8E17dcA888Cd");
     }
   }
 
