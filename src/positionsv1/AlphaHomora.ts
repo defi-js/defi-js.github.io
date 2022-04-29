@@ -1,16 +1,16 @@
 import { PositionFactory } from "./base/PositionFactory";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { erc20s, networks } from "./base/consts";
-import { bn, contract, erc20, ether, Token, zero } from "@defi.org/web3-candies";
+import { erc20s, networks, sendWithTxType } from "./base/consts";
+import { Abi, bn, contract, erc20, ether, Token, zero } from "@defi.org/web3-candies";
 import type { AlphaHomoraBankAbi } from "../../typechain-abi/AlphaHomoraBankAbi";
-import { AlphaHomoraJoeFarmAbi } from "../../typechain-abi/AlphaHomoraJoeFarmAbi";
 import _ from "lodash";
 
 export namespace AlphaHomora {
   export function register() {
     PositionFactory.register({
       "avax:AlphaHomora:WETHe/AVAX": (args, oracle) => new LYF(args, oracle, erc20s.avax.WETHe(), erc20s.avax.WAVAX()),
+      "avax:AlphaHomora:WBTCe/AVAX": (args, oracle) => new LYF(args, oracle, erc20s.avax.WBTCe(), erc20s.avax.WAVAX()),
     });
   }
 
@@ -62,18 +62,27 @@ export namespace AlphaHomora {
     async load() {
       const pos = await this.alphaHomoraBank.methods.getPositionInfo(this.data.id).call();
       const lpSupplied = bn(pos.collateralSize);
-      const nft = contract<AlphaHomoraJoeFarmAbi>(require("../abi/AlphaHomoraJoeFarmAbi.json"), pos.collToken);
+      const farmAbi = [
+        {
+          inputs: [{ internalType: "uint256", name: "id", type: "uint256" }],
+          name: "getUnderlyingToken",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+      ] as Abi;
+      const nft = contract(farmAbi, pos.collToken);
       const lpToken = erc20("", await nft.methods.getUnderlyingToken(pos.collId).call());
       const totalLPs = await lpToken.methods.totalSupply().call().then(bn);
       const share = lpSupplied.mul(ether).div(totalLPs);
-      const total0 = await this.token0.methods.balanceOf(lpToken.address).call().then(bn);
-      const total1 = await this.token1.methods.balanceOf(lpToken.address).call().then(bn);
+      const total0 = await this.token0.methods.balanceOf(lpToken.address).call().then(this.token0.mantissa);
+      const total1 = await this.token1.methods.balanceOf(lpToken.address).call().then(this.token1.mantissa);
       this.data.supply0 = total0.mul(share).div(ether);
       this.data.supply1 = total1.mul(share).div(ether);
 
       const debts = await this.alphaHomoraBank.methods.getPositionDebts(this.data.id).call();
-      this.data.borrow0 = bn(debts.debts[_.indexOf(debts.tokens, this.token0.address)]);
-      this.data.borrow1 = bn(debts.debts[_.indexOf(debts.tokens, this.token1.address)]);
+      this.data.borrow0 = await this.token0.mantissa(debts.debts[_.indexOf(debts.tokens, this.token0.address)]);
+      this.data.borrow1 = await this.token1.mantissa(debts.debts[_.indexOf(debts.tokens, this.token1.address)]);
 
       this.data.amount0 = this.data.supply0.sub(this.data.borrow0);
       this.data.amount1 = this.data.supply1.sub(this.data.borrow1);
@@ -178,9 +187,18 @@ export namespace AlphaHomora {
     //     console.log(f0, f1);
     //   }
 
-    getContractMethods = () => [];
-    async callContract(method: string, args: string[]) {}
-    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {}
+    getContractMethods = () => _.functions(this.alphaHomoraBank.methods);
+    async callContract(method: string, args: string[]) {
+      const tx = (this.alphaHomoraBank.methods as any)[method](...args);
+      return await tx.call({ from: this.args.address });
+    }
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.alphaHomoraBank.methods as any)[method](...args);
+      alert(`target:\n${this.alphaHomoraBank.options.address}\ndata:\n${tx.encodeABI()}`);
+      await sendWithTxType(tx, useLegacyTx);
+    }
+
     async harvest(useLegacyTx: boolean) {}
   }
 }
