@@ -6,12 +6,20 @@ import { bn, contract, eqIgnoreCase, erc20, ether, Network, Token, zero } from "
 import { PriceOracle } from "./base/PriceOracle";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import { BalancerV2VaultAbi } from "../../typechain-abi/BalancerV2VaultAbi";
+import { BalancerGaugeAbi } from "../../typechain-abi/BalancerGaugeAbi";
 
 export namespace Balancer {
   export function register() {
     PositionFactory.register({
       "eth:Balancer:WBTC/ETH": (args, oracle) =>
-        new Farm(args, oracle, networks.eth, [erc20s.eth.WBTC(), erc20s.eth.WETH()], "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e"),
+        new Farm(
+          args,
+          oracle,
+          networks.eth,
+          [erc20s.eth.WBTC(), erc20s.eth.WETH()],
+          "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e",
+          "0x4E3c048BE671852277Ad6ce29Fd5207aA12fabff"
+        ),
       "poly:Balancer:USDC/DAI/MAI/USDT": (args, oracle) =>
         new Farm(
           args,
@@ -47,6 +55,7 @@ export namespace Balancer {
 
   class Farm implements PositionV1 {
     vault = balV2();
+    gauge = contract<BalancerGaugeAbi>(require("../abi/BalancerGaugeAbi.json"), this.gaugeAddress);
     bal = balToken[this.network.id]();
 
     data = {
@@ -55,7 +64,7 @@ export namespace Balancer {
       tvl: zero,
     };
 
-    constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public tokens: Token[], public poolId: string) {}
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public tokens: Token[], public poolId: string, public gaugeAddress: string = "") {}
 
     getName = () => "";
     getNetwork = () => this.network;
@@ -69,6 +78,28 @@ export namespace Balancer {
     getHealth = () => [];
 
     async load() {
+      if (!this.gaugeAddress) return await this.loadFromPool();
+
+      const [lpTokenAddress, workingBalance, totalWorkingBalance] = await Promise.all([
+        this.gauge.methods.lp_token().call(),
+        this.gauge.methods.balanceOf(this.args.address).call().then(bn),
+        this.gauge.methods.totalSupply().call().then(bn),
+      ]);
+      const bpt = erc20("BPT", lpTokenAddress);
+      const [totalBptsStaked, bptTotalSupply] = await Promise.all([bpt.methods.balanceOf(this.gaugeAddress).call().then(bn), bpt.methods.totalSupply().call().then(bn)]);
+      const bptBalance = totalBptsStaked.mul(workingBalance).div(totalWorkingBalance);
+
+      const poolTokens = await this.vault.methods.getPoolTokens(this.poolId).call();
+      if (!_.every(this.tokens, (t, i) => eqIgnoreCase(t.options.address, poolTokens.tokens[i]))) throw new Error(`invalid Balancer poolBalances`);
+      this.data.amounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).mul(bptBalance).div(bptTotalSupply))));
+      this.data.values = await Promise.all(_.map(this.tokens, (t, i) => this.oracle.valueOf(this.network.id, t, this.data.amounts[i])));
+
+      const poolAmounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).mul(totalBptsStaked).div(bptTotalSupply))));
+      const poolValues = await Promise.all(_.map(this.tokens, (t, i) => this.oracle.valueOf(this.network.id, t, poolAmounts[i])));
+      this.data.tvl = poolValues.reduce((sum, b) => sum.add(bn(b)), zero);
+    }
+
+    private async loadFromPool() {
       const bpt = erc20(
         "BPT",
         await this.vault.methods
