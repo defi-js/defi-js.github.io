@@ -1,7 +1,7 @@
 import _ from "lodash";
 import { PositionV1, PositionArgs } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn9, contract, Network, Token, zero } from "@defi.org/web3-candies";
+import { bn, bn9, contract, erc20, Network, Token, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { RibbonThetaVaultAbi } from "../../typechain-abi/RibbonThetaVaultAbi";
@@ -18,6 +18,7 @@ export namespace Ribbon {
   }
 
   class ThetaVault implements PositionV1 {
+    rbn = erc20("RBN", "0x6123B0049F904d730dB3C36a31167D9d4121fA6B");
     vault = contract<RibbonThetaVaultAbi>(require("../abi/RibbonThetaVaultAbi.json"), this.vaultAddress);
 
     data = {
@@ -25,6 +26,8 @@ export namespace Ribbon {
       value: zero,
       tvl: zero,
       strike: zero,
+      pending: zero,
+      pendingValue: zero,
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public asset: Token, public vaultAddress: string) {}
@@ -36,8 +39,8 @@ export namespace Ribbon {
     getTVL = () => this.data.tvl;
     getAssets = () => [this.asset];
     getAmounts = () => [{ asset: this.asset, amount: this.data.amount, value: this.data.value }];
-    getRewardAssets = () => [];
-    getPendingRewards = () => [];
+    getRewardAssets = () => [this.rbn];
+    getPendingRewards = () => [{ asset: this.rbn, amount: this.data.pending, value: this.data.pendingValue }];
     getHealth = () => [];
 
     async load() {
@@ -56,6 +59,9 @@ export namespace Ribbon {
 
       const currentOption = contract(require("../abi/RibbonOptionAbi.json"), await this.vault.methods.currentOption().call());
       this.data.strike = bn9(await currentOption.methods["strikePrice()"]().call()).muln(10);
+
+      this.data.pending = await farm.methods.claimable_tokens(this.args.address).call().then(bn);
+      this.data.pendingValue = await this.oracle.valueOf(this.getNetwork().id, this.rbn, this.data.pending);
     }
 
     getContractMethods = () => _.functions(this.vault.methods);
