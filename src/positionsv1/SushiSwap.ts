@@ -19,6 +19,8 @@ export namespace SushiSwap {
     reward = getRewardContract(this.network);
 
     data = {
+      chef: this.masterchef.options.address,
+      poolId: this.poolId,
       amount0: zero,
       amount1: zero,
       value0: zero,

@@ -54,6 +54,9 @@ export namespace ElrondMaiar {
     mex = tokens.MEX();
 
     data = {
+      pool: this.strategy.pool,
+      farm: this.strategy.farm,
+      lp: this.strategy.lp.tokenId,
       lpBalanceStaked: zero,
       amount0: zero,
       amount1: zero,

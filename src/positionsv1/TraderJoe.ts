@@ -18,6 +18,8 @@ export namespace TraderJoe {
     reward = erc20("JOE", "0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd");
 
     data = {
+      chef: this.masterchef.options.address,
+      poolId: this.poolId,
       amount0: zero,
       amount1: zero,
       value0: zero,

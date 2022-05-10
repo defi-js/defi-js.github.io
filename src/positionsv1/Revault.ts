@@ -33,6 +33,8 @@ export namespace Revault {
     reva = REVA();
 
     data = {
+      revault: this.revault.options.address,
+      chef: this.chef.options.address,
       amount: zero,
       value: zero,
       pending: zero,
@@ -127,6 +129,7 @@ export namespace Revault {
     reva = REVA();
 
     data = {
+      staking: this.staking.options.address,
       amount: zero,
       value: zero,
       pendingAmount: zero,

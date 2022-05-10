@@ -5,8 +5,16 @@ import { erc20s, networks, sendWithTxType } from "./base/consts";
 import { PriceOracle } from "./base/PriceOracle";
 import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
 import type { UniclyXUnicAbi } from "../../typechain-abi/UniclyXUnicAbi";
+import { PositionFactory } from "./base/PositionFactory";
 
 export namespace Unicly {
+  export function register() {
+    PositionFactory.register({
+      "eth:Unicly:XUnicFarm:uPunks": (args, oracle) => new Unicly.XUnicFarm(args, oracle, Unicly.Strategies.uPunks()),
+      "eth:Unicly:XUnicFarm:uJenny": (args, oracle) => new Unicly.XUnicFarm(args, oracle, Unicly.Strategies.uJenny()),
+    });
+  }
+
   interface Strategy {
     asset: Token;
     lp: Token & UniclyLpAbi;
@@ -33,6 +41,9 @@ export namespace Unicly {
     eth = erc20s.eth.WETH();
 
     data = {
+      xfarm: this.xfarm.options.address,
+      unic: this.unic.options.address,
+      xunic: this.xunic.options.address,
       amountLP: zero,
       amountAsset: zero,
       amountETH: zero,

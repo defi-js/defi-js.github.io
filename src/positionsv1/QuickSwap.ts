@@ -1,23 +1,29 @@
-import _ from "lodash";
-import type { TraderJoeFarmAbi } from "../../typechain-abi/TraderJoeFarmAbi";
 import { bn, contract, erc20, erc20s, Token, zero } from "@defi.org/web3-candies";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
+import { QuickswapStakingAbi } from "../../typechain-abi/QuickswapStakingAbi";
+import _ from "lodash";
 
 export namespace QuickSwap {
+  const orbs = () => erc20("ORBS", "0x614389EaAE0A6821DC49062D56BDA3d9d45Fa2ff");
+  const quick = () => erc20("QUICK", "0x831753DD7087CaC61aB5644b308642cc1c33Dc13");
+
   export function register() {
     PositionFactory.register({
-      "poly:QuickSwap:Farm:ORBS/USDC": (args, oracle) => new Farm(args, oracle, erc20("ORBS", ""), erc20s.poly.USDC(), 26),
+      "poly:QuickSwap:Farm:ORBS/USDC": (args, oracle) => new Farm(args, oracle, erc20s.poly.USDC(), orbs(), "0x9CA237962823A0a74bbC8354764e1DAC9e4057F0"),
+
+      "poly:QuickSwap:LP:ORBS/QUICK": (args, oracle) => new LP(args, oracle, orbs(), quick(), "0x882624931b4A799d50242e5b25E2Fa2719E4d072"),
     });
   }
 
   class Farm implements PositionV1 {
-    masterchef = contract<TraderJoeFarmAbi>(require("../abi/TraderJoeFarmAbi.json"), "0xd6a4F121CA35509aF06A0Be99093d08462f53052");
-    reward = erc20("JOE", "0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd");
+    staking = contract<QuickswapStakingAbi>(require("../abi/QuickswapStakingAbi.json"), this.stakingAddress);
+    reward = erc20("dQUICK", "0xf28164A485B0B2C90639E47b0f377b4a438a16B1");
 
     data = {
+      contract: this.stakingAddress,
       amount0: zero,
       amount1: zero,
       value0: zero,
@@ -27,22 +33,15 @@ export namespace QuickSwap {
       tvl: zero,
     };
 
-    constructor(public args: PositionArgs, public oracle: PriceOracle, public asset0: Token, public asset1: Token, public poolId: number) {}
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public asset0: Token, public asset1: Token, public stakingAddress: string) {}
 
     getName = () => ``;
-
     getArgs = () => this.args;
-
-    getNetwork = () => networks.avax;
-
+    getNetwork = () => networks.poly;
     getAssets = () => [this.asset0, this.asset1];
-
     getRewardAssets = () => [this.reward];
-
     getData = () => this.data;
-
     getHealth = () => [];
-
     getAmounts = () => [
       {
         asset: this.asset0,
@@ -67,52 +66,120 @@ export namespace QuickSwap {
     getTVL = () => this.data.tvl;
 
     async load() {
-      const [poolInfo, userInfo, pending] = await Promise.all([
-        this.masterchef.methods.poolInfo(this.poolId).call(),
-        this.masterchef.methods.userInfo(this.poolId, this.args.address).call(),
-        this.masterchef.methods.pendingTokens(this.poolId, this.args.address).call(),
+      const [stakedBalance, totalStaked, earned, lpAddress] = await Promise.all([
+        this.staking.methods.balanceOf(this.args.address).call().then(bn),
+        this.staking.methods.totalSupply().call().then(bn),
+        this.staking.methods.earned(this.args.address).call().then(bn),
+        this.staking.methods.stakingToken().call(),
       ]);
-      const lpToken = erc20("LP", poolInfo.lpToken);
-      const lpTotalSupply = await lpToken.methods.totalSupply().call().then(bn);
-      const lpAmount = bn(userInfo.amount);
-      const [total0, total1, lpStaked] = await Promise.all([
-        this.asset0.methods
-          .balanceOf(lpToken.options.address)
-          .call()
-          .then((x) => this.asset0.mantissa(x)),
-        this.asset1.methods
-          .balanceOf(lpToken.options.address)
-          .call()
-          .then((x) => this.asset1.mantissa(x)),
-        lpToken.methods.balanceOf(this.masterchef.options.address).call().then(bn),
+      this.data.rewardAmount = earned;
+      this.data.rewardValue = await this.oracle.valueOf(this.getNetwork().id, this.reward, this.data.rewardAmount);
+
+      const lp = erc20("LP", lpAddress);
+
+      const [amount0InLp, amount1InLp, totalLpSupply] = await Promise.all([
+        this.asset0.methods.balanceOf(lpAddress).call().then(this.asset0.mantissa),
+        this.asset1.methods.balanceOf(lpAddress).call().then(this.asset1.mantissa),
+        lp.methods.totalSupply().call().then(lp.mantissa),
       ]);
-      this.data.amount0 = total0.mul(lpAmount).div(lpTotalSupply);
-      this.data.amount1 = total1.mul(lpAmount).div(lpTotalSupply);
+      this.data.amount0 = stakedBalance.mul(amount0InLp).div(totalLpSupply);
+      this.data.amount1 = stakedBalance.mul(amount1InLp).div(totalLpSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
-      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0.mul(lpStaked).div(lpTotalSupply))).add(
-        await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1.mul(lpStaked).div(lpTotalSupply))
-      );
 
-      this.data.rewardAmount = await this.reward.mantissa(pending.pendingJoe);
-      this.data.rewardValue = await this.oracle.valueOf(this.getNetwork().id, this.reward, this.data.rewardAmount);
+      const tvl_amount0 = totalStaked.mul(amount0InLp).div(totalLpSupply);
+      const tvl_amount1 = totalStaked.mul(amount1InLp).div(totalLpSupply);
+      const tvl_value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, tvl_amount0);
+      const tvl_value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, tvl_amount1);
+      this.data.tvl = tvl_value0.add(tvl_value1);
     }
 
-    getContractMethods = () => _.functions(this.masterchef.methods);
+    getContractMethods = () => _.functions(this.staking.methods);
 
     async callContract(method: string, args: string[]) {
-      const tx = (this.masterchef.methods as any)[method](...args);
+      const tx = (this.staking.methods as any)[method](...args);
       return await tx.call({ from: this.args.address });
     }
 
     async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
-      const tx = (this.masterchef.methods as any)[method](...args);
-      alert(`target:\n${this.masterchef.options.address}\ndata:\n${tx.encodeABI()}`);
+      const tx = (this.staking.methods as any)[method](...args);
+      alert(`target:\n${this.staking.options.address}\ndata:\n${tx.encodeABI()}`);
       await sendWithTxType(tx, useLegacyTx);
     }
 
     async harvest(useLegacyTx: boolean) {
-      await sendWithTxType(this.masterchef.methods.deposit(this.poolId, 0), useLegacyTx);
+      await sendWithTxType(this.staking.methods.stake(0), useLegacyTx);
     }
+  }
+
+  class LP implements PositionV1 {
+    lp = erc20("QuickswapLP", this.lpAddress);
+
+    data = {
+      contract: this.lpAddress,
+      amount0: zero,
+      amount1: zero,
+      value0: zero,
+      value1: zero,
+      tvl: zero,
+    };
+
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public asset0: Token, public asset1: Token, public lpAddress: string) {}
+
+    getName = () => ``;
+    getArgs = () => this.args;
+    getNetwork = () => networks.poly;
+    getAssets = () => [this.asset0, this.asset1];
+    getRewardAssets = () => [];
+    getData = () => this.data;
+    getHealth = () => [];
+    getAmounts = () => [
+      {
+        asset: this.asset0,
+        amount: this.data.amount0,
+        value: this.data.value0,
+      },
+      {
+        asset: this.asset1,
+        amount: this.data.amount1,
+        value: this.data.value1,
+      },
+    ];
+
+    getPendingRewards = () => [];
+
+    getTVL = () => this.data.tvl;
+
+    async load() {
+      const [balance, totalSupply] = await Promise.all([this.lp.methods.balanceOf(this.args.address).call().then(bn), this.lp.methods.totalSupply().call().then(bn)]);
+
+      const [amount0InLp, amount1InLp] = await Promise.all([
+        this.asset0.methods.balanceOf(this.lpAddress).call().then(this.asset0.mantissa),
+        this.asset1.methods.balanceOf(this.lpAddress).call().then(this.asset1.mantissa),
+      ]);
+      this.data.amount0 = amount0InLp.mul(balance).div(totalSupply);
+      this.data.amount1 = amount1InLp.mul(balance).div(totalSupply);
+      this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
+      this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
+
+      const tvl_value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, amount0InLp);
+      const tvl_value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, amount1InLp);
+      this.data.tvl = tvl_value0.add(tvl_value1);
+    }
+
+    getContractMethods = () => _.functions(this.lp.methods);
+
+    async callContract(method: string, args: string[]) {
+      const tx = (this.lp.methods as any)[method](...args);
+      return await tx.call({ from: this.args.address });
+    }
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.lp.methods as any)[method](...args);
+      alert(`target:\n${this.lp.options.address}\ndata:\n${tx.encodeABI()}`);
+      await sendWithTxType(tx, useLegacyTx);
+    }
+
+    async harvest(useLegacyTx: boolean) {}
   }
 }

@@ -21,6 +21,7 @@ export namespace LooksRare {
     checkPending = true;
 
     data = {
+      vault: this.vault.options.address,
       amount: zero,
       value: zero,
       pendingAmount: zero,
@@ -79,6 +80,7 @@ export namespace LooksRare {
     constructor(public args: PositionArgs, public oracle: PriceOracle) {
       super(args, oracle);
       this.vault = contract<LooksrareStakingAbi>(require("../abi/LooksrareStakingAbi.json"), "0x3ab16Af1315dc6C95F83Cbf522fecF98D00fd9ba");
+      this.data.vault = this.vault.options.address;
       this.checkPending = false;
     }
   }

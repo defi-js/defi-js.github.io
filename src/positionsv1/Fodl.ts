@@ -3,13 +3,22 @@ import { PriceOracle } from "./base/PriceOracle";
 import { bn, erc20, zero } from "@defi.org/web3-candies";
 import { networks, sendWithTxType } from "./base/consts";
 import _ from "lodash";
+import { PositionFactory } from "./base/PositionFactory";
 
 export namespace Fodl {
+  export function register() {
+    PositionFactory.register({
+      "eth:Fodl:XFodlStake": (args, oracle) => new Fodl.XFodlStake(args, oracle),
+    });
+  }
+
   export class XFodlStake implements PositionV1 {
     fodl = erc20("FODL", "0x4C2e59D098DF7b6cBaE0848d66DE2f8A4889b9C3");
     xfodl = erc20("FODL: xFODL", "0x7e05540A61b531793742fde0514e6c136b5fbAfE");
 
     data = {
+      fodl: this.fodl.address,
+      xfodl: this.xfodl.address,
       amount: zero,
       value: zero,
       tvl: zero,

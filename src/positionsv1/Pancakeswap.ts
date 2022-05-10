@@ -38,6 +38,9 @@ export namespace Pancakeswap {
     cake = erc20s.bsc.CAKE();
 
     data = {
+      chef: this.masterchef.options.address,
+      poolId: this.poolId,
+      lp: this.lpToken.address,
       amount0: zero,
       amount1: zero,
       value0: zero,

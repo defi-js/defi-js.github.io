@@ -15,13 +15,13 @@ export namespace AlphaHomora {
   }
 
   class LYF implements PositionV1 {
-    baseToken = erc20s.avax.WAVAX();
     alphaHomoraBank = contract<AlphaHomoraBankAbi>(require("../abi/AlphaHomoraBankAbi.json"), "0x376d16C7dE138B01455a51dA79AD65806E9cd694");
     maxHistoryBlocks = {
       [networks.avax.id]: 10_000_000,
     };
 
     data = {
+      contract: this.alphaHomoraBank.options.address,
       id: 0,
       supply0: zero,
       supply1: zero,

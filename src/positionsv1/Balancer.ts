@@ -59,9 +59,13 @@ export namespace Balancer {
     bal = balToken[this.network.id]();
 
     data = {
+      vault: this.vault.options.address,
+      gauge: this.gauge.options.address,
       amounts: [] as BN[],
       values: [] as BN[],
       tvl: zero,
+      pending: zero,
+      pendingValue: zero,
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public tokens: Token[], public poolId: string, public gaugeAddress: string = "") {}
@@ -74,16 +78,17 @@ export namespace Balancer {
     getAssets = () => this.tokens;
     getAmounts = () => _.map(this.tokens, (asset, i) => ({ asset, amount: this.data.amounts[i] || zero, value: this.data.values[i] || zero }));
     getRewardAssets = () => [this.bal];
-    getPendingRewards = () => [];
+    getPendingRewards = () => [{ asset: this.bal, amount: this.data.pending, value: this.data.pendingValue }];
     getHealth = () => [];
 
     async load() {
       if (!this.gaugeAddress) return await this.loadFromPool();
 
-      const [lpTokenAddress, workingBalance, totalWorkingBalance] = await Promise.all([
+      const [lpTokenAddress, workingBalance, totalWorkingBalance, pending] = await Promise.all([
         this.gauge.methods.lp_token().call(),
         this.gauge.methods.balanceOf(this.args.address).call().then(bn),
         this.gauge.methods.totalSupply().call().then(bn),
+        this.gauge.methods.claimable_tokens(this.args.address).call().then(bn),
       ]);
       const bpt = erc20("BPT", lpTokenAddress);
       const [totalBptsStaked, bptTotalSupply] = await Promise.all([bpt.methods.balanceOf(this.gaugeAddress).call().then(bn), bpt.methods.totalSupply().call().then(bn)]);
@@ -97,6 +102,9 @@ export namespace Balancer {
       const poolAmounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).mul(totalBptsStaked).div(bptTotalSupply))));
       const poolValues = await Promise.all(_.map(this.tokens, (t, i) => this.oracle.valueOf(this.network.id, t, poolAmounts[i])));
       this.data.tvl = poolValues.reduce((sum, b) => sum.add(bn(b)), zero);
+
+      this.data.pending = pending;
+      this.data.pendingValue = await this.oracle.valueOf(this.network.id, this.bal, this.data.pending);
     }
 
     private async loadFromPool() {
@@ -132,6 +140,8 @@ export namespace Balancer {
       await sendWithTxType(tx, useLegacyTx);
     }
 
-    async harvest(useLegacyTx: boolean) {}
+    async harvest(useLegacyTx: boolean) {
+      await sendWithTxType(this.gauge.methods.claimable_tokens(this.args.address), useLegacyTx);
+    }
   }
 }

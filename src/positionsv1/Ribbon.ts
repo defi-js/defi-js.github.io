@@ -22,6 +22,7 @@ export namespace Ribbon {
     vault = contract<RibbonThetaVaultAbi>(require("../abi/RibbonThetaVaultAbi.json"), this.vaultAddress);
 
     data = {
+      vault: this.vaultAddress,
       amount: zero,
       value: zero,
       tvl: zero,

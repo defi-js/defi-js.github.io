@@ -27,6 +27,7 @@ export namespace Uniswap {
     nftPositionManager = contract<UniswapNftManagerAbi>(require("../abi/UniswapNftManagerAbi.json"), "0xC36442b4a4522E871399CD717aBDD847Ab11FE88");
 
     data = {
+      nftManager: this.nftPositionManager.options.address,
       id: 0,
       amount0: zero,
       amount1: zero,

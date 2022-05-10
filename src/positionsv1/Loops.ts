@@ -7,8 +7,16 @@ import type { AaveSAAVEAbi } from "../../typechain-abi/AaveSAAVEAbi";
 import type { CompoundCTokenAbi } from "../../typechain-abi/CompoundCTokenAbi";
 import _ from "lodash";
 import { networks, sendWithTxType } from "./base/consts";
+import { PositionFactory } from "./base/PositionFactory";
 
 export namespace Loops {
+  export function register() {
+    PositionFactory.register({
+      "eth:Loops:AaveLoop": (args, oracle) => new Loops.AaveLoop(args, oracle),
+      "eth:Loops:CompoundLoop": (args, oracle) => new Loops.CompoundLoop(args, oracle),
+    });
+  }
+
   /**
    * Aave on Ethereum
    */
@@ -22,6 +30,7 @@ export namespace Loops {
     weth = erc20s.eth.WETH();
 
     data = {
+      contract: this.instance.options.address,
       healthFactor: zero,
       totalCollateralETH: zero,
       totalCollateralValue: zero,
@@ -128,6 +137,7 @@ export namespace Loops {
     rewardAsset = erc20("COMP", "0xc00e94Cb662C3520282E6f5717214004A7f26888");
 
     data = {
+      contract: this.instance.options.address,
       borrowBalance: zero,
       supplyBalance: zero,
       rewardAmount: zero,
