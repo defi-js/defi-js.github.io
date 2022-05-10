@@ -14,6 +14,7 @@ import { LooksRare } from "./LooksRare";
 import { SushiSwap } from "./SushiSwap";
 import { Fodl } from "./Fodl";
 import { QuickSwap } from "./QuickSwap";
+import { Pangolin } from "./Pangolin";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -33,4 +34,5 @@ export function registerAllPositions() {
   Fodl.register();
   Loops.register();
   QuickSwap.register();
+  Pangolin.register();
 }
