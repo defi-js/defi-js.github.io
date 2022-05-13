@@ -19,6 +19,7 @@ export namespace Pancakeswap {
     const lp_ADA_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP ADA/BNB", "0x28415ff2C35b65B9E5c7de82126b4015ab9d031F", require("../abi/PancakeswapLpAbi.json"));
     const lp_LINK_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP LINK/BNB", "0x824eb9faDFb377394430d2744fa7C42916DE3eCe", require("../abi/PancakeswapLpAbi.json"));
     const lp_DOGE_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP DOGE/BNB", "0xac109C8025F272414fd9e2faA805a583708A017f", require("../abi/PancakeswapLpAbi.json"));
+    const lp_TON_BTCB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP TON/BTCB", "0x1893da6b92660b85538f58217808685b80fb083e", require("../abi/PancakeswapLpAbi.json"));
 
     PositionFactory.register({
       "bsc:Pancakeswap:Farm:BUSD/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.BUSD(), erc20s.bsc.WBNB(), lp_BUSD_BNB(), 3),
@@ -30,6 +31,7 @@ export namespace Pancakeswap {
       "bsc:Pancakeswap:Farm:DOGE/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.DOGE(), erc20s.bsc.WBNB(), lp_DOGE_BNB(), 37),
 
       "bsc:Pancakeswap:LP:ORBS/BUSD": (args, oracle) => new LP(args, oracle, erc20s.bsc.ORBS(), erc20s.bsc.BUSD(), lp_ORBS_BUSD()),
+      "bsc:Pancakeswap:LP:TON/BTCB": (args, oracle) => new LP(args, oracle, erc20("TON", "0x76A797A59Ba2C17726896976B7B3747BfD1d220f"), erc20s.bsc.BTCB(), lp_TON_BTCB()),
     });
   }
 
