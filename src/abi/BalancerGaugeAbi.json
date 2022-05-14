@@ -335,5 +335,15 @@
     "name": "integrate_inv_supply",
     "inputs": [{ "name": "arg0", "type": "uint256" }],
     "outputs": [{ "name": "", "type": "uint256" }]
+  },
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "claimable_reward_write",
+    "inputs": [
+      { "name": "_addr", "type": "address" },
+      { "name": "_token", "type": "address" }
+    ],
+    "outputs": [{ "name": "", "type": "uint256" }]
   }
 ]

@@ -2,7 +2,7 @@ import _ from "lodash";
 import BN from "bn.js";
 import { PositionFactory } from "./base/PositionFactory";
 import { PositionV1, PositionArgs } from "./base/PositionV1";
-import { bn, contract, eqIgnoreCase, erc20, ether, Network, Token, zero } from "@defi.org/web3-candies";
+import { bn, contract, eqIgnoreCase, erc20, ether, fmt18, Network, Token, zero } from "@defi.org/web3-candies";
 import { PriceOracle } from "./base/PriceOracle";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import { BalancerV2VaultAbi } from "../../typechain-abi/BalancerV2VaultAbi";
@@ -20,6 +20,7 @@ export namespace Balancer {
           "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e",
           "0x4E3c048BE671852277Ad6ce29Fd5207aA12fabff"
         ),
+
       "poly:Balancer:USDC/DAI/MAI/USDT": (args, oracle) =>
         new Farm(
           args,
@@ -28,6 +29,16 @@ export namespace Balancer {
           [erc20s.poly.USDC(), erc20s.poly.DAI(), erc20("MAI", "0xa3Fa99A148fA48D14Ed51d610c367C61876997F1"), erc20s.poly.USDT()],
           "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000012"
         ),
+      "poly:Balancer:MATIC/sMATIC": (args, oracle) =>
+        new Farm(
+          args,
+          oracle,
+          networks.poly,
+          [erc20s.poly.WMATIC(), erc20("sMATIC", "0x3A58a54C066FdC0f2D55FC9C89F0415C92eBf3C4")],
+          "0xaf5e0b5425de1f5a630a8cb5aa9d97b8141c908d000200000000000000000366",
+          "0x9928340f9E1aaAd7dF1D95E27bd9A5c715202a56"
+        ),
+
       "arb:Balancer:MAI/USDT/USDC": (args, oracle) => {
         oracle.overridePrice(networks.arb.id, erc20("MAI", "0x3F56e0c36d275367b8C502090EDF38289b3dEa0d"), ether);
         return new Farm(
@@ -84,12 +95,17 @@ export namespace Balancer {
     async load() {
       if (!this.gaugeAddress) return await this.loadFromPool();
 
-      const [lpTokenAddress, workingBalance, totalWorkingBalance, pending] = await Promise.all([
+      const [lpTokenAddress, workingBalance, totalWorkingBalance] = await Promise.all([
         this.gauge.methods.lp_token().call(),
         this.gauge.methods.balanceOf(this.args.address).call().then(bn),
         this.gauge.methods.totalSupply().call().then(bn),
-        this.gauge.methods.claimable_tokens(this.args.address).call().then(bn),
       ]);
+      const pending = await this.gauge.methods
+        .claimable_tokens(this.args.address)
+        .call()
+        .catch(() => this.gauge.methods.claimable_reward_write(this.args.address, this.bal.address).call())
+        .then(bn);
+
       const bpt = erc20("BPT", lpTokenAddress);
       const [totalBptsStaked, bptTotalSupply] = await Promise.all([bpt.methods.balanceOf(this.gaugeAddress).call().then(bn), bpt.methods.totalSupply().call().then(bn)]);
       const bptBalance = totalBptsStaked.mul(workingBalance).div(totalWorkingBalance);

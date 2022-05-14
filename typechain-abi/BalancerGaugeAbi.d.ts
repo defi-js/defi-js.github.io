@@ -253,6 +253,11 @@ export interface BalancerGaugeAbi extends BaseContract {
     integrate_inv_supply(
       arg0: number | string | BN
     ): NonPayableTransactionObject<string>;
+
+    claimable_reward_write(
+      _addr: string,
+      _token: string
+    ): NonPayableTransactionObject<string>;
   };
   events: {
     Deposit(cb?: Callback<Deposit>): EventEmitter;
