@@ -1,8 +1,8 @@
 import _ from "lodash";
 import BN from "bn.js";
 import { PositionFactory } from "./base/PositionFactory";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
-import { bn, contract, eqIgnoreCase, erc20, ether, fmt18, Network, Token, zero } from "@defi.org/web3-candies";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
+import { bn, contract, eqIgnoreCase, erc20, ether, Network, Token, zero } from "@defi.org/web3-candies";
 import { PriceOracle } from "./base/PriceOracle";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import { BalancerV2VaultAbi } from "../../typechain-abi/BalancerV2VaultAbi";
