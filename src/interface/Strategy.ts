@@ -1,12 +1,13 @@
 import BN from "bn.js";
-import { Token } from "@defi.org/web3-candies";
+import { Token } from "./Token";
+import { Network } from "./Network";
 
 export interface Strategy {
   load(): Promise<void>;
 
   getName(): string;
 
-  getChain(): { id: number; name: string };
+  getNetwork(): Network;
 
   getAssets(): Token[];
 

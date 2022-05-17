@@ -3,9 +3,11 @@ export enum Severity {
   High,
   Medium,
   Low,
+  Info,
 }
 
 export interface Threat {
   severity: Severity;
   message: string;
+  data: any;
 }

@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { Token } from "@defi.org/web3-candies";
+import { Token } from "./Token";
 
 export interface TokenAmount {
   asset: Token;
