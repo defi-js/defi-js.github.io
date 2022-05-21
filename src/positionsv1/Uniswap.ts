@@ -1,6 +1,6 @@
 import { PositionArgs, PositionV1, Severity } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn18, contract, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
+import { bn, bn18, contract, erc20, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { UniswapNftManagerAbi } from "../../typechain-abi/UniswapNftManagerAbi";
@@ -14,6 +14,8 @@ export namespace Uniswap {
     PositionFactory.register({
       "eth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.WBTC(), erc20s.eth.WETH()),
       "eth:Uniswap:V3LP:USDC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH()),
+
+      "arb:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.arb, erc20("WBTC", "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f"), erc20s.arb.WETH()),
 
       "poly:Uniswap:V3LP:MATIC/ETH": (args, oracle) => new V3LP(args, oracle, networks.poly, erc20s.poly.WMATIC(), erc20s.poly.WETH()),
 
