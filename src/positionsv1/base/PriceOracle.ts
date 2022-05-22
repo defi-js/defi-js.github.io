@@ -13,6 +13,7 @@ const coingeckoIds = {
   [networks.arb.id]: "arbitrum-one",
   [networks.avax.id]: "avalanche",
   [networks.oeth.id]: "optimistic-ethereum",
+  [networks.ftm.id]: "fantom",
 };
 
 export class PriceOracle {

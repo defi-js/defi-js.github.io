@@ -17,6 +17,7 @@ import { QuickSwap } from "./QuickSwap";
 import { Pangolin } from "./Pangolin";
 import { Rook } from "./Rook";
 import { Aave } from "./Aave";
+import { SpiritSwap } from "./SpiritSwap";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -39,4 +40,5 @@ export function registerAllPositions() {
   Pangolin.register();
   Rook.register();
   Aave.register();
+  SpiritSwap.register()
 }
