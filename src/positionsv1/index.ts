@@ -18,6 +18,7 @@ import { Pangolin } from "./Pangolin";
 import { Rook } from "./Rook";
 import { Aave } from "./Aave";
 import { SpookySwap } from "./SpookySwap";
+import { SpiritSwap } from "./SpiritSwap";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -41,4 +42,5 @@ export function registerAllPositions() {
   Rook.register();
   Aave.register();
   SpookySwap.register()
+  SpiritSwap.register()
 }
