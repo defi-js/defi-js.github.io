@@ -5,8 +5,9 @@ import { ContractCallContext, Multicall } from "ethereum-multicall";
 export const erc20s = _.merge({}, erc20sOrig, {});
 
 export const networks = _.merge({}, networksOrig, {
-  egld: { id: -508, name: "Elrond", shortname: "egld" },
   off: { id: -1, name: "OffChain", shortname: "off" },
+  btc: { id: -2, name: "Bitcoin", shortname: "btc" },
+  egld: { id: -508, name: "Elrond", shortname: "egld" },
 });
 
 export async function currentNetwork() {

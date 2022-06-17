@@ -51,7 +51,7 @@ const columns: GridColDef[] = [
     field: "tvl",
     headerName: "TVL",
     headerAlign: "center",
-    width: 120,
+    width: 130,
     align: "right",
     type: "number",
     valueFormatter: (v) => "$  " + commafy((v.value as number).toFixed(0)),

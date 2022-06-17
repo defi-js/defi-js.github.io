@@ -19,10 +19,12 @@ import { Rook } from "./Rook";
 import { Aave } from "./Aave";
 import { SpookySwap } from "./SpookySwap";
 import { SpiritSwap } from "./SpiritSwap";
+import { Bitcoin } from "./Bitcoin";
 
 export function registerAllPositions() {
   OffChain.register();
   TokenBalances.register();
+  Bitcoin.register();
 
   Uniswap.register();
   SushiSwap.register();
@@ -41,6 +43,6 @@ export function registerAllPositions() {
   Pangolin.register();
   Rook.register();
   Aave.register();
-  SpookySwap.register()
-  SpiritSwap.register()
+  SpookySwap.register();
+  SpiritSwap.register();
 }
