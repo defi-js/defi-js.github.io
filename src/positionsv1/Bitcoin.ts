@@ -12,7 +12,7 @@ export namespace Bitcoin {
     });
   }
 
-  export type BTC = Token & { base58: string };
+  export type BTC = Token & { type: string; base58: string };
 
   class BitcoinBalance implements PositionV1 {
     token: BTC;
@@ -24,7 +24,7 @@ export namespace Bitcoin {
 
     constructor(public args: PositionArgs, public oracle: PriceOracle) {
       if (!args.address) throw new Error("bitcoin base58 address required");
-      this.token = _.merge(erc20(args.address, zeroAddress), { base58: args.address });
+      this.token = _.merge(erc20(args.address, zeroAddress), { base58: args.address, type: "Bitcoin" });
     }
 
     getName = () => ``;
