@@ -12,7 +12,7 @@ export namespace Bitcoin {
     });
   }
 
-  export type BTC = Token & { type: string; base58: string };
+  export type BTC = Token & { bech32: string };
 
   class BitcoinBalance implements PositionV1 {
     token: BTC;
@@ -23,8 +23,8 @@ export namespace Bitcoin {
     };
 
     constructor(public args: PositionArgs, public oracle: PriceOracle) {
-      if (!args.address) throw new Error("bitcoin base58 address required");
-      this.token = _.merge(erc20(args.address, zeroAddress), { base58: args.address, type: "Bitcoin" });
+      if (!args.address) throw new Error("bitcoin bech32 bc1 address required");
+      this.token = _.merge(erc20(args.address, zeroAddress), { bech32: args.address });
     }
 
     getName = () => ``;
@@ -40,7 +40,7 @@ export namespace Bitcoin {
 
     async load() {
       this.data.tvl = await fetchTVL();
-      this.data.amount = await fetchBalance(this.token.base58);
+      this.data.amount = await fetchBalance(this.token.bech32);
       this.data.value = await fetchPrice().then((p) => this.data.amount.muln(p));
     }
 
@@ -59,8 +59,8 @@ export namespace Bitcoin {
     return bn18(json);
   }
 
-  async function fetchBalance(base58: string) {
-    const r = await fetch(`https://blockchain.info/q/addressbalance/${base58}`);
+  async function fetchBalance(bech32: string) {
+    const r = await fetch(`https://blockchain.info/q/addressbalance/${bech32}`);
     const json = await r.json();
     return convertDecimals(json, 8, 18);
   }

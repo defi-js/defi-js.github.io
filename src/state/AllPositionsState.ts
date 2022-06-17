@@ -191,7 +191,6 @@ function totalMarketValue(positions: PositionV1[]) {
 function assetClass(a: Token): string {
   const ext = (a as any).symbol || (a as any).tokenId;
   if (ext) return ext;
-  if ((a as any).type === "Bitcoin") return "BTC";
   if (a.name.toLowerCase().includes("usd") || ["dai", "mai", "mim"].includes(a.name.toLowerCase())) return "USD";
   if (a.name.toLowerCase().includes("btc")) return "BTC";
   if (a.name.toLowerCase().includes("eth")) return "ETH";
@@ -199,5 +198,6 @@ function assetClass(a: Token): string {
   if (a.name.toLowerCase().includes("avax")) return "AVAX";
   if (a.name.toLowerCase().includes("matic")) return "MATIC";
   if (a.name.toLowerCase().includes("ftm")) return "FTM";
+  if ((a as any).bech32) return "BTC";
   return a.name || a.address;
 }

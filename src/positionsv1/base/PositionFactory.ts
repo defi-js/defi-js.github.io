@@ -35,7 +35,7 @@ export namespace PositionFactory {
   }
 
   export function isValidArgs(type: string, address: string) {
-    return (!!type && (web3()?.utils?.isAddress(address) || isElrondAddress(type, address) || isOffChainSymbol(type, address))) || isBitcoinBase58Address(type, address);
+    return (!!type && (web3()?.utils?.isAddress(address) || isElrondAddress(type, address) || isOffChainSymbol(type, address))) || isBitcoinAddress(type, address);
   }
 
   function isElrondAddress(type: string, address: string) {
@@ -54,9 +54,9 @@ export namespace PositionFactory {
     }
   }
 
-  function isBitcoinBase58Address(type: string, address: string) {
+  function isBitcoinAddress(type: string, address: string) {
     try {
-      return type.startsWith("x:Bitcoin") && _.trim(address).length > 0;
+      return type.startsWith("x:Bitcoin") && _.trim(address).length > 0 && address.startsWith("bc1");
     } catch (e) {
       return false;
     }
