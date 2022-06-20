@@ -14,11 +14,18 @@ export namespace Ribbon {
       "eth:Ribbon:T-CC:stETH": (args, oracle) => new ThetaVault(args, oracle, networks.eth, erc20s.eth.WETH(), "0x53773E034d9784153471813dacAFF53dBBB78E8c"),
       "eth:Ribbon:T-CC:WBTC": (args, oracle) => new ThetaVault(args, oracle, networks.eth, erc20s.eth.WBTC(), "0x65a833afDc250D9d38f8CD9bC2B1E3132dB13B2F"),
       "eth:Ribbon:T-CSP:yvUSDC": (args, oracle) => new ThetaVault(args, oracle, networks.eth, erc20s.eth.USDC(), "0xCc323557c71C0D1D20a1861Dc69c06C5f3cC9624"),
+
+      "avax:Ribbon:T-CC:AVAX": (args, oracle) => new ThetaVault(args, oracle, networks.avax, erc20s.avax.WAVAX(), "0x98d03125c62DaE2328D9d3cb32b7B969e6a87787"),
     });
   }
 
+  const rewardTokens = {
+    [networks.eth.id]: () => erc20("RBN", "0x6123B0049F904d730dB3C36a31167D9d4121fA6B"),
+    [networks.avax.id]: () => erc20s.avax.WAVAX(),
+  };
+
   class ThetaVault implements PositionV1 {
-    rbn = erc20("RBN", "0x6123B0049F904d730dB3C36a31167D9d4121fA6B");
+    rewardToken = rewardTokens[this.network.id]();
     vault = contract<RibbonThetaVaultAbi>(require("../abi/RibbonThetaVaultAbi.json"), this.vaultAddress);
 
     data = {
@@ -40,18 +47,24 @@ export namespace Ribbon {
     getTVL = () => this.data.tvl;
     getAssets = () => [this.asset];
     getAmounts = () => [{ asset: this.asset, amount: this.data.amount, value: this.data.value }];
-    getRewardAssets = () => [this.rbn];
-    getPendingRewards = () => [{ asset: this.rbn, amount: this.data.pending, value: this.data.pendingValue }];
+    getRewardAssets = () => [this.rewardToken];
+    getPendingRewards = () => [{ asset: this.rewardToken, amount: this.data.pending, value: this.data.pendingValue }];
     getHealth = () => [];
 
     async load() {
       const { amount, unredeemedShares } = await this.vault.methods.depositReceipts(this.args.address).call();
       this.data.amount = await this.asset.mantissa(bn(amount).add(bn(unredeemedShares)));
 
-      const farm = contract<RibbonGaugeAbi>(require("../abi/RibbonGaugeAbi.json"), await this.vault.methods.liquidityGauge().call());
-      const [fbalance, fratio] = await Promise.all([farm.methods.balanceOf(this.args.address).call().then(bn), this.vault.methods.pricePerShare().call().then(bn)]);
-      const staked = await this.asset.mantissa(fbalance.mul(fratio).div(await this.asset.amount(1)));
-      this.data.amount = this.data.amount.add(staked);
+      // farms only on ETH
+      if (this.network.id === networks.eth.id) {
+        const farm = contract<RibbonGaugeAbi>(require("../abi/RibbonGaugeAbi.json"), await this.vault.methods.liquidityGauge().call());
+        const [fbalance, fratio] = await Promise.all([farm.methods.balanceOf(this.args.address).call().then(bn), this.vault.methods.pricePerShare().call().then(bn)]);
+        const staked = await this.asset.mantissa(fbalance.mul(fratio).div(await this.asset.amount(1)));
+        this.data.amount = this.data.amount.add(staked);
+
+        this.data.pending = await farm.methods.claimable_tokens(this.args.address).call().then(bn);
+        this.data.pendingValue = await this.oracle.valueOf(this.getNetwork().id, this.rewardToken, this.data.pending);
+      }
 
       this.data.value = await this.oracle.valueOf(this.network.id, this.asset, this.data.amount);
 
@@ -60,9 +73,6 @@ export namespace Ribbon {
 
       const currentOption = contract(require("../abi/RibbonOptionAbi.json"), await this.vault.methods.currentOption().call());
       this.data.strike = bn9(await currentOption.methods["strikePrice()"]().call()).muln(10);
-
-      this.data.pending = await farm.methods.claimable_tokens(this.args.address).call().then(bn);
-      this.data.pendingValue = await this.oracle.valueOf(this.getNetwork().id, this.rbn, this.data.pending);
     }
 
     getContractMethods = () => _.functions(this.vault.methods);
