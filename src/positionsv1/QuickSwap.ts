@@ -15,6 +15,8 @@ export namespace QuickSwap {
       "poly:QuickSwap:Farm:ORBS/USDC": (args, oracle) => new Farm(args, oracle, erc20s.poly.USDC(), orbs(), "0x9CA237962823A0a74bbC8354764e1DAC9e4057F0"),
 
       "poly:QuickSwap:LP:ORBS/QUICK": (args, oracle) => new LP(args, oracle, orbs(), quick(), "0x882624931b4A799d50242e5b25E2Fa2719E4d072"),
+      "poly:QuickSwap:LP:ORBS/JPYC": (args, oracle) =>
+        new LP(args, oracle, orbs(), erc20("JPYC", "0x431D5dfF03120AFA4bDf332c61A6e1766eF37BDB"), "0xD01C074C78E9647a5ddAE2648f1A089b98D5380a"),
     });
   }
 
