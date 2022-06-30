@@ -14,6 +14,7 @@ export namespace Uniswap {
     PositionFactory.register({
       "eth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.WBTC(), erc20s.eth.WETH()),
       "eth:Uniswap:V3LP:USDC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH()),
+      "eth:Uniswap:V3LP:TON/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20("TON", "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1"), erc20s.eth.WETH()),
 
       "arb:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.arb, erc20("WBTC", "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f"), erc20s.arb.WETH()),
 
