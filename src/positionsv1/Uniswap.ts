@@ -71,11 +71,18 @@ export namespace Uniswap {
       { asset: this.token1, amount: this.data.pending1, value: this.data.pendingValue1 },
     ];
     getHealth = () => {
+      if (this.data.value0.isZero() || this.data.value1.isZero())
+        return [
+          {
+            severity: Severity.High,
+            message: "Range",
+          },
+        ];
       if (this.data.ilValue.gt(this.data.totalFeesValue) || this.data.il.gt(this.IL_WARN))
         return [
           {
             severity: Severity.High,
-            message: "IL!",
+            message: "IL",
           },
         ];
       return [];
