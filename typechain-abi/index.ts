@@ -22,6 +22,7 @@ export type { RibbonGaugeAbi } from "./RibbonGaugeAbi";
 export type { RibbonOptionAbi } from "./RibbonOptionAbi";
 export type { RibbonThetaVaultAbi } from "./RibbonThetaVaultAbi";
 export type { RookLiquidityPoolAbi } from "./RookLiquidityPoolAbi";
+export type { SpookyChefAbi } from "./SpookyChefAbi";
 export type { SushiswapMasterchefAbi } from "./SushiswapMasterchefAbi";
 export type { SushiswapMinichefAbi } from "./SushiswapMinichefAbi";
 export type { TraderJoeFarmAbi } from "./TraderJoeFarmAbi";
