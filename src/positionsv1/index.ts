@@ -20,6 +20,7 @@ import { Aave } from "./Aave";
 import { SpookySwap } from "./SpookySwap";
 import { SpiritSwap } from "./SpiritSwap";
 import { Bitcoin } from "./Bitcoin";
+import { Liquity } from "./Liquity";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -45,4 +46,5 @@ export function registerAllPositions() {
   Aave.register();
   SpookySwap.register();
   SpiritSwap.register();
+  Liquity.register();
 }
