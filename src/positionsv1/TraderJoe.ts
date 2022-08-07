@@ -12,13 +12,15 @@ export namespace TraderJoe {
   export function register() {
     PositionFactory.register({
       "avax:TraderJoe:Farm:WETH/AVAX": (args, oracle) => new Farm(args, oracle, erc20s.avax.WETHe(), erc20s.avax.WAVAX(), 26),
+      "avax:TraderJoe:Farm:sAVAX/AVAX": (args, oracle) =>
+        new Farm(args, oracle, erc20("sAVAX", "0x2b2C81e08f1Af8835a78Bb2A90AE924ACE0eA4bE"), erc20s.avax.WAVAX(), 51, "0x188bed1968b795d5c9022f6a0bb5931ac4c18f00"),
 
       "avax:TraderJoe:LP:ORBS/AVAX": (args, oracle) => new LP(args, oracle, orbs(), erc20s.avax.WAVAX(), "0x0315522354037e48C75756aD68358CE185dad911"),
     });
   }
 
   class Farm implements PositionV1 {
-    masterchef = contract<TraderJoeFarmAbi>(require("../abi/TraderJoeFarmAbi.json"), "0xd6a4F121CA35509aF06A0Be99093d08462f53052");
+    masterchef = contract<TraderJoeFarmAbi>(require("../abi/TraderJoeFarmAbi.json"), this.masterchefAddress);
     reward = erc20("JOE", "0x6e84a6216eA6dACC71eE8E6b0a5B7322EEbC0fDd");
 
     data = {
@@ -33,7 +35,14 @@ export namespace TraderJoe {
       tvl: zero,
     };
 
-    constructor(public args: PositionArgs, public oracle: PriceOracle, public asset0: Token, public asset1: Token, public poolId: number) {}
+    constructor(
+      public args: PositionArgs,
+      public oracle: PriceOracle,
+      public asset0: Token,
+      public asset1: Token,
+      public poolId: number,
+      public masterchefAddress: string = "0xd6a4F121CA35509aF06A0Be99093d08462f53052"
+    ) {}
 
     getName = () => ``;
 
