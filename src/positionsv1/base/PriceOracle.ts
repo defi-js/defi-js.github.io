@@ -5,6 +5,7 @@ import { PositionV1 } from "./PositionV1";
 import { ElrondMaiar } from "../ElrondMaiar";
 import { networks } from "./consts";
 import { OffChain } from "../OffChain";
+import { Raydium } from "../Raydium";
 
 const coingeckoIds = {
   [networks.eth.id]: "ethereum",
@@ -25,6 +26,7 @@ export class PriceOracle {
   getId(networkId: number, token: Token) {
     if (networkId === networks.egld.id) return (token as ElrondMaiar.ESDT).tokenId;
     if (networkId === networks.off.id) return (token as OffChain.Asset).symbol;
+    if (networkId === networks.sol.id) return (token as Raydium.SolToken).coingeckoId;
     return token.address;
   }
 
@@ -37,6 +39,7 @@ export class PriceOracle {
 
     if (!this.prices[id] || this.prices[id].isZero()) {
       if (networkId === networks.egld.id) await this.fetchPricesElrond([id]);
+      else if (networkId === networks.sol.id) await this.fetchCoingeckoPrices([id]);
       else await this.fetchPrices(networkId, [id]);
     }
 
@@ -136,6 +139,28 @@ export class PriceOracle {
         .value();
 
       return this.updateResults(tokenIds, result);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  /**
+   * returns price in USD 18 decimals by token address
+   */
+  async fetchCoingeckoPrices(coingeckoIds: string[]): Promise<{ [ids: string]: BN }> {
+    if (_.isEmpty(coingeckoIds)) return {};
+    console.log("fetchCoingeckoPrices", coingeckoIds);
+
+    try {
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coingeckoIds.join(",")}&vs_currencies=usd`;
+      const response = await fetch(url);
+      const json = (await response.json()) as Record<string, any>;
+
+      const result = _(json)
+        .mapValues((v) => bn18(v.usd))
+        .value();
+
+      return this.updateResults(coingeckoIds, result);
     } catch (e) {
       return {};
     }

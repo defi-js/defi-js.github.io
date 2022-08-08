@@ -8,6 +8,7 @@ export const networks = _.merge({}, networksOrig, {
   off: { id: -1, name: "OffChain", shortname: "off" },
   btc: { id: -2, name: "Bitcoin", shortname: "btc" },
   egld: { id: -508, name: "Elrond", shortname: "egld" },
+  sol: { id: -600, name: "Solana", shortname: "sol" },
 });
 
 export async function currentNetwork() {

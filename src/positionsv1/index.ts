@@ -21,6 +21,7 @@ import { SpookySwap } from "./SpookySwap";
 import { SpiritSwap } from "./SpiritSwap";
 import { Bitcoin } from "./Bitcoin";
 import { Liquity } from "./Liquity";
+import { Raydium } from "./Raydium";
 
 export function registerAllPositions() {
   OffChain.register();
@@ -47,4 +48,5 @@ export function registerAllPositions() {
   SpookySwap.register();
   SpiritSwap.register();
   Liquity.register();
+  Raydium.register();
 }

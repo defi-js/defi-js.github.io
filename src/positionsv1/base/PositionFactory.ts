@@ -30,12 +30,12 @@ export namespace PositionFactory {
     return p.getNetwork().id === current.id || p.getNetwork().id < 0; // non-web3 network
   }
 
-  export function isValidWallet(address: string) {
-    return web3()?.utils?.isAddress(address) || isElrondAddress("egld:", address);
-  }
-
   export function isValidArgs(type: string, address: string) {
-    return (!!type && (web3()?.utils?.isAddress(address) || isElrondAddress(type, address) || isOffChainSymbol(type, address))) || isBitcoinAddress(type, address);
+    return (
+      (!!type && (web3()?.utils?.isAddress(address) || isElrondAddress(type, address) || isOffChainSymbol(type, address))) ||
+      isBitcoinAddress(type, address) ||
+      isSolanaAddress(type, address)
+    );
   }
 
   function isElrondAddress(type: string, address: string) {
@@ -57,6 +57,14 @@ export namespace PositionFactory {
   function isBitcoinAddress(type: string, address: string) {
     try {
       return type.startsWith("x:Bitcoin") && _.trim(address).length > 0 && address.startsWith("bc1");
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function isSolanaAddress(type: string, address: string) {
+    try {
+      return type.startsWith("sol:") && _.trim(address).length === 44;
     } catch (e) {
       return false;
     }
