@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { createHook, createSelector, createStore, StoreActionApi } from "react-sweet-state";
-import { PositionV1, PositionArgs } from "../positionsv1/base/PositionV1";
+import { PositionArgs, PositionV1 } from "../positionsv1/base/PositionV1";
 import { PositionFactory } from "../positionsv1/base/PositionFactory";
 import { registerAllPositions } from "../positionsv1";
 import { to3, Token, zero } from "@defi.org/web3-candies";

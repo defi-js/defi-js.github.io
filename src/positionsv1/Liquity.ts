@@ -1,6 +1,6 @@
 import { PositionFactory } from "./base/PositionFactory";
 import { PositionArgs, PositionV1 } from "./base/PositionV1";
-import { bn18, contract, erc20, erc20s, zero } from "@defi.org/web3-candies";
+import { contract, erc20, erc20s, zero } from "@defi.org/web3-candies";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import type { LiquityStabilityPoolAbi } from "../../typechain-abi";
@@ -50,7 +50,7 @@ export namespace Liquity {
         this.pool.methods.getTotalLUSDDeposits().call().then(this.lusd.mantissa),
         this.pool.methods.getCompoundedLUSDDeposit(this.args.address).call().then(this.lusd.mantissa),
         this.pool.methods.getDepositorLQTYGain(this.args.address).call().then(this.lqty.mantissa),
-        this.pool.methods.getDepositorETHGain(this.args.address).call().then(bn18),
+        this.pool.methods.getDepositorETHGain(this.args.address).call().then(erc20s.eth.WETH().mantissa),
       ]);
       this.data.tvl = await this.oracle.valueOf(this.getNetwork().id, this.lusd, totalDeposits);
       this.data.amount = deposit;
