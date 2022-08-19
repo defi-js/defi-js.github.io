@@ -10,6 +10,7 @@ export type { BalancerV2VaultAbi } from "./BalancerV2VaultAbi";
 export type { CompoundCTokenAbi } from "./CompoundCTokenAbi";
 export type { CompoundLoopAbi } from "./CompoundLoopAbi";
 export type { LiquityStabilityPoolAbi } from "./LiquityStabilityPoolAbi";
+export type { LiquityTroveManagerAbi } from "./LiquityTroveManagerAbi";
 export type { LooksrareStakingAbi } from "./LooksrareStakingAbi";
 export type { PancakeswapLpAbi } from "./PancakeswapLpAbi";
 export type { PancakeswapMasterchefAbi } from "./PancakeswapMasterchefAbi";
