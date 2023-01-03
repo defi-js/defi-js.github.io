@@ -3,15 +3,18 @@ import { PriceOracle } from "./base/PriceOracle";
 import { bn, bn18, contract, erc20, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
-import type { UniswapNftManagerAbi } from "../../typechain-abi/UniswapNftManagerAbi";
+import type { UniswapNftManagerAbi } from "../../typechain-abi";
+import type { UniswapV3FactoryAbi } from "../../typechain-abi";
+import type { UniswapV2Abi, UniswapV2FactoryAbi } from "../../typechain-abi";
 import _ from "lodash";
-import { UniswapV3FactoryAbi } from "../../typechain-abi/UniswapV3FactoryAbi";
 
 const maxUint128 = bn(2).pow(bn(128)).subn(1).toString();
 
 export namespace Uniswap {
   export function register() {
     PositionFactory.register({
+      "eth:Uniswap:V2LP:USDC/ETH": (args, oracle) => new V2LP(args, oracle, erc20s.eth.USDC(), erc20s.eth.WETH()),
+
       "eth:Uniswap:V3LP:WBTC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.WBTC(), erc20s.eth.WETH()),
       "eth:Uniswap:V3LP:USDC/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH()),
       "eth:Uniswap:V3LP:TON/ETH": (args, oracle) => new V3LP(args, oracle, networks.eth, erc20("TON", "0x582d872A1B094FC48F5DE31D3B73F2D9bE47def1"), erc20s.eth.WETH()),
@@ -178,5 +181,75 @@ export namespace Uniswap {
       const [v0, v1] = await Promise.all([this.oracle.valueOf(this.network.id, this.token0, a0), this.oracle.valueOf(this.network.id, this.token1, a1)]);
       this.data.tvl = v0.add(v1);
     }
+  }
+
+  class V2LP implements PositionV1 {
+    router = contract<UniswapV2Abi>(require("../abi/UniswapV2Abi.json"), "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D");
+    data = {
+      router: this.router.options.address,
+      pair: "",
+      amount0: zero,
+      amount1: zero,
+      value0: zero,
+      value1: zero,
+      tvl: zero,
+    };
+
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public asset0: Token, public asset1: Token) {}
+
+    getName = () => ``;
+    getArgs = () => this.args;
+    getNetwork = () => networks.eth;
+    getAssets = () => [this.asset0, this.asset1];
+    getRewardAssets = () => [];
+    getData = () => this.data;
+    getHealth = () => [];
+    getPendingRewards = () => [];
+    getTVL = () => this.data.tvl;
+    getAmounts = () => [
+      { asset: this.asset0, amount: this.data.amount0, value: this.data.value0 },
+      { asset: this.asset1, amount: this.data.amount1, value: this.data.value1 },
+    ];
+
+    async load() {
+      const factoryAddress = await this.router.methods.factory().call();
+      const factory = contract<UniswapV2FactoryAbi>(require("../abi/UniswapV2FactoryAbi.json"), factoryAddress);
+      this.data.pair = await factory.methods.getPair(this.asset0.address, this.asset1.address).call();
+      const lpToken = erc20("LP", this.data.pair);
+
+      const [lpAmount, lpTotalSupply, total0, total1] = await Promise.all([
+        lpToken.methods.balanceOf(this.args.address).call().then(bn),
+        lpToken.methods.totalSupply().call().then(bn),
+        this.asset0.methods
+          .balanceOf(lpToken.options.address)
+          .call()
+          .then((t) => this.asset0.mantissa(t)),
+        this.asset1.methods
+          .balanceOf(lpToken.options.address)
+          .call()
+          .then((t) => this.asset1.mantissa(t)),
+      ]);
+
+      this.data.amount0 = total0.mul(lpAmount).div(lpTotalSupply);
+      this.data.amount1 = total1.mul(lpAmount).div(lpTotalSupply);
+      this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
+      this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
+      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0)).add(await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1));
+    }
+
+    getContractMethods = () => _.functions(this.router.methods);
+
+    async callContract(method: string, args: string[]) {
+      const tx = (this.router.methods as any)[method](...args);
+      return await tx.call({ from: this.args.address });
+    }
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.router.methods as any)[method](...args);
+      alert(`target:\n${this.router.options.address}\ndata:\n${tx.encodeABI()}`);
+      await sendWithTxType(tx, useLegacyTx);
+    }
+
+    async harvest(useLegacyTx: boolean) {}
   }
 }

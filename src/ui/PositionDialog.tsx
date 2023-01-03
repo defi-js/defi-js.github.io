@@ -21,7 +21,7 @@ import { useAllPositions } from "../state/AllPositionsState";
 
 export const PositionDialog = () => {
   const [, appStateActions] = useAppState();
-  const [selector, actions] = usePositionDialogSelector(null);
+  const [selector, actions] = usePositionDialogSelector(undefined);
   const [, allPositionsActions] = useAllPositions();
 
   const close = () => actions.closeDialog();

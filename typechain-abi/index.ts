@@ -31,4 +31,6 @@ export type { TraderJoeFarmAbi } from "./TraderJoeFarmAbi";
 export type { UniclyLpAbi } from "./UniclyLpAbi";
 export type { UniclyXUnicAbi } from "./UniclyXUnicAbi";
 export type { UniswapNftManagerAbi } from "./UniswapNftManagerAbi";
+export type { UniswapV2Abi } from "./UniswapV2Abi";
+export type { UniswapV2FactoryAbi } from "./UniswapV2FactoryAbi";
 export type { UniswapV3FactoryAbi } from "./UniswapV3FactoryAbi";

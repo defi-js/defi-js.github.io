@@ -62,12 +62,12 @@ const columns: GridColDef[] = [
 
 export const AllPositionsTable = () => {
   const [appState, appActions] = useAppState();
-  const [rows, actions] = useAllPositionRows(null);
+  const [rows, actions] = useAllPositionRows(undefined);
   const [positions] = useAllPositions();
   const [, positionDialogActions] = usePositionDialogActions();
-  const [totalValuesPerChain] = useAllPositionsValuePerChain(null);
-  const [valuesPerPosition] = useAllPositionsValuePerPosition(null);
-  const [valuesPerAssetClass] = useAllPositionsValuePerAssetClass(null);
+  const [totalValuesPerChain] = useAllPositionsValuePerChain(undefined);
+  const [valuesPerPosition] = useAllPositionsValuePerPosition(undefined);
+  const [valuesPerAssetClass] = useAllPositionsValuePerAssetClass(undefined);
 
   useEffect(() => {
     if (appState.network?.id) appActions.withLoading(actions.load).then();
