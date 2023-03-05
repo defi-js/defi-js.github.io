@@ -1,14 +1,12 @@
 import { PositionArgs, PositionV1, Severity } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn18, contract, erc20, ether, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
+import { bn, contract, erc20, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
-import type { UniswapNftManagerAbi } from "../../typechain-abi";
-import type { UniswapV3FactoryAbi } from "../../typechain-abi";
-import type { UniswapV2Abi, UniswapV2FactoryAbi } from "../../typechain-abi";
+import type { UniswapNftManagerAbi, UniswapV2Abi, UniswapV2FactoryAbi, UniswapV3FactoryAbi } from "../../typechain-abi";
 import _ from "lodash";
 
-const maxUint128 = bn(2).pow(bn(128)).subn(1).toString();
+const maxUint128 = bn(2).pow(bn(128)).minus(1).toString();
 
 export namespace Uniswap {
   export function register() {
@@ -148,27 +146,27 @@ export namespace Uniswap {
       });
       const json = await response.json();
 
-      this.data.tvl = bn18(json.data.position.pool.totalValueLockedUSD);
-      this.data.principal0 = bn18(json.data.position.depositedToken0).sub(bn18(json.data.position.withdrawnToken0));
-      this.data.principal1 = bn18(json.data.position.depositedToken1).sub(bn18(json.data.position.withdrawnToken1));
+      this.data.tvl = bn(json.data.position.pool.totalValueLockedUSD);
+      this.data.principal0 = bn(json.data.position.depositedToken0).minus(bn(json.data.position.withdrawnToken0));
+      this.data.principal1 = bn(json.data.position.depositedToken1).minus(bn(json.data.position.withdrawnToken1));
 
       const [principalValue0, principalValue1] = await Promise.all([
         this.oracle.valueOf(this.network.id, this.token0, this.data.principal0),
         this.oracle.valueOf(this.network.id, this.token1, this.data.principal1),
       ]);
-      this.data.valueIfHodl = principalValue0.add(principalValue1);
-      this.data.valueNow = this.data.value0.add(this.data.value1);
-      this.data.ilValue = this.data.valueIfHodl.sub(this.data.valueNow);
-      this.data.il = ether.sub(this.data.valueNow.mul(ether).div(this.data.valueIfHodl));
+      this.data.valueIfHodl = principalValue0.plus(principalValue1);
+      this.data.valueNow = this.data.value0.plus(this.data.value1);
+      this.data.ilValue = this.data.valueIfHodl.minus(this.data.valueNow);
+      this.data.il = bn(1).minus(this.data.valueNow.div(this.data.valueIfHodl));
       const pending = await this.nftPositionManager.methods.collect([this.data.id, this.args.address, maxUint128, maxUint128]).call({ from: this.args.address });
       this.data.pending0 = await this.token0.mantissa(pending.amount0);
       this.data.pending1 = await this.token1.mantissa(pending.amount1);
       this.data.pendingValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, this.data.pending0);
       this.data.pendingValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, this.data.pending1);
-      const collectedValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, bn18(json.data.position.collectedFeesToken0));
-      const collectedValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, bn18(json.data.position.collectedFeesToken1));
+      const collectedValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, bn(json.data.position.collectedFeesToken0));
+      const collectedValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, bn(json.data.position.collectedFeesToken1));
 
-      this.data.totalFeesValue = this.data.pendingValue0.add(this.data.pendingValue1).add(collectedValue0).add(collectedValue1);
+      this.data.totalFeesValue = this.data.pendingValue0.plus(this.data.pendingValue1).plus(collectedValue0).plus(collectedValue1);
     }
 
     async loadTVL(fee: number) {
@@ -179,7 +177,7 @@ export namespace Uniswap {
         this.token1.methods.balanceOf(pool).call().then(this.token1.mantissa),
       ]);
       const [v0, v1] = await Promise.all([this.oracle.valueOf(this.network.id, this.token0, a0), this.oracle.valueOf(this.network.id, this.token1, a1)]);
-      this.data.tvl = v0.add(v1);
+      this.data.tvl = v0.plus(v1);
     }
   }
 
@@ -230,11 +228,11 @@ export namespace Uniswap {
           .then((t) => this.asset1.mantissa(t)),
       ]);
 
-      this.data.amount0 = total0.mul(lpAmount).div(lpTotalSupply);
-      this.data.amount1 = total1.mul(lpAmount).div(lpTotalSupply);
+      this.data.amount0 = total0.times(lpAmount).div(lpTotalSupply);
+      this.data.amount1 = total1.times(lpAmount).div(lpTotalSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
-      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0)).add(await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1));
+      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0)).plus(await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1));
     }
 
     getContractMethods = () => _.functions(this.router.methods);

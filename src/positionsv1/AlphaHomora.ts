@@ -74,24 +74,24 @@ export namespace AlphaHomora {
       const nft = contract(farmAbi, pos.collToken);
       const lpToken = erc20("", await nft.methods.getUnderlyingToken(pos.collId).call());
       const totalLPs = await lpToken.methods.totalSupply().call().then(bn);
-      const share = lpSupplied.mul(ether).div(totalLPs);
+      const share = lpSupplied.times(ether).div(totalLPs);
       const total0 = await this.token0.methods.balanceOf(lpToken.address).call().then(this.token0.mantissa);
       const total1 = await this.token1.methods.balanceOf(lpToken.address).call().then(this.token1.mantissa);
-      this.data.supply0 = total0.mul(share).div(ether);
-      this.data.supply1 = total1.mul(share).div(ether);
+      this.data.supply0 = total0.times(share).div(ether);
+      this.data.supply1 = total1.times(share).div(ether);
 
       const debts = await this.alphaHomoraBank.methods.getPositionDebts(this.data.id).call();
       this.data.borrow0 = await this.token0.mantissa(debts.debts[_.indexOf(debts.tokens, this.token0.address)]);
       this.data.borrow1 = await this.token1.mantissa(debts.debts[_.indexOf(debts.tokens, this.token1.address)]);
 
-      this.data.amount0 = this.data.supply0.sub(this.data.borrow0);
-      this.data.amount1 = this.data.supply1.sub(this.data.borrow1);
+      this.data.amount0 = this.data.supply0.minus(this.data.borrow0);
+      this.data.amount1 = this.data.supply1.minus(this.data.borrow1);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, this.data.amount1);
 
       const totalValue0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, total0);
       const totalValue1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, total1);
-      this.data.tvl = totalValue0.add(totalValue1);
+      this.data.tvl = totalValue0.plus(totalValue1);
     }
 
     //     private async loadDeposits() {
@@ -119,14 +119,14 @@ export namespace AlphaHomora {
     //
     //       const depositEvent = events.find((e) => e.event === "Transfer" && eqIgnoreCase(e.address, this.token0.address) && eqIgnoreCase(e.returnValues.from, this.args.address))!;
     //       const deposit0 = bn(depositEvent.returnValues.value);
-    //       const deposit1 = _.reduce(relevantTxs, (sum, tx) => sum.add(bn(tx.value)), zero);
+    //       const deposit1 = _.reduce(relevantTxs, (sum, tx) => sum.plus(bn(tx.value)), zero);
     //       const valueNow0 = await this.oracle.valueOf(this.getNetwork().id, this.token0, deposit0);
     //       const valueNow1 = await this.oracle.valueOf(this.getNetwork().id, this.token1, deposit1);
     //
-    //       this.data.valueIfHodl = valueNow0.add(valueNow1);
-    //       const valueNow = this.data.value0.add(this.data.value1);
-    //       this.data.ilAmount = this.data.valueIfHodl.sub(valueNow);
-    //       this.data.il = ether.sub(valueNow.mul(ether).div(this.data.valueIfHodl));
+    //       this.data.valueIfHodl = valueNow0.plus(valueNow1);
+    //       const valueNow = this.data.value0.plus(this.data.value1);
+    //       this.data.ilAmount = this.data.valueIfHodl.minus(valueNow);
+    //       this.data.il = ether.minus(valueNow.times(ether).div(this.data.valueIfHodl));
     //     }
 
     //   private async loadDebtRatio() {

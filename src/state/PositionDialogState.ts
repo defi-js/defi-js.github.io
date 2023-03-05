@@ -1,8 +1,7 @@
 import { createHook, createSelector, createStore } from "react-sweet-state";
 import { PositionV1 } from "../positionsv1/base/PositionV1";
 import _ from "lodash";
-import BN from "bn.js";
-import { fmt18 } from "@defi.org/web3-candies";
+import { BN } from "@defi.org/web3-candies";
 
 const PositionDialogState = createStore({
   name: "PositionDialogState",
@@ -106,5 +105,5 @@ export const usePositionDialogSelector = createHook(PositionDialogState, {
 
 function fmtData(data: any): any {
   if (_.isArray(data)) return _.map(data, fmtData);
-  return data instanceof BN ? fmt18(data) : data;
+  return data instanceof BN ? data.toFormat(3) : data;
 }

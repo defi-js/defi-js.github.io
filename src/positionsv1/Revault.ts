@@ -1,11 +1,9 @@
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, contract, erc20, Token, web3, zero } from "@defi.org/web3-candies";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import _ from "lodash";
-import type { RevaultFarmAbi } from "../../typechain-abi/RevaultFarmAbi";
-import type { RevaultChefAbi } from "../../typechain-abi/RevaultChefAbi";
-import type { RevaultStakingAbi } from "../../typechain-abi/RevaultStakingAbi";
+import type { RevaultChefAbi, RevaultFarmAbi, RevaultStakingAbi } from "../../typechain-abi";
 import { PositionFactory } from "./base/PositionFactory";
 
 export namespace Revault {

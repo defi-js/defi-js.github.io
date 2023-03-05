@@ -1,4 +1,4 @@
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, erc20, Network, Token, web3, zero } from "@defi.org/web3-candies";
 import { erc20s, networks } from "./base/consts";

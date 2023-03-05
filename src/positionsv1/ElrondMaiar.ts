@@ -115,9 +115,9 @@ export namespace ElrondMaiar {
       const totalLPStaked = bn(_.find(farmEsdts, (e) => e.tokenIdentifier === this.strategy.lp.tokenId)!.balance);
       const asset0InPair = bn(_.find(pairEsdts, (t) => t.tokenIdentifier === asset0.tokenId)!.balance);
       const asset1InPair = bn(_.find(pairEsdts, (t) => t.tokenIdentifier === asset1.tokenId)!.balance);
-      const asset0TotalValue = await this.oracle.valueOf(this.getNetwork().id, asset0, totalLPStaked.mul(asset0InPair).div(totalLPSupply));
-      const asset1TotalValue = await this.oracle.valueOf(this.getNetwork().id, asset1, totalLPStaked.mul(asset1InPair).div(totalLPSupply));
-      this.data.tvl = asset0TotalValue.add(asset1TotalValue);
+      const asset0TotalValue = await this.oracle.valueOf(this.getNetwork().id, asset0, totalLPStaked.times(asset0InPair).div(totalLPSupply));
+      const asset1TotalValue = await this.oracle.valueOf(this.getNetwork().id, asset1, totalLPStaked.times(asset1InPair).div(totalLPSupply));
+      this.data.tvl = asset0TotalValue.plus(asset1TotalValue);
 
       const esdts = await getESDTs(this.args.address);
       const lpNameSuffix = this.strategy.lp.tokenId.split("-")[0];
@@ -125,8 +125,8 @@ export namespace ElrondMaiar {
       if (!lps) return;
 
       this.data.lpBalanceStaked = bn(lps!.balance);
-      this.data.amount0 = this.data.lpBalanceStaked.mul(asset0InPair).div(totalLPSupply);
-      this.data.amount1 = this.data.lpBalanceStaked.mul(asset1InPair).div(totalLPSupply);
+      this.data.amount0 = this.data.lpBalanceStaked.times(asset0InPair).div(totalLPSupply);
+      this.data.amount1 = this.data.lpBalanceStaked.times(asset1InPair).div(totalLPSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, asset1, this.data.amount1);
     }

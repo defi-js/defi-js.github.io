@@ -1,11 +1,10 @@
 import _ from "lodash";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, bn9, contract, erc20, Network, Token, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
-import type { RibbonThetaVaultAbi } from "../../typechain-abi/RibbonThetaVaultAbi";
-import type { RibbonGaugeAbi } from "../../typechain-abi/RibbonGaugeAbi";
+import type { RibbonGaugeAbi, RibbonThetaVaultAbi } from "../../typechain-abi";
 
 export namespace Ribbon {
   export function register() {
@@ -53,14 +52,14 @@ export namespace Ribbon {
 
     async load() {
       const { amount, unredeemedShares } = await this.vault.methods.depositReceipts(this.args.address).call();
-      this.data.amount = await this.asset.mantissa(bn(amount).add(bn(unredeemedShares)));
+      this.data.amount = await this.asset.mantissa(bn(amount).plus(bn(unredeemedShares)));
 
       // farms only on ETH
       if (this.network.id === networks.eth.id) {
         const farm = contract<RibbonGaugeAbi>(require("../abi/RibbonGaugeAbi.json"), await this.vault.methods.liquidityGauge().call());
         const [fbalance, fratio] = await Promise.all([farm.methods.balanceOf(this.args.address).call().then(bn), this.vault.methods.pricePerShare().call().then(bn)]);
-        const staked = await this.asset.mantissa(fbalance.mul(fratio).div(await this.asset.amount(1)));
-        this.data.amount = this.data.amount.add(staked);
+        const staked = await this.asset.mantissa(fbalance.times(fratio).div(await this.asset.amount(1)));
+        this.data.amount = this.data.amount.plus(staked);
 
         this.data.pending = await farm.methods.claimable_tokens(this.args.address).call().then(bn);
         this.data.pendingValue = await this.oracle.valueOf(this.getNetwork().id, this.rewardToken, this.data.pending);
@@ -72,7 +71,7 @@ export namespace Ribbon {
       this.data.tvl = await this.oracle.valueOf(this.network.id, this.asset, total);
 
       const currentOption = contract(require("../abi/RibbonOptionAbi.json"), await this.vault.methods.currentOption().call());
-      this.data.strike = bn9(await currentOption.methods["strikePrice()"]().call()).muln(10);
+      this.data.strike = bn9(await currentOption.methods["strikePrice()"]().call()).times(10);
     }
 
     getContractMethods = () => _.functions(this.vault.methods);

@@ -3,7 +3,7 @@ import { contract, erc20, zero } from "@defi.org/web3-candies";
 import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
-import { RookLiquidityPoolAbi } from "../../typechain-abi/RookLiquidityPoolAbi";
+import { RookLiquidityPoolAbi } from "../../typechain-abi";
 import _ from "lodash";
 
 export namespace Rook {

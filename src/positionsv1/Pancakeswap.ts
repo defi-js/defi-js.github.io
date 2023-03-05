@@ -3,32 +3,25 @@ import { bn, contract, erc20, erc20s, Token, zero } from "@defi.org/web3-candies
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
-import { PancakeswapMasterchefV2Abi } from "../../typechain-abi/PancakeswapMasterchefV2Abi";
-import { PancakeswapLpAbi } from "../../typechain-abi/PancakeswapLpAbi";
+import { PancakeswapLpAbi, PancakeswapMasterchefV2Abi } from "../../typechain-abi";
 import _ from "lodash";
 
 export namespace Pancakeswap {
   // https://docs.pancakeswap.finance/code/migration/masterchef-v2/list-of-farms
 
   export function register() {
-    const lp_BUSD_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP BUSD/BNB", "0x58F876857a02D6762E0101bb5C46A8c1ED44Dc16", require("../abi/PancakeswapLpAbi.json"));
-    const lp_BTCB_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP BTCB/BNB", "0x61EB789d75A95CAa3fF50ed7E47b96c132fEc082", require("../abi/PancakeswapLpAbi.json"));
-    const lp_CAKE_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP CAKE/BNB", "0x0eD7e52944161450477ee417DE9Cd3a859b14fD0", require("../abi/PancakeswapLpAbi.json"));
-    const lp_ORBS_BUSD = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP ORBS/BUSD", "0xB87b857670A44356f2b70337E0F218713D2378e8", require("../abi/PancakeswapLpAbi.json"));
-    const lp_DOT_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP DOT/BNB", "0xDd5bAd8f8b360d76d12FdA230F8BAF42fe0022CF", require("../abi/PancakeswapLpAbi.json"));
-    const lp_ADA_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP ADA/BNB", "0x28415ff2C35b65B9E5c7de82126b4015ab9d031F", require("../abi/PancakeswapLpAbi.json"));
-    const lp_LINK_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP LINK/BNB", "0x824eb9faDFb377394430d2744fa7C42916DE3eCe", require("../abi/PancakeswapLpAbi.json"));
-    const lp_DOGE_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP DOGE/BNB", "0xac109C8025F272414fd9e2faA805a583708A017f", require("../abi/PancakeswapLpAbi.json"));
-    const lp_TON_BTCB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP TON/BTCB", "0x1893da6b92660b85538f58217808685b80fb083e", require("../abi/PancakeswapLpAbi.json"));
+    const lp_BUSD_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP BUSD/BNB", "0x58F876857a02D6762E0101bb5C46A8c1ED44Dc16", 0, require("../abi/PancakeswapLpAbi.json"));
+    const lp_BTCB_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP BTCB/BNB", "0x61EB789d75A95CAa3fF50ed7E47b96c132fEc082", 0, require("../abi/PancakeswapLpAbi.json"));
+    const lp_CAKE_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP CAKE/BNB", "0x0eD7e52944161450477ee417DE9Cd3a859b14fD0", 0, require("../abi/PancakeswapLpAbi.json"));
+    const lp_ORBS_BUSD = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP ORBS/BUSD", "0xB87b857670A44356f2b70337E0F218713D2378e8", 0, require("../abi/PancakeswapLpAbi.json"));
+    const lp_DOGE_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP DOGE/BNB", "0xac109C8025F272414fd9e2faA805a583708A017f", 0, require("../abi/PancakeswapLpAbi.json"));
+    const lp_TON_BTCB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP TON/BTCB", "0x1893da6b92660b85538f58217808685b80fb083e", 0, require("../abi/PancakeswapLpAbi.json"));
 
     PositionFactory.register({
       "bsc:Pancakeswap:Farm:BUSD/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.BUSD(), erc20s.bsc.WBNB(), lp_BUSD_BNB(), 3),
       "bsc:Pancakeswap:Farm:CAKE/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.CAKE(), erc20s.bsc.WBNB(), lp_CAKE_BNB(), 2),
       "bsc:Pancakeswap:Farm:BTCB/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.BTCB(), erc20s.bsc.WBNB(), lp_BTCB_BNB(), 11),
-      "bsc:Pancakeswap:Farm:DOT/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.DOT(), erc20s.bsc.WBNB(), lp_DOT_BNB(), 5),
-      "bsc:Pancakeswap:Farm:ADA/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.ADA(), erc20s.bsc.WBNB(), lp_ADA_BNB(), 4),
-      "bsc:Pancakeswap:Farm:LINK/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.LINK(), erc20s.bsc.WBNB(), lp_LINK_BNB(), 6),
-      "bsc:Pancakeswap:Farm:DOGE/BNB": (args, oracle) => new Farm(args, oracle, erc20s.bsc.DOGE(), erc20s.bsc.WBNB(), lp_DOGE_BNB(), 37),
+      "bsc:Pancakeswap:Farm:DOGE/BNB": (args, oracle) => new Farm(args, oracle, erc20("DOGE", "0xbA2aE424d960c26247Dd6c32edC70B295c744C43"), erc20s.bsc.WBNB(), lp_DOGE_BNB(), 37),
 
       "bsc:Pancakeswap:LP:ORBS/BUSD": (args, oracle) => new LP(args, oracle, erc20s.bsc.ORBS(), erc20s.bsc.BUSD(), lp_ORBS_BUSD()),
       "bsc:Pancakeswap:LP:TON/BTCB": (args, oracle) => new LP(args, oracle, erc20("TON", "0x76A797A59Ba2C17726896976B7B3747BfD1d220f"), erc20s.bsc.BTCB(), lp_TON_BTCB()),
@@ -113,14 +106,14 @@ export namespace Pancakeswap {
       const amountLP = bn(userInfo.amount);
       this.data.rewardAmount = bn(pending);
 
-      this.data.amount0 = await this.asset0.mantissa(bn(r0).mul(amountLP).div(bn(totalSupply)));
-      this.data.amount1 = await this.asset1.mantissa(bn(r1).mul(amountLP).div(bn(totalSupply)));
+      this.data.amount0 = await this.asset0.mantissa(bn(r0).times(amountLP).div(bn(totalSupply)));
+      this.data.amount1 = await this.asset1.mantissa(bn(r1).times(amountLP).div(bn(totalSupply)));
 
       [this.data.value0, this.data.value1, this.data.rewardValue, this.data.tvl] = await Promise.all([
         this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0),
         this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1),
         this.oracle.valueOf(this.getNetwork().id, this.cake, this.data.rewardAmount),
-        this.oracle.valueOf(this.getNetwork().id, this.asset1, bn(r1).muln(2).mul(bn(lpStaked)).div(bn(totalSupply))),
+        this.oracle.valueOf(this.getNetwork().id, this.asset1, bn(r1).times(2).times(bn(lpStaked)).div(bn(totalSupply))),
       ]);
     }
 
@@ -154,8 +147,8 @@ export namespace Pancakeswap {
         this.lpToken.methods.totalSupply().call().then(this.lpToken.mantissa),
       ]);
       const amountLP = await this.lpToken.methods.balanceOf(this.args.address).call().then(this.lpToken.mantissa);
-      this.data.amount0 = total0.mul(amountLP).div(totalSupply);
-      this.data.amount1 = total1.mul(amountLP).div(totalSupply);
+      this.data.amount0 = total0.times(amountLP).div(totalSupply);
+      this.data.amount1 = total1.times(amountLP).div(totalSupply);
 
       let val0, val1;
       [this.data.value0, this.data.value1, val0, val1] = await Promise.all([
@@ -164,7 +157,7 @@ export namespace Pancakeswap {
         this.oracle.valueOf(this.getNetwork().id, this.asset0, total0),
         this.oracle.valueOf(this.getNetwork().id, this.asset1, total1),
       ]);
-      this.data.tvl = val0.add(val1);
+      this.data.tvl = val0.plus(val1);
     }
   }
 }

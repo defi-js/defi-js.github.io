@@ -1,16 +1,17 @@
 import _ from "lodash";
 import { bn, Contract, contract, erc20, erc20s, Network, Token, zero } from "@defi.org/web3-candies";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
-import { SushiswapMinichefAbi } from "../../typechain-abi/SushiswapMinichefAbi";
+import { SushiswapMinichefAbi } from "../../typechain-abi";
 
 export namespace SushiSwap {
   export function register() {
     PositionFactory.register({
       "eth:SushiSwap:Farm:USDC/ETH": (args, oracle) => new Farm(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH(), 1),
       "poly:SushiSwap:Farm:ETH/MATIC": (args, oracle) => new Farm(args, oracle, networks.poly, erc20s.poly.WETH(), erc20s.poly.WMATIC(), 0),
+      "arb:SushiSwap:Farm:USDC/ETH": (args, oracle) => new Farm(args, oracle, networks.arb, erc20s.arb.USDC(), erc20s.arb.WETH(), 0),
     });
   }
 
@@ -89,12 +90,12 @@ export namespace SushiSwap {
           .then((x) => this.asset1.mantissa(x)),
         lpToken.methods.balanceOf(this.masterchef.options.address).call().then(bn),
       ]);
-      this.data.amount0 = total0.mul(lpAmount).div(lpTotalSupply);
-      this.data.amount1 = total1.mul(lpAmount).div(lpTotalSupply);
+      this.data.amount0 = total0.times(lpAmount).div(lpTotalSupply);
+      this.data.amount1 = total1.times(lpAmount).div(lpTotalSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
-      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0.mul(lpStaked).div(lpTotalSupply))).add(
-        await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1.mul(lpStaked).div(lpTotalSupply))
+      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0.times(lpStaked).div(lpTotalSupply))).plus(
+        await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1.times(lpStaked).div(lpTotalSupply))
       );
 
       this.data.rewardAmount = await this.reward.mantissa(pending);
@@ -122,6 +123,8 @@ export namespace SushiSwap {
 
   function getFarmContract(network: Network): Contract {
     switch (network.shortname) {
+      case "arb":
+        return contract<SushiswapMinichefAbi>(require("../abi/SushiswapMinichefAbi.json"), "0xF4d73326C13a4Fc5FD7A064217e12780e9Bd62c3");
       case "poly":
         return contract<SushiswapMinichefAbi>(require("../abi/SushiswapMinichefAbi.json"), "0x0769fd68dFb93167989C6f7254cd0D766Fb2841F");
       case "eth":
@@ -132,6 +135,8 @@ export namespace SushiSwap {
 
   function getRewardContract(network: Network) {
     switch (network.shortname) {
+      case "arb":
+        return erc20("SUSHI", "0xd4d42F0b6DEF4CE0383636770eF773390d85c61A");
       case "poly":
         return erc20("SUSHI", "0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a");
       case "eth":

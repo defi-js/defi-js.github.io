@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { contract, erc20, Token, zero } from "@defi.org/web3-candies";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
@@ -81,12 +81,12 @@ export namespace SpookySwap {
         this.lp.methods.totalSupply().call().then(this.lp.mantissa),
       ]);
       if (this.poolId > 0) {
-        lpAmount = lpAmount.add(await this.lp.mantissa((await this.masterchef.methods.userInfo(this.poolId, this.args.address).call()).amount));
+        lpAmount = lpAmount.plus(await this.lp.mantissa((await this.masterchef.methods.userInfo(this.poolId, this.args.address).call()).amount));
         this.data.pending = await this.masterchef.methods.pendingBOO(this.poolId, this.args.address).call().then(this.boo.mantissa);
         this.data.pendingValue = await this.oracle.valueOf(this.getNetwork().id, this.boo, this.data.pending);
       }
-      this.data.amount0 = total0.mul(lpAmount).div(totalSupply);
-      this.data.amount1 = total1.mul(lpAmount).div(totalSupply);
+      this.data.amount0 = total0.times(lpAmount).div(totalSupply);
+      this.data.amount1 = total1.times(lpAmount).div(totalSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
 
@@ -98,7 +98,7 @@ export namespace SpookySwap {
 
       if (totalValue0.isZero()) totalValue0 = totalValue1;
       else if (totalValue1.isZero()) totalValue1 = totalValue0;
-      this.data.tvl = totalValue0.add(totalValue1);
+      this.data.tvl = totalValue0.plus(totalValue1);
     }
 
     getContractMethods = () => _.functions(this.lp.methods);

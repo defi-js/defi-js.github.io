@@ -1,10 +1,7 @@
-import { PositionV1, PositionArgs, Severity } from "./base/PositionV1";
+import { PositionArgs, PositionV1, Severity } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn18, contract, erc20, erc20s, ether, to18, zero } from "@defi.org/web3-candies";
-import type { AaveLoopAbi } from "../../typechain-abi/AaveLoopAbi";
-import type { CompoundLoopAbi } from "../../typechain-abi/CompoundLoopAbi";
-import type { AaveSAAVEAbi } from "../../typechain-abi/AaveSAAVEAbi";
-import type { CompoundCTokenAbi } from "../../typechain-abi/CompoundCTokenAbi";
+import { bn, bn18, contract, erc20, erc20s, ether, zero } from "@defi.org/web3-candies";
+import type { AaveLoopAbi, AaveSAAVEAbi, CompoundCTokenAbi, CompoundLoopAbi } from "../../typechain-abi";
 import _ from "lodash";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
@@ -25,7 +22,7 @@ export namespace Loops {
 
     instance = contract<AaveLoopAbi>(require("../abi/AaveLoopAbi.json"), this.args.address);
     asset = erc20s.eth.USDC();
-    rewardAsset = erc20<AaveSAAVEAbi>("stkAAVE", "0x4da27a545c0c5B758a6BA100e3a049001de870f5", require("../abi/AaveSAAVEAbi.json"));
+    rewardAsset = erc20<AaveSAAVEAbi>("stkAAVE", "0x4da27a545c0c5B758a6BA100e3a049001de870f5", 0, require("../abi/AaveSAAVEAbi.json"));
     aave = erc20("AAVE", "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9");
     weth = erc20s.eth.WETH();
 
@@ -78,8 +75,8 @@ export namespace Loops {
     getAmounts = () => [
       {
         asset: this.asset,
-        amount: this.data.totalCollateralETH.sub(this.data.totalDebtETH),
-        value: this.data.totalCollateralValue.sub(this.data.totalDebtValue),
+        amount: this.data.totalCollateralETH.minus(this.data.totalDebtETH),
+        value: this.data.totalCollateralValue.minus(this.data.totalDebtValue),
       },
     ];
 
@@ -172,8 +169,8 @@ export namespace Loops {
     getAmounts = () => [
       {
         asset: this.asset,
-        amount: this.data.supplyBalance.sub(this.data.borrowBalance),
-        value: this.data.supplyBalance.sub(this.data.borrowBalance),
+        amount: this.data.supplyBalance.minus(this.data.borrowBalance),
+        value: this.data.supplyBalance.minus(this.data.borrowBalance),
       },
     ];
 
@@ -188,7 +185,7 @@ export namespace Loops {
     ];
 
     getHealth() {
-      const minLiquidity = this.data.supplyBalance.muln(this.WARN_LIQUIDITY_PERCENT_OF_PRINCIPAL).divn(100);
+      const minLiquidity = this.data.supplyBalance.times(this.WARN_LIQUIDITY_PERCENT_OF_PRINCIPAL).div(100);
       if (!this.data.accountShortfall.isZero() || bn(this.data.accountLiquidity).lt(minLiquidity)) {
         return [
           {
@@ -201,7 +198,7 @@ export namespace Loops {
     }
 
     async load() {
-      const ctoken = erc20<CompoundCTokenAbi>("Compound: cUSDC", "0x39AA39c021dfbaE8faC545936693aC917d5E7563", require("../abi/CompoundCTokenAbi.json"));
+      const ctoken = erc20<CompoundCTokenAbi>("Compound: cUSDC", "0x39AA39c021dfbaE8faC545936693aC917d5E7563", 0, require("../abi/CompoundCTokenAbi.json"));
       const [totalSupply, exchangeRate, underlyingBalance, borrowBalance, pending, liquidity] = await Promise.all([
         ctoken.methods.totalSupply().call(),
         ctoken.methods.exchangeRateCurrent().call(),
@@ -218,7 +215,7 @@ export namespace Loops {
       this.data.accountLiquidity = bn(liquidity.accountLiquidity);
       this.data.accountShortfall = bn(liquidity.accountShortfall);
 
-      this.data.tvl = (await ctoken.mantissa(totalSupply)).mul(to18(exchangeRate, 16)).div(ether);
+      this.data.tvl = (await ctoken.mantissa(totalSupply)).times(bn18(exchangeRate).times(100)).div(ether);
     }
 
     getContractMethods = () => _.functions(this.instance.methods);

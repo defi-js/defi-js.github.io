@@ -3,7 +3,7 @@ import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
-import { QuickswapStakingAbi } from "../../typechain-abi/QuickswapStakingAbi";
+import { QuickswapStakingAbi } from "../../typechain-abi";
 import _ from "lodash";
 
 export namespace QuickSwap {
@@ -71,7 +71,7 @@ export namespace QuickSwap {
       const [stakedBalance, totalStaked, earned, lpAddress] = await Promise.all([
         this.staking.methods.balanceOf(this.args.address).call().then(bn),
         this.staking.methods.totalSupply().call().then(bn),
-        this.staking.methods.earned(this.args.address).call().then(bn),
+        this.staking.methods.earned(this.args.address).call().then(this.reward.mantissa),
         this.staking.methods.stakingToken().call(),
       ]);
       this.data.rewardAmount = earned;
@@ -82,18 +82,18 @@ export namespace QuickSwap {
       const [amount0InLp, amount1InLp, totalLpSupply] = await Promise.all([
         this.asset0.methods.balanceOf(lpAddress).call().then(this.asset0.mantissa),
         this.asset1.methods.balanceOf(lpAddress).call().then(this.asset1.mantissa),
-        lp.methods.totalSupply().call().then(lp.mantissa),
+        lp.methods.totalSupply().call().then(bn),
       ]);
-      this.data.amount0 = stakedBalance.mul(amount0InLp).div(totalLpSupply);
-      this.data.amount1 = stakedBalance.mul(amount1InLp).div(totalLpSupply);
+      this.data.amount0 = stakedBalance.times(amount0InLp).div(totalLpSupply);
+      this.data.amount1 = stakedBalance.times(amount1InLp).div(totalLpSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
 
-      const tvl_amount0 = totalStaked.mul(amount0InLp).div(totalLpSupply);
-      const tvl_amount1 = totalStaked.mul(amount1InLp).div(totalLpSupply);
+      const tvl_amount0 = totalStaked.times(amount0InLp).div(totalLpSupply);
+      const tvl_amount1 = totalStaked.times(amount1InLp).div(totalLpSupply);
       const tvl_value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, tvl_amount0);
       const tvl_value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, tvl_amount1);
-      this.data.tvl = tvl_value0.add(tvl_value1);
+      this.data.tvl = tvl_value0.plus(tvl_value1);
     }
 
     getContractMethods = () => _.functions(this.staking.methods);
@@ -159,14 +159,14 @@ export namespace QuickSwap {
         this.asset0.methods.balanceOf(this.lpAddress).call().then(this.asset0.mantissa),
         this.asset1.methods.balanceOf(this.lpAddress).call().then(this.asset1.mantissa),
       ]);
-      this.data.amount0 = amount0InLp.mul(balance).div(totalSupply);
-      this.data.amount1 = amount1InLp.mul(balance).div(totalSupply);
+      this.data.amount0 = amount0InLp.times(balance).div(totalSupply);
+      this.data.amount1 = amount1InLp.times(balance).div(totalSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
 
       const tvl_value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, amount0InLp);
       const tvl_value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, amount1InLp);
-      this.data.tvl = tvl_value0.add(tvl_value1);
+      this.data.tvl = tvl_value0.plus(tvl_value1);
     }
 
     getContractMethods = () => _.functions(this.lp.methods);

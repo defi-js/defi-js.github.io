@@ -3,12 +3,12 @@ import { useAllPositionRows, useAllPositions, useAllPositionsValuePerAssetClass,
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useAppState } from "../state/AppState";
 import { usePositionDialogActions } from "../state/PositionDialogState";
-import { commafy } from "@defi.org/web3-candies";
 import { Threat } from "../positionsv1/base/PositionV1";
 import { ListItemText } from "@mui/material";
 import { AddPositionBtn } from "./AddPositionDialog";
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from "chart.js";
 import { Pie } from "react-chartjs-2";
+import { BN } from "@defi.org/web3-candies";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -34,7 +34,7 @@ const columns: GridColDef[] = [
     width: 100,
     align: "right",
     type: "number",
-    valueFormatter: (v) => "$  " + commafy((v.value as number).toFixed(0)),
+    valueFormatter: (v) => "$  " + BN(v.value).toFormat(0),
     sortable: true,
   },
   {
@@ -44,7 +44,7 @@ const columns: GridColDef[] = [
     width: 100,
     align: "right",
     type: "number",
-    valueFormatter: (v) => "$  " + commafy((v.value as number).toFixed(0)),
+    valueFormatter: (v) => "$  " + BN(v.value).toFormat(0),
     sortable: true,
   },
   {
@@ -54,7 +54,7 @@ const columns: GridColDef[] = [
     width: 130,
     align: "right",
     type: "number",
-    valueFormatter: (v) => "$  " + commafy((v.value as number).toFixed(0)),
+    valueFormatter: (v) => "$  " + BN(v.value).toFormat(0),
     sortable: true,
   },
   { field: "address", headerName: "Address", headerAlign: "center", width: 450, align: "left" },
@@ -77,7 +77,7 @@ export const AllPositionsTable = () => {
 
   return (
     <div style={{ height: "100%", width: "90%" }}>
-      <ListItemText>Total Market Value: $ {commafy(totalValuesPerChain.grandtotal)}</ListItemText>
+      <ListItemText>Total Market Value: $ {BN(totalValuesPerChain.grandtotal).toFormat()}</ListItemText>
 
       <div style={{ display: "flex" }}>
         <div>

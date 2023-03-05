@@ -1,5 +1,4 @@
-import BN from "bn.js";
-import { Network, Token } from "@defi.org/web3-candies";
+import { BN, Network, Token } from "@defi.org/web3-candies";
 
 export type PositionArgs = {
   type: string;

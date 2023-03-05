@@ -3,7 +3,7 @@ import { createHook, createStore } from "react-sweet-state";
 import { account, Network, setWeb3Instance } from "@defi.org/web3-candies";
 import { currentNetwork, networks } from "../positionsv1/base/consts";
 
-// defaults.middlewares.add((storeState: any) => (next: any) => (arg: any) => {
+// defaults.middlewares.plus((storeState: any) => (next: any) => (arg: any) => {
 //   const result = next(arg);
 //   console.log(storeState.key, ":", storeState.getState());
 //   return result;

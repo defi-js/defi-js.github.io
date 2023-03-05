@@ -1,9 +1,9 @@
 import _ from "lodash";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { bn, contract, erc20, ether, zero } from "@defi.org/web3-candies";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
-import type { LooksrareStakingAbi } from "../../typechain-abi/LooksrareStakingAbi";
+import type { LooksrareStakingAbi } from "../../typechain-abi";
 import { PositionFactory } from "./base/PositionFactory";
 
 export namespace LooksRare {
@@ -51,7 +51,7 @@ export namespace LooksRare {
       ]);
       this.data.amount = stakedLooks;
       this.data.pendingAmount = pendingEth;
-      const tvlAmount = totalShares.mul(sharePrice).div(ether);
+      const tvlAmount = totalShares.times(sharePrice).div(ether);
 
       [this.data.value, this.data.pendingValue, this.data.tvl] = await Promise.all([
         this.oracle.valueOf(this.getNetwork().id, this.looks, this.data.amount),

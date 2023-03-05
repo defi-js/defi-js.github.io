@@ -57,15 +57,15 @@ export namespace Raydium {
       const totalTokens = bn18(lpInfo.tokenAmountCoin);
       const totalSol = bn18(lpInfo.tokenAmountPc);
 
-      this.data.amountToken = totalTokens.mul(lpAmount).div(totalLps);
-      this.data.amountSol = totalSol.mul(lpAmount).div(totalLps);
+      this.data.amountToken = totalTokens.times(lpAmount).div(totalLps);
+      this.data.amountSol = totalSol.times(lpAmount).div(totalLps);
 
       this.data.valueToken = await this.oracle.valueOf(networks.sol.id, this.token, this.data.amountToken);
       this.data.valueSol = await this.oracle.valueOf(networks.sol.id, this.sol, this.data.amountSol);
 
       const totalTokensValue = await this.oracle.valueOf(networks.sol.id, this.token, totalTokens);
       const totalSolValue = await this.oracle.valueOf(networks.sol.id, this.sol, totalSol);
-      this.data.tvl = totalTokensValue.add(totalSolValue);
+      this.data.tvl = totalTokensValue.plus(totalSolValue);
     }
 
     getContractMethods = () => [];

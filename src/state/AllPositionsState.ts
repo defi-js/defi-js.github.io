@@ -3,9 +3,8 @@ import { createHook, createSelector, createStore, StoreActionApi } from "react-s
 import { PositionArgs, PositionV1 } from "../positionsv1/base/PositionV1";
 import { PositionFactory } from "../positionsv1/base/PositionFactory";
 import { registerAllPositions } from "../positionsv1";
-import { to3, Token, zero } from "@defi.org/web3-candies";
+import { BN, Token, zero } from "@defi.org/web3-candies";
 import { currentNetwork } from "../positionsv1/base/consts";
-import BN from "bn.js";
 
 registerAllPositions();
 
@@ -110,7 +109,7 @@ export const useAllPositionRows = createHook(AllPositionsState, {
         chain: p.getNetwork().name,
         health: p.getHealth(),
         marketValue: num(marketValue(p)),
-        pending: num(p.getPendingRewards().reduce((sum, v) => sum.add(v.value), zero)),
+        pending: num(p.getPendingRewards().reduce((sum, v) => sum.plus(v.value), zero)),
         tvl: num(p.getTVL()),
         position: p,
         address: p.getArgs().address,
@@ -177,15 +176,15 @@ export const useAllPositionsValuePerChain = createHook(AllPositionsState, {
 });
 
 function num(bn: BN) {
-  return to3(bn, 18).toNumber() / 1000;
+  return bn.times(1000).idiv(1000).toNumber();
 }
 
 function marketValue(p: PositionV1) {
-  return _.reduce(p.getAmounts(), (sum, v) => sum.add(v.value), zero);
+  return _.reduce(p.getAmounts(), (sum, v) => sum.plus(v.value), zero);
 }
 
 function totalMarketValue(positions: PositionV1[]) {
-  return _.reduce(positions, (sum, pos) => sum.add(marketValue(pos)), zero);
+  return _.reduce(positions, (sum, pos) => sum.plus(marketValue(pos)), zero);
 }
 
 function assetClass(a: Token): string {

@@ -41,7 +41,7 @@ export namespace Bitcoin {
     async load() {
       this.data.tvl = await fetchTVL();
       this.data.amount = await fetchBalance(this.token.bech32);
-      this.data.value = await fetchPrice().then((p) => this.data.amount.muln(p));
+      this.data.value = await fetchPrice().then((p) => this.data.amount.times(p));
     }
 
     getContractMethods = () => [];

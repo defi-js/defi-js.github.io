@@ -1,10 +1,9 @@
 import _ from "lodash";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { bn, contract, erc20, ether, Token, zero } from "@defi.org/web3-candies";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import { PriceOracle } from "./base/PriceOracle";
-import type { UniclyLpAbi } from "../../typechain-abi/UniclyLpAbi";
-import type { UniclyXUnicAbi } from "../../typechain-abi/UniclyXUnicAbi";
+import type { UniclyLpAbi, UniclyXUnicAbi } from "../../typechain-abi";
 import { PositionFactory } from "./base/PositionFactory";
 
 export namespace Unicly {
@@ -24,12 +23,12 @@ export namespace Unicly {
   export const Strategies = {
     uPunks: () => ({
       asset: erc20("Unicly: uPUNK", "0x8d2BFfCbB19Ff14A698C424FbcDcFd17aab9b905"),
-      lp: erc20<UniclyLpAbi>("Unicly: LP uPUNK/ETH", "0xc809Af9E3490bCB2B3bA2BF15E002f0A6a1F6835", require("../abi/UniclyLpAbi.json")),
+      lp: erc20<UniclyLpAbi>("Unicly: LP uPUNK/ETH", "0xc809Af9E3490bCB2B3bA2BF15E002f0A6a1F6835", 0, require("../abi/UniclyLpAbi.json")),
       poolId: 3,
     }),
     uJenny: () => ({
       asset: erc20("Unicly: uJenny", "0xa499648fD0e80FD911972BbEb069e4c20e68bF22"),
-      lp: erc20<UniclyLpAbi>("Unicly: LP uJenny/ETH", "0xEC5100AD159F660986E47AFa0CDa1081101b471d", require("../abi/UniclyLpAbi.json")),
+      lp: erc20<UniclyLpAbi>("Unicly: LP uJenny/ETH", "0xEC5100AD159F660986E47AFa0CDa1081101b471d", 0, require("../abi/UniclyLpAbi.json")),
       poolId: 18,
     }),
   };
@@ -109,14 +108,14 @@ export namespace Unicly {
       this.data.amountLP = bn(userInfo.amount);
       this.data.rewardAmount = await this.xunic.mantissa(pending);
 
-      this.data.amountAsset = await this.strategy.asset.mantissa(bn(r0).mul(this.data.amountLP).div(bn(totalSupply)));
-      this.data.amountETH = await this.eth.mantissa(bn(r1).mul(this.data.amountLP).div(bn(totalSupply)));
+      this.data.amountAsset = await this.strategy.asset.mantissa(bn(r0).times(this.data.amountLP).div(bn(totalSupply)));
+      this.data.amountETH = await this.eth.mantissa(bn(r1).times(this.data.amountLP).div(bn(totalSupply)));
 
       [this.data.valueAsset, this.data.valueETH, this.data.rewardValue, this.data.tvl] = await Promise.all([
         this.oracle.valueOf(this.getNetwork().id, this.strategy.asset, this.data.amountAsset),
         this.oracle.valueOf(this.getNetwork().id, this.eth, this.data.amountETH),
-        this.oracle.valueOf(this.getNetwork().id, this.unic, this.data.rewardAmount.mul(bn(xunicrate)).div(ether)),
-        this.oracle.valueOf(this.getNetwork().id, this.eth, bn(r1).muln(2).mul(bn(poolInfo.totalLPTokens)).div(bn(totalSupply))),
+        this.oracle.valueOf(this.getNetwork().id, this.unic, this.data.rewardAmount.times(bn(xunicrate)).div(ether)),
+        this.oracle.valueOf(this.getNetwork().id, this.eth, bn(r1).times(2).times(bn(poolInfo.totalLPTokens)).div(bn(totalSupply))),
       ]);
     }
 

@@ -1,7 +1,7 @@
 import _ from "lodash";
-import type { TraderJoeFarmAbi } from "../../typechain-abi/TraderJoeFarmAbi";
+import type { TraderJoeFarmAbi } from "../../typechain-abi";
 import { bn, contract, erc20, erc20s, Token, zero } from "@defi.org/web3-candies";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
@@ -101,12 +101,12 @@ export namespace TraderJoe {
           .then((x) => this.asset1.mantissa(x)),
         lpToken.methods.balanceOf(this.masterchef.options.address).call().then(bn),
       ]);
-      this.data.amount0 = total0.mul(lpAmount).div(lpTotalSupply);
-      this.data.amount1 = total1.mul(lpAmount).div(lpTotalSupply);
+      this.data.amount0 = total0.times(lpAmount).div(lpTotalSupply);
+      this.data.amount1 = total1.times(lpAmount).div(lpTotalSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
-      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0.mul(lpStaked).div(lpTotalSupply))).add(
-        await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1.mul(lpStaked).div(lpTotalSupply))
+      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0.times(lpStaked).div(lpTotalSupply))).plus(
+        await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1.times(lpStaked).div(lpTotalSupply))
       );
 
       this.data.rewardAmount = await this.reward.mantissa(pending.pendingJoe);
@@ -183,8 +183,8 @@ export namespace TraderJoe {
         this.lp.methods.balanceOf(this.args.address).call().then(this.lp.mantissa),
         this.lp.methods.totalSupply().call().then(this.lp.mantissa),
       ]);
-      this.data.amount0 = total0.mul(lpAmount).div(totalSupply);
-      this.data.amount1 = total1.mul(lpAmount).div(totalSupply);
+      this.data.amount0 = total0.times(lpAmount).div(totalSupply);
+      this.data.amount1 = total1.times(lpAmount).div(totalSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
       if (this.data.value0.isZero()) this.data.value0 = this.data.value1;
@@ -194,7 +194,7 @@ export namespace TraderJoe {
       let totalValue1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1);
       if (totalValue0.isZero()) totalValue0 = totalValue1;
       else if (totalValue1.isZero()) totalValue1 = totalValue0;
-      this.data.tvl = totalValue0.add(totalValue1);
+      this.data.tvl = totalValue0.plus(totalValue1);
     }
 
     getContractMethods = () => _.functions(this.lp.methods);

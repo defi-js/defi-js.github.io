@@ -52,7 +52,7 @@ export namespace Fodl {
         this.xfodl.methods.totalSupply().call().then(bn),
         this.fodl.methods.balanceOf(this.xfodl.address).call().then(bn),
       ]);
-      this.data.amount = myXfodl.mul(fodlStaked).div(xfodlTotalSupply);
+      this.data.amount = myXfodl.times(fodlStaked).div(xfodlTotalSupply);
       this.data.value = await this.oracle.valueOf(this.getNetwork().id, this.fodl, this.data.amount);
 
       this.data.tvl = await this.oracle.valueOf(this.getNetwork().id, this.fodl, fodlStaked);

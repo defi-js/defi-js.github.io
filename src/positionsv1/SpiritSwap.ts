@@ -1,6 +1,6 @@
 import _ from "lodash";
-import {  erc20, Token, zero } from "@defi.org/web3-candies";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { erc20, Token, zero } from "@defi.org/web3-candies";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
@@ -12,13 +12,10 @@ export namespace SpiritSwap {
 
   export function register() {
     PositionFactory.register({
-
       "ftm:SpiritSwap:LP:ORBS/USDC": (args, oracle) => new LP(args, oracle, orbs(), usdc(), "0x4B668A229740b4F6d04cE2D1b05648Ef1d508EC1"),
       "ftm:SpiritSwap:LP:ORBS/FTM": (args, oracle) => new LP(args, oracle, orbs(), ftm(), "0x1F0700387Dfe4Aec7b8C99fbf54cdCDbBB5603B5"),
-
     });
   }
-
 
   class LP implements PositionV1 {
     lp = erc20("SpiritSwapLP", this.lpAddress);
@@ -72,20 +69,20 @@ export namespace SpiritSwap {
         this.lp.methods.balanceOf(this.args.address).call().then(this.lp.mantissa),
         this.lp.methods.totalSupply().call().then(this.lp.mantissa),
       ]);
-      this.data.amount0 = total0.mul(lpAmount).div(totalSupply);
-      this.data.amount1 = total1.mul(lpAmount).div(totalSupply);
+      this.data.amount0 = total0.times(lpAmount).div(totalSupply);
+      this.data.amount1 = total1.times(lpAmount).div(totalSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
-      
+
       if (this.data.value0.isZero()) this.data.value0 = this.data.value1;
       else if (this.data.value1.isZero()) this.data.value1 = this.data.value0;
 
       let totalValue0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0);
       let totalValue1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1);
-      
+
       if (totalValue0.isZero()) totalValue0 = totalValue1;
       else if (totalValue1.isZero()) totalValue1 = totalValue0;
-      this.data.tvl = totalValue0.add(totalValue1);
+      this.data.tvl = totalValue0.plus(totalValue1);
     }
 
     getContractMethods = () => _.functions(this.lp.methods);

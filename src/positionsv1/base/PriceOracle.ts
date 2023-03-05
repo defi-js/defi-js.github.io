@@ -1,6 +1,5 @@
 import _ from "lodash";
-import BN from "bn.js";
-import { bn18, ether, Token, web3, zero } from "@defi.org/web3-candies";
+import { BN, bn18, ether, Token, web3, zero } from "@defi.org/web3-candies";
 import { PositionV1 } from "./PositionV1";
 import { ElrondMaiar } from "../ElrondMaiar";
 import { networks } from "./consts";
@@ -48,7 +47,7 @@ export class PriceOracle {
       return zero;
     }
 
-    return amount.mul(this.prices[id]).div(ether);
+    return amount.times(this.prices[id]).div(ether);
   }
 
   async warmup(positions: PositionV1[]) {

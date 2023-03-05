@@ -1,6 +1,6 @@
 import { PositionFactory } from "./base/PositionFactory";
 import { PositionArgs, PositionV1, Severity } from "./base/PositionV1";
-import { bn18, contract, erc20, erc20s, ether, to3, zero } from "@defi.org/web3-candies";
+import { bn18, contract, erc20, erc20s, ether, zero } from "@defi.org/web3-candies";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import type { LiquityStabilityPoolAbi, LiquityTroveManagerAbi } from "../../typechain-abi";
@@ -58,7 +58,7 @@ export namespace Liquity {
         ? [
             {
               severity: Severity.High,
-              message: `CR ${to3(this.data.cr, 18).muln(100).toNumber() / 1000}%`,
+              message: `CR ${this.data.cr.toFixed(3)}%`,
             },
           ]
         : [];
@@ -72,19 +72,19 @@ export namespace Liquity {
         this.manager.methods.getEntireDebtAndColl(this.args.address).call(),
         this.manager.methods.getEntireSystemColl().call().then(eth.mantissa),
         this.manager.methods.getEntireSystemDebt().call().then(lusd().mantissa),
-        this.manager.methods.checkRecoveryMode(price).call(),
+        this.manager.methods.checkRecoveryMode(price.toString()).call(),
       ]);
       this.data.recoveryMode = recoveryMode ? 1 : 0;
       this.data.amount = await eth.mantissa(pos.coll);
       this.data.value = await this.oracle.valueOf(this.getNetwork().id, eth, this.data.amount);
       this.data.tvl = await this.oracle.valueOf(this.getNetwork().id, eth, systemColl);
       this.data.debt = await lusd().mantissa(pos.debt);
-      this.data.cr = this.data.value.mul(ether).div(this.data.debt);
-      this.data.ltv = ether.mul(ether).div(this.data.cr);
-      const crWithGasFeeRebate = this.data.value.mul(ether).div(this.data.debt.sub(await lusd().amount(200)));
-      this.data.liquidationPrice = price.mul(this.CR_LIQUIDATION).div(crWithGasFeeRebate);
+      this.data.cr = this.data.value.times(ether).div(this.data.debt);
+      this.data.ltv = ether.times(ether).div(this.data.cr);
+      const crWithGasFeeRebate = this.data.value.times(ether).div(this.data.debt.minus(await lusd().amount(200)));
+      this.data.liquidationPrice = price.times(this.CR_LIQUIDATION).div(crWithGasFeeRebate);
       this.data.entireSystemDebt = await lusd().mantissa(systemDebt);
-      this.data.entireSystemCR = this.data.tvl.mul(ether).div(this.data.entireSystemDebt);
+      this.data.entireSystemCR = this.data.tvl.times(ether).div(this.data.entireSystemDebt);
     }
 
     getContractMethods = () => _.functions(this.manager.methods);

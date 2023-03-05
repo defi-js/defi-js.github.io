@@ -3,7 +3,7 @@ import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
-import { PangolinChefAbi } from "../../typechain-abi/PangolinChefAbi";
+import { PangolinChefAbi } from "../../typechain-abi";
 import _ from "lodash";
 
 export namespace Pangolin {
@@ -84,17 +84,17 @@ export namespace Pangolin {
         lp.methods.totalSupply().call().then(bn),
         lp.methods.balanceOf(this.chef.options.address).call().then(bn),
       ]);
-      this.data.amount0 = stakedBalance.mul(amount0InLp).div(totalLpSupply);
-      this.data.amount1 = stakedBalance.mul(amount1InLp).div(totalLpSupply);
+      this.data.amount0 = stakedBalance.times(amount0InLp).div(totalLpSupply);
+      this.data.amount1 = stakedBalance.times(amount1InLp).div(totalLpSupply);
       this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
       this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
       if (this.data.value0.isZero()) this.data.value0 = this.data.value1;
 
-      const tvl_amount0 = totalStaked.mul(amount0InLp).div(totalLpSupply);
-      const tvl_amount1 = totalStaked.mul(amount1InLp).div(totalLpSupply);
+      const tvl_amount0 = totalStaked.times(amount0InLp).div(totalLpSupply);
+      const tvl_amount1 = totalStaked.times(amount1InLp).div(totalLpSupply);
       const tvl_value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, tvl_amount0);
       const tvl_value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, tvl_amount1);
-      this.data.tvl = tvl_value0.isZero() ? tvl_value1.muln(2) : tvl_value0.add(tvl_value1);
+      this.data.tvl = tvl_value0.isZero() ? tvl_value1.times(2) : tvl_value0.plus(tvl_value1);
     }
 
     getContractMethods = () => _.functions(this.chef.methods);

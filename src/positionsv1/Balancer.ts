@@ -1,12 +1,10 @@
 import _ from "lodash";
-import BN from "bn.js";
 import { PositionFactory } from "./base/PositionFactory";
 import { PositionArgs, PositionV1 } from "./base/PositionV1";
-import { bn, contract, eqIgnoreCase, erc20, ether, Network, Token, zero } from "@defi.org/web3-candies";
+import { BN, bn, contract, eqIgnoreCase, erc20, ether, Network, Token, zero } from "@defi.org/web3-candies";
 import { PriceOracle } from "./base/PriceOracle";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
-import { BalancerV2VaultAbi } from "../../typechain-abi/BalancerV2VaultAbi";
-import { BalancerGaugeAbi } from "../../typechain-abi/BalancerGaugeAbi";
+import { BalancerGaugeAbi, BalancerV2VaultAbi } from "../../typechain-abi";
 
 export namespace Balancer {
   export function register() {
@@ -108,16 +106,16 @@ export namespace Balancer {
 
       const bpt = erc20("BPT", lpTokenAddress);
       const [totalBptsStaked, bptTotalSupply] = await Promise.all([bpt.methods.balanceOf(this.gaugeAddress).call().then(bn), bpt.methods.totalSupply().call().then(bn)]);
-      const bptBalance = totalBptsStaked.mul(workingBalance).div(totalWorkingBalance);
+      const bptBalance = totalBptsStaked.times(workingBalance).div(totalWorkingBalance);
 
       const poolTokens = await this.vault.methods.getPoolTokens(this.poolId).call();
       if (!_.every(this.tokens, (t, i) => eqIgnoreCase(t.options.address, poolTokens.tokens[i]))) throw new Error(`invalid Balancer poolBalances`);
-      this.data.amounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).mul(bptBalance).div(bptTotalSupply))));
+      this.data.amounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).times(bptBalance).div(bptTotalSupply))));
       this.data.values = await Promise.all(_.map(this.tokens, (t, i) => this.oracle.valueOf(this.network.id, t, this.data.amounts[i])));
 
-      const poolAmounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).mul(totalBptsStaked).div(bptTotalSupply))));
+      const poolAmounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).times(totalBptsStaked).div(bptTotalSupply))));
       const poolValues = await Promise.all(_.map(this.tokens, (t, i) => this.oracle.valueOf(this.network.id, t, poolAmounts[i])));
-      this.data.tvl = poolValues.reduce((sum, b) => sum.add(bn(b)), zero);
+      this.data.tvl = poolValues.reduce((sum, b) => sum.plus(bn(b)), zero);
 
       this.data.pending = pending;
       this.data.pendingValue = await this.oracle.valueOf(this.network.id, this.bal, this.data.pending);
@@ -135,12 +133,12 @@ export namespace Balancer {
       if (!_.every(this.tokens, (t, i) => eqIgnoreCase(t.options.address, poolTokens.tokens[i]))) throw new Error(`invalid Balancer poolBalances`);
       const [bptBalance, bptTotalSupply] = await Promise.all([bpt.methods.balanceOf(this.args.address).call().then(bn), bpt.methods.totalSupply().call().then(bn)]);
 
-      this.data.amounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).mul(bptBalance).div(bptTotalSupply))));
+      this.data.amounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]).times(bptBalance).div(bptTotalSupply))));
       this.data.values = await Promise.all(_.map(this.tokens, (t, i) => this.oracle.valueOf(this.network.id, t, this.data.amounts[i])));
 
       const poolAmounts = await Promise.all(_.map(this.tokens, (t, i) => t.mantissa(bn(poolTokens.balances[i]))));
       const poolValues = await Promise.all(_.map(this.tokens, (t, i) => this.oracle.valueOf(this.network.id, t, poolAmounts[i])));
-      this.data.tvl = poolValues.reduce((sum, b) => sum.add(bn(b)), zero);
+      this.data.tvl = poolValues.reduce((sum, b) => sum.plus(bn(b)), zero);
     }
 
     getContractMethods = () => _.functions(this.vault.methods);
