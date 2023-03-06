@@ -39,6 +39,7 @@ export class PriceOracle {
     if (!this.prices[id] || this.prices[id].isZero()) {
       if (networkId === networks.egld.id) await this.fetchPricesElrond([id]);
       else if (networkId === networks.sol.id) await this.fetchCoingeckoPrices([id]);
+      else if (networkId === networks.off.id) await this.fetchOffchainPrice(id);
       else await this.fetchPrices(networkId, [id]);
     }
 
@@ -160,6 +161,17 @@ export class PriceOracle {
         .value();
 
       return this.updateResults(coingeckoIds, result);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  async fetchOffchainPrice(symbol: string) {
+    try {
+      const response = await fetch(`https://api.api-ninjas.com/v1/exchangerate?pair=${symbol}_USD`);
+      const json = await response.json();
+      const result = bn18(json.exchange_rate || 1);
+      return this.updateResults(symbol, { [symbol]: result });
     } catch (e) {
       return {};
     }

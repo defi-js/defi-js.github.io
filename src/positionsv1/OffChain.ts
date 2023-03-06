@@ -1,8 +1,8 @@
 import { PositionFactory } from "./base/PositionFactory";
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks } from "./base/consts";
-import { bn18, erc20, Token, zero, zeroAddress } from "@defi.org/web3-candies";
+import { BN, erc20, Token, zero, zeroAddress } from "@defi.org/web3-candies";
 import _ from "lodash";
 
 export namespace OffChain {
@@ -25,7 +25,7 @@ export namespace OffChain {
       if (!args.input) throw new Error("input amount required");
       if (!args.address) throw new Error("address symbol required");
       this.token = _.merge(erc20(args.address, zeroAddress), { symbol: args.address });
-      this.data.amount = bn18(args.input);
+      this.data.amount = BN(args.input);
     }
 
     getName = () => `OffChain:${this.token.name}`;
