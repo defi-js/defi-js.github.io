@@ -2,7 +2,7 @@ import { PositionFactory } from "./base/PositionFactory";
 import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks } from "./base/consts";
-import { bn18, convertDecimals, erc20, Token, zero, zeroAddress } from "@defi.org/web3-candies";
+import { bn, bnm, erc20, Token, zero, zeroAddress } from "@defi.org/web3-candies";
 import _ from "lodash";
 
 export namespace Bitcoin {
@@ -56,13 +56,13 @@ export namespace Bitcoin {
   async function fetchTVL() {
     const r = await fetch("https://blockchain.info/q/marketcap");
     const json = await r.json();
-    return bn18(json);
+    return bn(json);
   }
 
   async function fetchBalance(bech32: string) {
     const r = await fetch(`https://blockchain.info/q/addressbalance/${bech32}`);
     const json = await r.json();
-    return convertDecimals(json, 8, 18);
+    return bnm(json, 8);
   }
 
   async function fetchPrice() {

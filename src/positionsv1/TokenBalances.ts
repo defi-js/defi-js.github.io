@@ -1,6 +1,6 @@
 import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, erc20, Network, Token, web3, zero } from "@defi.org/web3-candies";
+import { bnm, erc20, Network, Token, web3, zero } from "@defi.org/web3-candies";
 import { erc20s, networks } from "./base/consts";
 import _ from "lodash";
 import { PositionFactory } from "./base/PositionFactory";
@@ -69,7 +69,7 @@ export namespace TokenBalances {
     getName = () => this.token.name;
 
     async load() {
-      [this.data.amount, this.data.totalSupply] = await Promise.all([web3().eth.getBalance(this.args.address).then(bn), this.token.methods.totalSupply().call().then(bn)]);
+      [this.data.amount, this.data.totalSupply] = await Promise.all([web3().eth.getBalance(this.args.address).then(bnm), this.token.methods.totalSupply().call().then(bnm)]);
       this.data.value = await this.oracle.valueOf(this.network.id, this.token, this.data.amount);
       this.data.mcap = await this.oracle.valueOf(this.network.id, this.token, this.data.totalSupply);
     }

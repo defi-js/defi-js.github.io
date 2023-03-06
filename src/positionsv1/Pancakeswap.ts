@@ -97,14 +97,14 @@ export namespace Pancakeswap {
         this.lpToken.methods.getReserves().call(),
         this.lpToken.methods.token0().call(),
         this.lpToken.methods.totalSupply().call(),
-        this.masterchef.methods.pendingCake(this.poolId, this.args.address).call(),
-        this.lpToken.methods.balanceOf(this.masterchef.options.address).call(),
+        this.masterchef.methods.pendingCake(this.poolId, this.args.address).call().then(this.cake.mantissa),
+        this.lpToken.methods.balanceOf(this.masterchef.options.address).call().then(this.lpToken.mantissa),
       ]);
       const { _reserve0, _reserve1 } = reserves;
       const r0 = token0.toLowerCase() === this.asset0.address.toLowerCase() ? _reserve0 : _reserve1;
       const r1 = r0 === _reserve0 ? _reserve1 : _reserve0;
       const amountLP = bn(userInfo.amount);
-      this.data.rewardAmount = bn(pending);
+      this.data.rewardAmount = pending;
 
       this.data.amount0 = await this.asset0.mantissa(bn(r0).times(amountLP).div(bn(totalSupply)));
       this.data.amount1 = await this.asset1.mantissa(bn(r1).times(amountLP).div(bn(totalSupply)));

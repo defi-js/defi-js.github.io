@@ -1,6 +1,6 @@
-import { PositionV1, PositionArgs } from "./base/PositionV1";
+import { PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, erc20, zero } from "@defi.org/web3-candies";
+import { erc20, zero } from "@defi.org/web3-candies";
 import { networks, sendWithTxType } from "./base/consts";
 import _ from "lodash";
 import { PositionFactory } from "./base/PositionFactory";
@@ -48,9 +48,9 @@ export namespace Fodl {
 
     async load() {
       const [myXfodl, xfodlTotalSupply, fodlStaked] = await Promise.all([
-        this.xfodl.methods.balanceOf(this.args.address).call().then(bn),
-        this.xfodl.methods.totalSupply().call().then(bn),
-        this.fodl.methods.balanceOf(this.xfodl.address).call().then(bn),
+        this.xfodl.methods.balanceOf(this.args.address).call().then(this.xfodl.mantissa),
+        this.xfodl.methods.totalSupply().call().then(this.xfodl.mantissa),
+        this.fodl.methods.balanceOf(this.xfodl.address).call().then(this.fodl.mantissa),
       ]);
       this.data.amount = myXfodl.times(fodlStaked).div(xfodlTotalSupply);
       this.data.value = await this.oracle.valueOf(this.getNetwork().id, this.fodl, this.data.amount);

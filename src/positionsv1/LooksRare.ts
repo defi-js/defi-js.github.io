@@ -44,9 +44,9 @@ export namespace LooksRare {
 
     async load() {
       const [stakedLooks, pendingEth, totalShares, sharePrice] = await Promise.all([
-        this.vault.methods.calculateSharesValueInLOOKS(this.args.address).call().then(bn),
+        this.vault.methods.calculateSharesValueInLOOKS(this.args.address).call().then(this.looks.mantissa),
         this.checkPending ? this.vault.methods.calculatePendingRewards(this.args.address).call().then(bn) : zero,
-        this.vault.methods.totalShares().call().then(bn),
+        this.vault.methods.totalShares().call().then(this.looks.mantissa),
         this.vault.methods.calculateSharePriceInLOOKS().call().then(bn),
       ]);
       this.data.amount = stakedLooks;
