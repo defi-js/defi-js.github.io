@@ -1,7 +1,7 @@
 import _ from "lodash";
-import { PositionV1, PositionArgs } from "./PositionV1";
+import { PositionV1, PositionArgs, Network } from "./PositionV1";
 import { PriceOracle } from "./PriceOracle";
-import { Network, web3 } from "@defi.org/web3-candies";
+import { web3 } from "@defi.org/web3-candies";
 
 type Factory = (args: PositionArgs, oracle: PriceOracle) => PositionV1;
 

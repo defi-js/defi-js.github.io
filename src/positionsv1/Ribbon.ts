@@ -1,7 +1,7 @@
 import _ from "lodash";
-import { PositionArgs, PositionV1 } from "./base/PositionV1";
+import { Network, PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, bn9, contract, erc20, Network, Token, zero } from "@defi.org/web3-candies";
+import { bn, bn9, contract, erc20, Token, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { RibbonGaugeAbi, RibbonThetaVaultAbi } from "../../typechain-abi";

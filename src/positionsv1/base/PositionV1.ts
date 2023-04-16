@@ -1,4 +1,6 @@
-import { BN, Network, Token } from "@defi.org/web3-candies";
+import { BN, Token, networks } from "@defi.org/web3-candies";
+
+export type Network = (typeof networks)[keyof typeof networks];
 
 export type PositionArgs = {
   type: string;

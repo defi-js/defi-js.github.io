@@ -1,6 +1,6 @@
-import { PositionArgs, PositionV1 } from "./base/PositionV1";
+import { Network, PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bnm, erc20, Network, Token, web3, zero } from "@defi.org/web3-candies";
+import { bnm, erc20, Token, web3, zero } from "@defi.org/web3-candies";
 import { erc20s, networks } from "./base/consts";
 import _ from "lodash";
 import { PositionFactory } from "./base/PositionFactory";

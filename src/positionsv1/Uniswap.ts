@@ -1,6 +1,6 @@
-import { PositionArgs, PositionV1, Severity } from "./base/PositionV1";
+import { Network, PositionArgs, PositionV1, Severity } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
-import { bn, contract, erc20, maxUint256, Network, Token, web3, zero } from "@defi.org/web3-candies";
+import { bn, contract, erc20, maxUint256, Token, web3, zero } from "@defi.org/web3-candies";
 import { PositionFactory } from "./base/PositionFactory";
 import { erc20s, networks, sendWithTxType } from "./base/consts";
 import type { UniswapNftManagerAbi, UniswapV2Abi, UniswapV2FactoryAbi, UniswapV3FactoryAbi } from "../../typechain-abi";

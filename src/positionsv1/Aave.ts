@@ -1,8 +1,8 @@
 import { PositionFactory } from "./base/PositionFactory";
-import { PositionArgs, PositionV1 } from "./base/PositionV1";
+import { Network, PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { erc20s, networks } from "./base/consts";
-import { erc20, Network, Token, zero } from "@defi.org/web3-candies";
+import { erc20, Token, zero } from "@defi.org/web3-candies";
 
 export namespace Aave {
   export function register() {

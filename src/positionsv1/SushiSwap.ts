@@ -1,6 +1,6 @@
 import _ from "lodash";
-import { bn, Contract, contract, erc20, erc20s, Network, Token, zero } from "@defi.org/web3-candies";
-import { PositionArgs, PositionV1 } from "./base/PositionV1";
+import { bn, Contract, contract, erc20, erc20s, Token, zero } from "@defi.org/web3-candies";
+import { Network, PositionArgs, PositionV1 } from "./base/PositionV1";
 import { PriceOracle } from "./base/PriceOracle";
 import { networks, sendWithTxType } from "./base/consts";
 import { PositionFactory } from "./base/PositionFactory";
@@ -12,6 +12,7 @@ export namespace SushiSwap {
       "eth:SushiSwap:Farm:USDC/ETH": (args, oracle) => new Farm(args, oracle, networks.eth, erc20s.eth.USDC(), erc20s.eth.WETH(), 1),
       "poly:SushiSwap:Farm:ETH/MATIC": (args, oracle) => new Farm(args, oracle, networks.poly, erc20s.poly.WETH(), erc20s.poly.WMATIC(), 0),
       "arb:SushiSwap:Farm:USDC/ETH": (args, oracle) => new Farm(args, oracle, networks.arb, erc20s.arb.USDC(), erc20s.arb.WETH(), 0),
+      "arb:SushiSwap:LP:USDC/ETH": (args, oracle) => new LP(args, oracle, networks.arb, erc20s.arb.USDC(), erc20s.arb.WETH(), "0x905dfCD5649217c42684f23958568e533C711Aa3"),
     });
   }
 
@@ -119,6 +120,81 @@ export namespace SushiSwap {
       const tx = this.network.id === networks.poly.id ? this.masterchef.methods.deposit(this.poolId, 0, this.args.address) : this.masterchef.methods.deposit(this.poolId, 0);
       await sendWithTxType(tx, useLegacyTx);
     }
+  }
+
+  class LP implements PositionV1 {
+    lp = erc20("LP", this.lpAddress);
+
+    data = {
+      lp: this.lp.options.address,
+      amount0: zero,
+      amount1: zero,
+      value0: zero,
+      value1: zero,
+      tvl: zero,
+    };
+
+    constructor(public args: PositionArgs, public oracle: PriceOracle, public network: Network, public asset0: Token, public asset1: Token, public lpAddress: string) {}
+
+    getName = () => ``;
+    getArgs = () => this.args;
+    getNetwork = () => this.network;
+    getAssets = () => [this.asset0, this.asset1];
+    getRewardAssets = () => [];
+    getData = () => this.data;
+    getHealth = () => [];
+    getAmounts = () => [
+      {
+        asset: this.asset0,
+        amount: this.data.amount0,
+        value: this.data.value0,
+      },
+      {
+        asset: this.asset1,
+        amount: this.data.amount1,
+        value: this.data.value1,
+      },
+    ];
+
+    getPendingRewards = () => [];
+
+    getTVL = () => this.data.tvl;
+
+    async load() {
+      const [balance, total0, total1, lpSupply] = await Promise.all([
+        this.lp.methods.balanceOf(this.args.address).call().then(this.lp.mantissa),
+        this.asset0.methods
+          .balanceOf(this.lp.options.address)
+          .call()
+          .then((x) => this.asset0.mantissa(x)),
+        this.asset1.methods
+          .balanceOf(this.lp.options.address)
+          .call()
+          .then((x) => this.asset1.mantissa(x)),
+        this.lp.methods.totalSupply().call().then(this.lp.mantissa),
+      ]);
+      this.data.amount0 = total0.times(balance).div(lpSupply);
+      this.data.amount1 = total1.times(balance).div(lpSupply);
+
+      this.data.value0 = await this.oracle.valueOf(this.getNetwork().id, this.asset0, this.data.amount0);
+      this.data.value1 = await this.oracle.valueOf(this.getNetwork().id, this.asset1, this.data.amount1);
+      this.data.tvl = (await this.oracle.valueOf(this.getNetwork().id, this.asset0, total0)).plus(await this.oracle.valueOf(this.getNetwork().id, this.asset1, total1));
+    }
+
+    getContractMethods = () => _.functions(this.lp.methods);
+
+    async callContract(method: string, args: string[]) {
+      const tx = (this.lp.methods as any)[method](...args);
+      return await tx.call({ from: this.args.address });
+    }
+
+    async sendTransaction(method: string, args: string[], useLegacyTx: boolean) {
+      const tx = (this.lp.methods as any)[method](...args);
+      alert(`target:\n${this.lp.options.address}\ndata:\n${tx.encodeABI()}`);
+      await sendWithTxType(tx, useLegacyTx);
+    }
+
+    async harvest() {}
   }
 
   function getFarmContract(network: Network): Contract {
