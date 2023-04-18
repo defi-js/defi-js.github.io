@@ -14,6 +14,7 @@ export namespace Pancakeswap {
     const lp_BTCB_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP BTCB/BNB", "0x61EB789d75A95CAa3fF50ed7E47b96c132fEc082", 0, require("../abi/PancakeswapLpAbi.json"));
     const lp_CAKE_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP CAKE/BNB", "0x0eD7e52944161450477ee417DE9Cd3a859b14fD0", 0, require("../abi/PancakeswapLpAbi.json"));
     const lp_ORBS_BUSD = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP ORBS/BUSD", "0xB87b857670A44356f2b70337E0F218713D2378e8", 0, require("../abi/PancakeswapLpAbi.json"));
+    const lp_ORBS_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP ORBS/BNB", "0xcD71C49f6e9283Af099faE404f7F38aB543B7ca1", 0, require("../abi/PancakeswapLpAbi.json"));
     const lp_DOGE_BNB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP DOGE/BNB", "0xac109C8025F272414fd9e2faA805a583708A017f", 0, require("../abi/PancakeswapLpAbi.json"));
     const lp_TON_BTCB = () => erc20<PancakeswapLpAbi>("Pancakeswap: LP TON/BTCB", "0x1893da6b92660b85538f58217808685b80fb083e", 0, require("../abi/PancakeswapLpAbi.json"));
 
@@ -24,6 +25,7 @@ export namespace Pancakeswap {
       "bsc:Pancakeswap:Farm:DOGE/BNB": (args, oracle) => new Farm(args, oracle, erc20("DOGE", "0xbA2aE424d960c26247Dd6c32edC70B295c744C43"), erc20s.bsc.WBNB(), lp_DOGE_BNB(), 37),
 
       "bsc:Pancakeswap:LP:ORBS/BUSD": (args, oracle) => new LP(args, oracle, erc20s.bsc.ORBS(), erc20s.bsc.BUSD(), lp_ORBS_BUSD()),
+      "bsc:Pancakeswap:LP:ORBS/BNB": (args, oracle) => new LP(args, oracle, erc20s.bsc.ORBS(), erc20s.bsc.WBNB(), lp_ORBS_BNB()),
       "bsc:Pancakeswap:LP:TON/BTCB": (args, oracle) => new LP(args, oracle, erc20("TON", "0x76A797A59Ba2C17726896976B7B3747BfD1d220f"), erc20s.bsc.BTCB(), lp_TON_BTCB()),
     });
   }
